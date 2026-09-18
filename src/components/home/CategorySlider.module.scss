@@ -1,8 +1,6 @@
-@use '@/styles/modules/layout' as layout;
-
 .sliderWrapper {
   width: 100%;
-  max-width: 1400px;
+  max-width: 1080px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -10,21 +8,11 @@
   padding: 6px 0;
   position: relative;
   z-index: 2;
-
-  &.arrowsHidden {
-    .scrollTrack {
-      justify-content: flex-start;
-
-      @media (min-width: 1280px) {
-        justify-content: center;
-      }
-    }
-  }
 }
 
 .navBtn {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: var(--radius-full);
   background: var(--bg-card);
   border: 1px solid var(--border-card);
@@ -41,12 +29,12 @@
     background: var(--bg-input-hover);
     color: var(--text-primary);
     border-color: var(--border-card-hover);
-    transform: scale(1.05);
+    transform: scale(1.06);
   }
 
   &.navBtnDisabled,
   &:disabled {
-    opacity: 0.35;
+    opacity: 0.25;
     cursor: default;
     pointer-events: none;
   }
@@ -56,7 +44,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   overflow-x: auto;
   scroll-behavior: smooth;
   scrollbar-width: none;

@@ -67,21 +67,16 @@ export default function CategorySlider({
   const filteredCategories = categories.filter((c) => c.id !== 'all');
 
   return (
-    <div
-      className={`${styles.sliderWrapper} ${!isCompact ? styles.arrowsHidden : ''}`}
-      aria-label="Category Carousel"
-    >
-      {isCompact && (
-        <button
-          type="button"
-          className={`${styles.navBtn} ${!canScrollLeft ? styles.navBtnDisabled : ''}`}
-          onClick={handleScrollLeft}
-          aria-label="Scroll categories left"
-          disabled={!canScrollLeft}
-        >
-          <ChevronLeft size={16} />
-        </button>
-      )}
+    <div className={styles.sliderWrapper} aria-label="Category Carousel">
+      <button
+        type="button"
+        className={`${styles.navBtn} ${!canScrollLeft ? styles.navBtnDisabled : ''}`}
+        onClick={handleScrollLeft}
+        aria-label="Scroll categories left"
+        disabled={!canScrollLeft}
+      >
+        <ChevronLeft size={16} />
+      </button>
 
       <div
         className={styles.scrollTrack}
@@ -111,17 +106,15 @@ export default function CategorySlider({
         })}
       </div>
 
-      {isCompact && (
-        <button
-          type="button"
-          className={`${styles.navBtn} ${!canScrollRight ? styles.navBtnDisabled : ''}`}
-          onClick={handleScrollRight}
-          aria-label="Scroll categories right"
-          disabled={!canScrollRight}
-        >
-          <ChevronRight size={16} />
-        </button>
-      )}
+      <button
+        type="button"
+        className={`${styles.navBtn} ${!canScrollRight ? styles.navBtnDisabled : ''}`}
+        onClick={handleScrollRight}
+        aria-label="Scroll categories right"
+        disabled={!canScrollRight}
+      >
+        <ChevronRight size={16} />
+      </button>
     </div>
   );
 }
