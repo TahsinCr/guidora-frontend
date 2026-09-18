@@ -34,8 +34,8 @@
     @include layout.square(36px);
     @include layout.flex(row, center, center);
     border-radius: var(--radius-sm);
-    background: var(--bg-input);
-    color: var(--text-secondary);
+    background: rgba(138, 56, 245, 0.08);
+    color: var(--primary-color);
     flex-shrink: 0;
   }
 

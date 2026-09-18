@@ -190,27 +190,43 @@
 
   &.free {
     background: rgba(16, 185, 129, 0.12);
-    color: #10B981;
+    color: #059669;
     border-color: rgba(16, 185, 129, 0.25);
   }
 
   &.freemium {
     background: rgba(78, 92, 226, 0.12);
-    color: #6366F1;
+    color: #4f46e5;
     border-color: rgba(78, 92, 226, 0.25);
   }
 
   &.paid,
   &.paidenterprise {
-    background: rgba(234, 179, 8, 0.12);
-    color: #EAB308;
-    border-color: rgba(234, 179, 8, 0.25);
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+    border-color: rgba(245, 158, 11, 0.25);
   }
 
   &.opensource {
     background: rgba(14, 165, 233, 0.12);
-    color: #0EA5E9;
+    color: #0284c7;
     border-color: rgba(14, 165, 233, 0.25);
+  }
+}
+
+:global([data-theme='dark']) .pricingBadge {
+  &.free {
+    color: #10B981;
+  }
+  &.freemium {
+    color: #818CF8;
+  }
+  &.paid,
+  &.paidenterprise {
+    color: #FBBF24;
+  }
+  &.opensource {
+    color: #38BDF8;
   }
 }
 
