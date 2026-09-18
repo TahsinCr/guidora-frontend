@@ -29,6 +29,7 @@ export async function getTools({
   category = 'all',
   selectedCategories = [],
   selectedTags = [],
+  selectedOrganizations = [],
   sort = 'relevance',
   filterVerified = false,
   verification = { admin: false, community: false, bot: false },
@@ -49,6 +50,20 @@ export async function getTools({
   // Multi-Category filter (from filter drawer/panel)
   if (selectedCategories && selectedCategories.length > 0) {
     filtered = filtered.filter((t) => selectedCategories.includes(t.categoryId));
+  }
+
+  // Multi-Organization filter (from filter drawer/panel)
+  if (selectedOrganizations && selectedOrganizations.length > 0) {
+    filtered = filtered.filter((t) => {
+      const toolOrgId = t.organizationId || t.creator?.organizationId;
+      const toolCreatorName = (t.creator?.name || '').toLowerCase();
+      return selectedOrganizations.some((orgId) => {
+        return (
+          toolOrgId === orgId ||
+          toolCreatorName.includes(orgId.replace('org_', '').toLowerCase())
+        );
+      });
+    });
   }
 
   // Multi-Tags filter (from filter drawer/panel)

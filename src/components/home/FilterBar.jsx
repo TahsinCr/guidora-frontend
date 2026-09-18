@@ -12,8 +12,11 @@ import {
   Folder,
   Layers,
   Hash,
+  Building2,
+  CheckCircle2,
 } from 'lucide-react';
 import { TAG_CATEGORIES } from '@/services/mockData';
+import { getOrganizations } from '@/services/userService';
 import styles from './FilterBar.module.scss';
 
 export default function FilterBar({
@@ -22,6 +25,8 @@ export default function FilterBar({
   onSelectCategory,
   selectedCategories = [],
   onSelectedCategoriesChange,
+  selectedOrganizations = [],
+  onSelectedOrganizationsChange,
   selectedTags = [],
   onSelectedTagsChange,
   verification = { admin: false, community: false, bot: false },
@@ -34,7 +39,10 @@ export default function FilterBar({
   const [filterQuery, setFilterQuery] = useState('');
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(true);
   const [isVerificationOpen, setIsVerificationOpen] = useState(true);
+  const [isOrganizationsOpen, setIsOrganizationsOpen] = useState(true);
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [showAllOrgs, setShowAllOrgs] = useState(false);
+  const [organizations] = useState(getOrganizations());
   
   // Track open/collapsed state for each tag category
   const [openTagSections, setOpenTagSections] = useState({
@@ -123,9 +131,40 @@ export default function FilterBar({
     onSelectedTagsChange([...updatedTags, tagName]);
   };
 
+  // Alphabetical and search-filtered organizations
+  const filteredOrganizations = useMemo(() => {
+    let list = [...organizations].sort((a, b) => a.name.localeCompare(b.name));
+    if (!filterQuery.trim()) return list;
+    const q = filterQuery.toLowerCase();
+    return list.filter((org) => org.name.toLowerCase().includes(q) || org.slug?.includes(q));
+  }, [organizations, filterQuery]);
+
+  const hasSelectedOrg = selectedOrganizations.length > 0;
+  const visibleOrganizations = useMemo(() => {
+    if (hasSelectedOrg) {
+      return filteredOrganizations.filter((o) => selectedOrganizations.includes(o.id));
+    }
+    if (showAllOrgs || filterQuery.trim()) {
+      return filteredOrganizations;
+    }
+    return filteredOrganizations.slice(0, 6);
+  }, [filteredOrganizations, hasSelectedOrg, selectedOrganizations, showAllOrgs, filterQuery]);
+
+  const canExpandOrgs = filteredOrganizations.length > 6 && !filterQuery.trim();
+
+  const handleToggleOrganization = (orgId) => {
+    if (!onSelectedOrganizationsChange) return;
+    if (selectedOrganizations.includes(orgId)) {
+      onSelectedOrganizationsChange(selectedOrganizations.filter((id) => id !== orgId));
+    } else {
+      onSelectedOrganizationsChange([...selectedOrganizations, orgId]);
+    }
+  };
+
   const hasAnyActiveFilters =
     (selectedCategory && selectedCategory !== 'all') ||
     selectedCategories.length > 0 ||
+    selectedOrganizations.length > 0 ||
     selectedTags.length > 0 ||
     verification.admin ||
     verification.community ||
@@ -299,6 +338,73 @@ export default function FilterBar({
               <Bot size={14} color="#A855F7" />
               <span className={styles.label}>Bot Verified</span>
             </div>
+          </div>
+        )}
+        <div className={styles.divider} />
+      </div>
+
+      {/* ORGANIZATIONS SECTION (Placed directly below Verification, categorized like categories) */}
+      <div className={styles.section}>
+        <div
+          className={styles.sectionHeader}
+          onClick={() => setIsOrganizationsOpen(!isOrganizationsOpen)}
+        >
+          <span className={styles.headerLabel}>
+            <Building2 size={13} />
+            Organizations {selectedOrganizations.length > 0 && `(${selectedOrganizations.length})`}
+          </span>
+          {isOrganizationsOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        </div>
+        {isOrganizationsOpen && (
+          <div className={styles.optionsList}>
+            {visibleOrganizations.map((org) => {
+              const isChecked = selectedOrganizations.includes(org.id);
+
+              return (
+                <div
+                  key={org.id}
+                  className={`${styles.checkboxItem} ${isChecked ? styles.itemActive : ''}`}
+                  onClick={() => handleToggleOrganization(org.id)}
+                >
+                  <div className={`${styles.squareBox} ${isChecked ? styles.checked : ''}`}>
+                    {isChecked && <Check size={11} strokeWidth={3} />}
+                  </div>
+                  <span className={styles.orgInitialsPill}>{org.initials}</span>
+                  <span className={styles.label}>{org.name}</span>
+                  {org.verified && (
+                    <CheckCircle2 size={12} color="#10B981" title="Verified Organization" />
+                  )}
+                </div>
+              );
+            })}
+
+            {hasSelectedOrg ? (
+              <button
+                type="button"
+                className={styles.showMoreBtn}
+                onClick={() => onSelectedOrganizationsChange && onSelectedOrganizationsChange([])}
+              >
+                Show all organizations
+              </button>
+            ) : (
+              canExpandOrgs && (
+                <button
+                  type="button"
+                  className={styles.showMoreBtn}
+                  onClick={() => setShowAllOrgs(!showAllOrgs)}
+                >
+                  {showAllOrgs ? (
+                    <>
+                      Show less <ChevronUp size={12} />
+                    </>
+                  ) : (
+                    <>
+                      Show {filteredOrganizations.length - 6} more <ChevronDown size={12} />
+                    </>
+                  )}
+                </button>
+              )
+            )}
           </div>
         )}
         <div className={styles.divider} />

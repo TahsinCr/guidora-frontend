@@ -2,17 +2,57 @@
 const USER_KEY = 'guidora_current_user';
 const ORGANIZATIONS_KEY = 'guidora_organizations';
 
-// Initial Mock User
-const DEFAULT_USER = {
-  id: 'usr_tahsin_01',
-  name: 'Tahsin Can',
-  email: 'tahsin@guidora.io',
-  role: 'admin', // 'admin' | 'creator' | 'member'
-  avatar: 'TC',
-  bio: 'Lead AI Engineer & Product Architect',
-  organizationId: 'org_neurolabs',
-  savedToolIds: ['neurogen-studio', 'cursor-editor', 'midjourney'],
-};
+// Initial Mock Users
+export const MOCK_USERS = [
+  {
+    id: 'usr_tahsin_01',
+    name: 'Tahsin Can',
+    email: 'tahsin@guidora.io',
+    role: 'admin', // 'admin' | 'creator' | 'member'
+    avatar: 'TC',
+    title: 'Lead AI Engineer & Product Architect',
+    bio: 'Building next-generation AI developer directories, intelligent tool orchestration workflows, and modular UI design architectures.',
+    location: 'Istanbul, Turkey',
+    website: 'https://github.com/Tahsincr',
+    joinedDate: 'September 2024',
+    organizationId: null, // Ordinary user not inherently tied to an organization
+    savedToolIds: ['neurogen-studio', 'cursor-editor', 'midjourney', 'v0-dev'],
+    submittedToolIds: ['neurogen-studio'],
+    reputation: 980,
+  },
+  {
+    id: 'usr_elena_02',
+    name: 'Elena Rostova',
+    email: 'elena@neurolabs.ai',
+    role: 'creator',
+    avatar: 'ER',
+    title: 'Senior Neural Interface Designer',
+    bio: 'Obsessed with generative tokens, dark mode UI paradigms, and contextual coding assistants.',
+    location: 'Berlin, Germany',
+    website: 'https://neurolabs.ai',
+    joinedDate: 'November 2025',
+    organizationId: 'org_neurolabs',
+    savedToolIds: ['codewizard-ai', 'figma'],
+    submittedToolIds: ['vision-forge'],
+    reputation: 640,
+  },
+  {
+    id: 'usr_dev_03',
+    name: 'Alex Vance',
+    email: 'alex@community.org',
+    role: 'member',
+    avatar: 'AV',
+    title: 'Fullstack Software Engineer',
+    bio: 'Exploring local LLMs, Ollama orchestration, and open-source generative stacks.',
+    location: 'San Francisco, CA',
+    website: 'https://github.com',
+    joinedDate: 'January 2026',
+    organizationId: null,
+    savedToolIds: ['cursor-editor'],
+    submittedToolIds: [],
+    reputation: 210,
+  },
+];
 
 // Initial Organizations (Verified / Admin created)
 const DEFAULT_ORGANIZATIONS = [
@@ -70,6 +110,8 @@ const DEFAULT_ORGANIZATIONS = [
   },
 ];
 
+export const DEFAULT_USER = MOCK_USERS[0];
+
 export function getCurrentUser() {
   try {
     const raw = localStorage.getItem(USER_KEY);
@@ -81,6 +123,15 @@ export function getCurrentUser() {
   } catch (e) {
     return DEFAULT_USER;
   }
+}
+
+export function getUserById(id) {
+  if (!id) return getCurrentUser();
+  const found = MOCK_USERS.find((u) => u.id === id);
+  if (found) return found;
+  const current = getCurrentUser();
+  if (current.id === id) return current;
+  return found || current;
 }
 
 export function updateCurrentUser(updatedFields) {

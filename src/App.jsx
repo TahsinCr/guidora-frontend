@@ -5,6 +5,7 @@ import InformationCard from '@/components/home/InformationCard';
 import ProductGrid from '@/components/home/ProductGrid';
 import ToolDialog from '@/components/tool-detail/ToolDialog';
 import SubmitToolPage from '@/components/submit/SubmitToolPage';
+import UserProfilePage from '@/components/profile/UserProfilePage';
 import { getTools, getCategories } from '@/services/toolsService';
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
   const initialParams = new URLSearchParams(window.location.search);
   const initialCat = initialParams.get('cat') || 'all';
   const initialTags = initialParams.get('tags') ? initialParams.get('tags').split(',').filter(Boolean) : [];
+  const initialOrgs = initialParams.get('orgs') ? initialParams.get('orgs').split(',').filter(Boolean) : [];
   const initialSearch = initialParams.get('q') || '';
   const initialSort = initialParams.get('sort') || 'relevance';
   const initialVer = {
@@ -27,6 +29,7 @@ export default function App() {
     return initialCat !== 'all' ? [initialCat] : [];
   });
   const [selectedTags, setSelectedTags] = useState(initialTags);
+  const [selectedOrganizations, setSelectedOrganizations] = useState(initialOrgs);
   const [search, setSearch] = useState(initialSearch);
   const [sort, setSort] = useState(initialSort);
   const [filterVerified, setFilterVerified] = useState(false);
@@ -44,6 +47,14 @@ export default function App() {
   // Full-page Submit Tool view state synchronized with URL (?view=submit)
   const [isSubmitView, setIsSubmitView] = useState(() => {
     return initialParams.get('view') === 'submit';
+  });
+
+  // User Profile view state synchronized with URL (?view=profile or ?user=id)
+  const [isProfileView, setIsProfileView] = useState(() => {
+    return initialParams.get('view') === 'profile' || Boolean(initialParams.get('user'));
+  });
+  const [profileUserId, setProfileUserId] = useState(() => {
+    return initialParams.get('user') || null;
   });
 
   // Active tool for detail view - synchronized with URL (?tool=id)
@@ -81,7 +92,7 @@ export default function App() {
 
   // Update browser URL query params without reloading the page
   useEffect(() => {
-    if (isSubmitView || activeToolId) return;
+    if (isSubmitView || isProfileView || activeToolId) return;
 
     const url = new URL(window.location.href);
     
@@ -99,6 +110,13 @@ export default function App() {
       url.searchParams.set('tags', selectedTags.join(','));
     } else {
       url.searchParams.delete('tags');
+    }
+
+    // Organizations param
+    if (selectedOrganizations && selectedOrganizations.length > 0) {
+      url.searchParams.set('orgs', selectedOrganizations.join(','));
+    } else {
+      url.searchParams.delete('orgs');
     }
 
     // Search param
@@ -126,7 +144,7 @@ export default function App() {
     else url.searchParams.delete('bot');
 
     window.history.replaceState({}, '', url.toString());
-  }, [selectedCategory, selectedCategories, selectedTags, search, sort, verification, isSubmitView, activeToolId]);
+  }, [selectedCategory, selectedCategories, selectedTags, selectedOrganizations, search, sort, verification, isSubmitView, isProfileView, activeToolId]);
 
   // Fetch tools whenever filters change (reset to page 1)
   useEffect(() => {
@@ -136,6 +154,7 @@ export default function App() {
       category: selectedCategory,
       selectedCategories,
       selectedTags,
+      selectedOrganizations,
       search,
       sort,
       filterVerified,
@@ -153,7 +172,7 @@ export default function App() {
         console.error('Error fetching tools:', err);
         setIsLoading(false);
       });
-  }, [selectedCategory, selectedCategories, selectedTags, search, sort, filterVerified, verification]);
+  }, [selectedCategory, selectedCategories, selectedTags, selectedOrganizations, search, sort, filterVerified, verification]);
 
   // Load more tools (infinite scroll pagination)
   const handleLoadMore = useCallback(() => {
@@ -165,6 +184,7 @@ export default function App() {
       category: selectedCategory,
       selectedCategories,
       selectedTags,
+      selectedOrganizations,
       search,
       sort,
       filterVerified,
@@ -182,7 +202,7 @@ export default function App() {
         console.error('Error loading more tools:', err);
         setIsLoadingMore(false);
       });
-  }, [page, hasMore, isLoadingMore, selectedCategory, selectedCategories, selectedTags, search, sort, filterVerified, verification]);
+  }, [page, hasMore, isLoadingMore, selectedCategory, selectedCategories, selectedTags, selectedOrganizations, search, sort, filterVerified, verification]);
 
   // Handle URL sync and browser back/forward buttons (no page reload)
   useEffect(() => {
@@ -190,8 +210,11 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       const tool = params.get('tool');
       const view = params.get('view');
+      const user = params.get('user');
       setActiveToolId(tool || null);
       setIsSubmitView(view === 'submit');
+      setIsProfileView(view === 'profile' || Boolean(user));
+      setProfileUserId(user || null);
       if (!tool) setActiveToolData(null);
     };
 
@@ -201,9 +224,11 @@ export default function App() {
 
   const handleOpenTool = useCallback((toolId) => {
     setIsSubmitView(false);
+    setIsProfileView(false);
     setActiveToolId(toolId);
     const url = new URL(window.location.href);
     url.searchParams.delete('view');
+    url.searchParams.delete('user');
     url.searchParams.set('tool', toolId);
     window.history.pushState({ toolId }, '', url.toString());
   }, []);
@@ -211,20 +236,42 @@ export default function App() {
   const handleOpenSubmit = useCallback(() => {
     setActiveToolId(null);
     setActiveToolData(null);
+    setIsProfileView(false);
     setIsSubmitView(true);
     const url = new URL(window.location.href);
     url.searchParams.delete('tool');
+    url.searchParams.delete('user');
     url.searchParams.set('view', 'submit');
     window.history.pushState({ view: 'submit' }, '', url.toString());
+  }, []);
+
+  const handleOpenProfile = useCallback((userId) => {
+    setActiveToolId(null);
+    setActiveToolData(null);
+    setIsSubmitView(false);
+    setIsProfileView(true);
+    setProfileUserId(userId || null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('tool');
+    if (userId) {
+      url.searchParams.set('user', userId);
+      url.searchParams.delete('view');
+    } else {
+      url.searchParams.set('view', 'profile');
+      url.searchParams.delete('user');
+    }
+    window.history.pushState({ view: 'profile', user: userId }, '', url.toString());
   }, []);
 
   const handleCloseTool = useCallback(() => {
     setActiveToolId(null);
     setActiveToolData(null);
     setIsSubmitView(false);
+    setIsProfileView(false);
     const url = new URL(window.location.href);
     url.searchParams.delete('tool');
     url.searchParams.delete('view');
+    url.searchParams.delete('user');
     window.history.pushState({}, '', url.toString());
   }, []);
 
@@ -232,11 +279,14 @@ export default function App() {
     setActiveToolId(null);
     setActiveToolData(null);
     setIsSubmitView(false);
+    setIsProfileView(false);
     const url = new URL(window.location.href);
     url.searchParams.delete('tool');
     url.searchParams.delete('view');
+    url.searchParams.delete('user');
     url.searchParams.delete('cat');
     url.searchParams.delete('tags');
+    url.searchParams.delete('orgs');
     url.searchParams.delete('q');
     url.searchParams.delete('sort');
     url.searchParams.delete('admin');
@@ -247,6 +297,7 @@ export default function App() {
     setSelectedCategory('all');
     setSelectedCategories([]);
     setSelectedTags([]);
+    setSelectedOrganizations([]);
     setSearch('');
     setSort('relevance');
     setFilterVerified(false);
@@ -260,6 +311,7 @@ export default function App() {
       category: selectedCategory,
       selectedCategories,
       selectedTags,
+      selectedOrganizations,
       search,
       sort,
       filterVerified,
@@ -277,7 +329,7 @@ export default function App() {
     } else {
       handleCloseTool();
     }
-  }, [selectedCategory, selectedCategories, selectedTags, search, sort, filterVerified, verification, handleOpenTool, handleCloseTool]);
+  }, [selectedCategory, selectedCategories, selectedTags, selectedOrganizations, search, sort, filterVerified, verification, handleOpenTool, handleCloseTool]);
 
   return (
     <div className="app-container">
@@ -290,10 +342,17 @@ export default function App() {
           handleSelectTopCategory(catId);
         }}
         onSubmitTool={handleOpenSubmit}
+        onOpenProfile={handleOpenProfile}
       />
 
       <main className="main-content">
-        {isSubmitView ? (
+        {isProfileView ? (
+          <UserProfilePage
+            userId={profileUserId}
+            onBack={handleCloseTool}
+            onOpenTool={handleOpenTool}
+          />
+        ) : isSubmitView ? (
           <SubmitToolPage
             onBack={handleCloseTool}
             onToolCreated={handleToolCreated}
@@ -325,6 +384,8 @@ export default function App() {
               onSelectCategory={handleSelectTopCategory}
               selectedCategories={selectedCategories}
               onSelectedCategoriesChange={handleSelectedCategoriesChange}
+              selectedOrganizations={selectedOrganizations}
+              onSelectedOrganizationsChange={setSelectedOrganizations}
               selectedTags={selectedTags}
               onSelectedTagsChange={setSelectedTags}
               sort={sort}

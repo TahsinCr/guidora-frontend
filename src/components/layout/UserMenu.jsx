@@ -20,7 +20,7 @@ import {
 } from '@/services/userService';
 import styles from './UserMenu.module.scss';
 
-export default function UserMenu() {
+export default function UserMenu({ onOpenProfile }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
   const [user, setUser] = useState(getCurrentUser());
@@ -54,6 +54,13 @@ export default function UserMenu() {
     setNewOrgWebsite('');
   };
 
+  const handleProfileClick = () => {
+    setIsOpen(false);
+    if (onOpenProfile) {
+      onOpenProfile(user?.id);
+    }
+  };
+
   return (
     <div className={styles.dropdownWrapper}>
       {/* Trigger: User Avatar */}
@@ -76,7 +83,12 @@ export default function UserMenu() {
       {isOpen && (
         <div className={styles.menuDropdown}>
           {/* User Card Header */}
-          <div className={styles.userCardHeader}>
+          <div
+            className={styles.userCardHeader}
+            onClick={handleProfileClick}
+            style={{ cursor: 'pointer' }}
+            title="View full profile"
+          >
             <div className={styles.largeAvatar}>{user?.avatar || 'TC'}</div>
             <div className={styles.userDetails}>
               <div className={styles.userNameRow}>
@@ -117,6 +129,15 @@ export default function UserMenu() {
 
           {/* Action List */}
           <div className={styles.actionList}>
+            <button
+              type="button"
+              className={styles.menuItem}
+              onClick={handleProfileClick}
+            >
+              <User size={15} />
+              <span>View Profile</span>
+            </button>
+
             <button
               type="button"
               className={styles.menuItem}

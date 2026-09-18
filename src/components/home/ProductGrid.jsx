@@ -17,6 +17,8 @@ export default function ProductGrid({
   onSelectCategory,
   selectedCategories = [],
   onSelectedCategoriesChange,
+  selectedOrganizations = [],
+  onSelectedOrganizationsChange,
   selectedTags = [],
   onSelectedTagsChange,
   sort,
@@ -75,6 +77,8 @@ export default function ProductGrid({
         onSelectCategory={onSelectCategory}
         selectedCategories={selectedCategories}
         onSelectedCategoriesChange={onSelectedCategoriesChange}
+        selectedOrganizations={selectedOrganizations}
+        onSelectedOrganizationsChange={onSelectedOrganizationsChange}
         selectedTags={selectedTags}
         onSelectedTagsChange={onSelectedTagsChange}
         filterVerified={filterVerified}
@@ -101,6 +105,8 @@ export default function ProductGrid({
               onSelectCategory={onSelectCategory}
               selectedCategories={selectedCategories}
               onSelectedCategoriesChange={onSelectedCategoriesChange}
+              selectedOrganizations={selectedOrganizations}
+              onSelectedOrganizationsChange={onSelectedOrganizationsChange}
               selectedTags={selectedTags}
               onSelectedTagsChange={onSelectedTagsChange}
               filterVerified={filterVerified}

@@ -215,6 +215,16 @@
     flex-shrink: 0;
   }
 
+  .orgInitialsPill {
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: var(--radius-xs);
+    background: rgba(129, 140, 248, 0.15);
+    color: var(--primary-color);
+    flex-shrink: 0;
+  }
+
   .label {
     flex: 1;
     white-space: nowrap;
