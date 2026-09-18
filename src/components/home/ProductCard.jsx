@@ -39,29 +39,33 @@ export default function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
 
           <div className={styles.info}>
             <div className={styles.titleRow}>
-              <h2 className={styles.title}>{tool.name}</h2>
+              <div className={styles.titleLeft}>
+                <h2 className={styles.title}>{tool.name}</h2>
+                {tool.verified && (
+                  <div className={styles.verifiedIcons}>
+                    {tool.verified?.admin && (
+                      <ShieldCheck size={14} color="#EAB308" title="Admin Verified" />
+                    )}
+                    {tool.verified?.community && (
+                      <Sparkles size={14} color="#10B981" title="Community Choice" />
+                    )}
+                    {tool.verified?.audited && (
+                      <Bot size={14} color="#A855F7" title="Bot Verified" />
+                    )}
+                  </div>
+                )}
+              </div>
               {tool.isNew && <span className={styles.newBadge}>NEW</span>}
             </div>
 
             <div className={styles.tagRow}>
               <span className={styles.categoryTag}>{tool.tag || tool.category}</span>
-              {tool.version && <span className={styles.versionText}>• {tool.version}</span>}
               {tool.pricing && (
                 <span className={`${styles.pricingBadge} ${styles[tool.pricing.toLowerCase().replace(/[^a-z0-9]/g, '')] || ''}`}>
                   {tool.pricing}
                 </span>
               )}
-              <div className={styles.verifiedIcons}>
-                {tool.verified?.admin && (
-                  <ShieldCheck size={14} color="#EAB308" title="Admin Verified" />
-                )}
-                {tool.verified?.community && (
-                  <Sparkles size={14} color="#10B981" title="Community Choice" />
-                )}
-                {tool.verified?.audited && (
-                  <Bot size={14} color="#A855F7" title="Bot Verified" />
-                )}
-              </div>
+              {tool.version && <span className={styles.versionText}>• {tool.version}</span>}
             </div>
           </div>
         </div>
