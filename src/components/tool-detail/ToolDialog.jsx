@@ -12,6 +12,7 @@ export default function ToolDialog({ toolId, onClose, onSelectTool, onToolLoaded
   const [tool, setTool] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('about');
+  const [reviewCount, setReviewCount] = useState(null);
 
   // Fetch tool details asynchronously
   useEffect(() => {
@@ -74,9 +75,17 @@ export default function ToolDialog({ toolId, onClose, onSelectTool, onToolLoaded
         <div className={styles.contentBody}>
           <div className={styles.leftColumn}>
             <ProductPreviewHeader tool={tool} />
-            <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
+            <Tabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              reviewCount={reviewCount}
+            />
             <StatusCardGroup tool={tool} />
-            <DocContent tool={tool} activeTab={activeTab} />
+            <DocContent
+              tool={tool}
+              activeTab={activeTab}
+              onReviewCountChange={setReviewCount}
+            />
           </div>
 
           <div className={styles.rightColumn}>

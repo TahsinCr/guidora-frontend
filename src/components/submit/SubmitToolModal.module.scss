@@ -1,0 +1,491 @@
+@use '@/styles/modules/layout' as layout;
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: 1100;
+  @include layout.flex(row, center, center, 0);
+  padding: 24px;
+  overflow-y: auto;
+  animation: overlayFadeIn 0.2s ease-out;
+
+  @media (max-width: 640px) {
+    padding: 12px;
+  }
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modalBox {
+  position: relative;
+  @include layout.width(100%);
+  max-width: 720px;
+  max-height: 90vh;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleIn {
+  from { opacity: 0; transform: scale(0.96) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modalHeader {
+  @include layout.flex(row, space-between, center, 16px);
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-card);
+  background: var(--bg-card);
+  flex-shrink: 0;
+}
+
+.headerTitleRow {
+  @include layout.flex(row, flex-start, center, 14px);
+}
+
+.headerIcon {
+  @include layout.square(40px);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+  @include layout.flex(row, center, center, 0);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: var(--text-primary);
+    background: var(--bg-input);
+  }
+}
+
+.form {
+  padding: 24px;
+  overflow-y: auto;
+  @include layout.flex(column, flex-start, stretch, 20px);
+}
+
+// 1. GitHub Banner
+.githubBanner {
+  @include layout.box(16px, 1px solid var(--border-card), var(--radius-lg));
+  background: var(--bg-input);
+  @include layout.flex(column, flex-start, stretch, 12px);
+}
+
+.githubBannerTop {
+  @include layout.flex(row, flex-start, center, 8px);
+}
+
+.ghIcon {
+  color: var(--text-primary);
+}
+
+.ghTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.githubInputRow {
+  display: flex;
+  gap: 10px;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
+}
+
+.ghInput {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 9px 12px;
+  transition: border-color 0.15s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+.fetchBtn {
+  @include layout.flex(row, center, center, 6px);
+  background: var(--accent-purple);
+  border: none;
+  color: #ffffff;
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: var(--accent-purple-hover);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.statusAlert {
+  @include layout.flex(row, flex-start, center, 8px);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.statusSuccess {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.statusError {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+// 2. Core Fields Grid
+.fieldsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.inputGroup {
+  @include layout.flex(column, flex-start, stretch, 6px);
+}
+
+.inputGroupFull {
+  grid-column: 1 / -1;
+  @include layout.flex(column, flex-start, stretch, 6px);
+}
+
+.label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.input, .select {
+  background: var(--bg-input);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 9px 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 0 3px var(--accent-purple-glow);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+.platformGroup {
+  @include layout.flex(column, flex-start, stretch, 8px);
+}
+
+.platformPills {
+  @include layout.flex(row, flex-start, center, 8px);
+  flex-wrap: wrap;
+}
+
+.platPill {
+  background: var(--bg-input);
+  border: 1px solid var(--border-card);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: var(--text-primary);
+    border-color: var(--accent-purple);
+  }
+
+  &.platActive {
+    background: var(--accent-purple);
+    border-color: var(--accent-purple);
+    color: #ffffff;
+    font-weight: 600;
+  }
+}
+
+// 3. Markdown Editor Container
+.editorContainer {
+  @include layout.box(0, 1px solid var(--border-card), var(--radius-lg));
+  background: var(--bg-card);
+  overflow: hidden;
+  @include layout.flex(column, flex-start, stretch, 0);
+}
+
+.editorNav {
+  @include layout.flex(row, space-between, center, 12px);
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border-bottom: 1px solid var(--border-card);
+  flex-wrap: wrap;
+}
+
+.docTypeTabs {
+  @include layout.flex(row, flex-start, center, 6px);
+}
+
+.docTypeBtn {
+  background: transparent;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: var(--text-primary);
+  }
+
+  &.activeDoc {
+    color: var(--accent-purple);
+    background: var(--accent-purple-glow);
+  }
+}
+
+.viewToggle {
+  @include layout.flex(row, flex-end, center, 4px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  padding: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.viewBtn {
+  @include layout.flex(row, center, center, 4px);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: var(--text-primary);
+  }
+
+  &.activeView {
+    background: var(--accent-purple);
+    color: #ffffff;
+    font-weight: 600;
+  }
+}
+
+.editorToolbar {
+  @include layout.flex(row, flex-start, center, 4px);
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border-card);
+  background: var(--bg-card);
+}
+
+.toolBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 5px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 0;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--bg-input);
+    color: var(--accent-purple);
+  }
+}
+
+.editorTextarea {
+  width: 100%;
+  border: none;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 14px;
+  resize: vertical;
+  min-height: 160px;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.previewBox {
+  padding: 16px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--bg-card);
+}
+
+// 4. Automation & Bot Hook Box
+.automationBox {
+  @include layout.box(14px, 1px dashed var(--border-card), var(--radius-lg));
+  background: var(--bg-input);
+  @include layout.flex(column, flex-start, stretch, 10px);
+}
+
+.automationHeader {
+  @include layout.flex(row, flex-start, center, 10px);
+}
+
+.botIcon {
+  color: var(--accent-purple);
+  flex-shrink: 0;
+}
+
+.botTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.botDesc {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.botInputsRow {
+  display: grid;
+  grid-template-columns: 1fr 160px;
+  gap: 10px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Footer Row
+.footerRow {
+  @include layout.flex(row, flex-end, center, 12px);
+  padding-top: 10px;
+  border-top: 1px solid var(--border-card);
+}
+
+.cancelBtn {
+  background: transparent;
+  border: 1px solid var(--border-card);
+  color: var(--text-secondary);
+  padding: 9px 18px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-input);
+    color: var(--text-primary);
+  }
+}
+
+.submitBtn {
+  @include layout.flex(row, center, center, 8px);
+  background: var(--accent-purple);
+  border: none;
+  color: #ffffff;
+  padding: 10px 22px;
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--accent-purple-hover);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.successState {
+  @include layout.flex(column, center, center, 14px);
+  padding: 60px 24px;
+  text-align: center;
+
+  h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+}

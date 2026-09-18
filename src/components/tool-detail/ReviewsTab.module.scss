@@ -1,0 +1,355 @@
+@use '@/styles/modules/layout' as layout;
+
+.reviewsContainer {
+  @include layout.flex(column, flex-start, stretch, 20px);
+  @include layout.width(fill);
+}
+
+// 1. Summary Card
+.summaryCard {
+  @include layout.box(24px, 1px solid var(--border-card), var(--radius-lg));
+  background: var(--bg-card);
+  display: grid;
+  grid-template-columns: 180px 1fr auto;
+  gap: 24px;
+  align-items: center;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+.scoreCol {
+  @include layout.flex(column, center, center, 6px);
+  text-align: center;
+  border-right: 1px solid var(--border-card);
+  padding-right: 20px;
+
+  @media (max-width: 768px) {
+    border-right: none;
+    padding-right: 0;
+    border-bottom: 1px solid var(--border-card);
+    padding-bottom: 16px;
+  }
+}
+
+.averageScore {
+  font-size: 38px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.starsGroup {
+  @include layout.flex(row, center, center, 4px);
+}
+
+.totalCount {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.distCol {
+  @include layout.flex(column, center, stretch, 6px);
+}
+
+.distRow {
+  @include layout.flex(row, flex-start, center, 10px);
+}
+
+.distLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  width: 28px;
+  text-align: right;
+  font-weight: 600;
+}
+
+.barTrack {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-input);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: linear-gradient(90deg, #EAB308, #F59E0B);
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+.distCount {
+  font-size: 11px;
+  color: var(--text-muted);
+  width: 20px;
+}
+
+.actionCol {
+  @include layout.flex(row, center, center, 0);
+}
+
+.writeReviewBtn {
+  @include layout.flex(row, center, center, 8px);
+  padding: 10px 18px;
+  background: var(--accent-purple);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--accent-purple-hover);
+    transform: translateY(-1px);
+  }
+}
+
+// 2. Write Review Form
+.reviewForm {
+  @include layout.box(24px, 1px solid var(--border-card), var(--radius-lg));
+  background: var(--bg-card);
+  @include layout.flex(column, flex-start, stretch, 16px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.formTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.ratingSelectRow {
+  @include layout.flex(row, flex-start, center, 12px);
+}
+
+.formLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.starPickers {
+  @include layout.flex(row, flex-start, center, 4px);
+}
+
+.starBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  line-height: 0;
+  transition: transform 0.1s ease;
+
+  &:hover {
+    transform: scale(1.15);
+  }
+}
+
+.starPickedText {
+  font-size: 13px;
+  font-weight: 700;
+  color: #EAB308;
+}
+
+.inputGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.inputGroup {
+  @include layout.flex(column, flex-start, stretch, 6px);
+}
+
+.textInput, .textArea {
+  background: var(--bg-input);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13.5px;
+  padding: 10px 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 0 3px var(--accent-purple-glow);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+.textArea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.formActions {
+  @include layout.flex(row, flex-end, center, 12px);
+  margin-top: 4px;
+}
+
+.cancelBtn {
+  background: transparent;
+  border: 1px solid var(--border-card);
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-input);
+    color: var(--text-primary);
+  }
+}
+
+.submitBtn {
+  @include layout.flex(row, center, center, 8px);
+  background: var(--accent-purple);
+  border: none;
+  color: #ffffff;
+  padding: 9px 20px;
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--accent-purple-hover);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// 3. Reviews List
+.reviewsList {
+  @include layout.flex(column, flex-start, stretch, 14px);
+}
+
+.reviewCard {
+  @include layout.box(20px, 1px solid var(--border-card), var(--radius-lg));
+  background: var(--bg-card);
+  @include layout.flex(column, flex-start, stretch, 12px);
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--border-hover);
+  }
+}
+
+.revHeader {
+  @include layout.flex(row, space-between, flex-start, 12px);
+}
+
+.authorAvatar {
+  @include layout.square(38px);
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  @include layout.flex(row, center, center, 0);
+  flex-shrink: 0;
+}
+
+.authorMeta {
+  flex: 1;
+  @include layout.flex(column, center, flex-start, 2px);
+}
+
+.nameRow {
+  @include layout.flex(row, flex-start, center, 6px);
+}
+
+.authorName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.authorRole {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.revRight {
+  @include layout.flex(column, flex-end, flex-end, 4px);
+}
+
+.revStars {
+  @include layout.flex(row, flex-end, center, 2px);
+}
+
+.revDate {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.revContent {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.revFooter {
+  @include layout.flex(row, flex-start, center, 12px);
+  padding-top: 6px;
+}
+
+.helpfulBtn {
+  @include layout.flex(row, center, center, 6px);
+  background: var(--bg-input);
+  border: 1px solid var(--border-card);
+  color: var(--text-secondary);
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--accent-purple);
+    color: var(--accent-purple);
+  }
+
+  &.helpfulActive {
+    background: var(--accent-purple-glow);
+    border-color: var(--accent-purple);
+    color: var(--accent-purple);
+    font-weight: 600;
+  }
+}
+
+.emptyState {
+  @include layout.box(32px, 1px dashed var(--border-card), var(--radius-lg));
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}

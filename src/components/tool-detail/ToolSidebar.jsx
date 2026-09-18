@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { ExternalLink, Bookmark, Plus, Star, CheckCircle2, ChevronRight } from 'lucide-react';
+import { ExternalLink, Bookmark, Plus, Star, CheckCircle2, ChevronRight, Flag } from 'lucide-react';
+import ReportModal from './ReportModal';
 import styles from './ToolSidebar.module.scss';
 
 export default function ToolSidebar({ tool, onSelectTool }) {
   const [isSaved, setIsSaved] = useState(false);
   const [isCompared, setIsCompared] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   const ratingValue = tool.rating ? Number(tool.rating).toFixed(1) : '4.8';
   const rankValue = tool.rank || '#4';
@@ -127,7 +129,24 @@ export default function ToolSidebar({ tool, onSelectTool }) {
           ))}
         </div>
       </div>
+
+      {/* 4. Report Tool Action */}
+      <div className={styles.reportRow}>
+        <button
+          className={styles.reportBtn}
+          onClick={() => setIsReportOpen(true)}
+          title="Report inaccurate information or issues"
+        >
+          <Flag size={13} />
+          <span>Report this tool</span>
+        </button>
+      </div>
+
+      <ReportModal
+        tool={tool}
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+      />
     </aside>
   );
 }
-

@@ -62,54 +62,60 @@
 
 .visitWebsiteBtn {
   @include layout.width(fill);
-  @include layout.inline-flex(row, center, center, 8px);
-  height: 46px;
-  background: #7c3aed;
+  @include layout.box(
+    $padding: 13px 20px,
+    $border: none,
+    $radius: var(--radius-md)
+  );
+  background: var(--accent-purple);
   color: #ffffff;
   font-size: 14.5px;
-  font-weight: 600;
-  border-radius: var(--radius-md);
-  border: none;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   cursor: pointer;
+  @include layout.flex(row, center, center, 8px);
   text-decoration: none;
+  box-shadow: 0 4px 14px rgba(129, 140, 248, 0.35);
   transition: all var(--transition-fast);
+  margin-bottom: 12px;
 
   &:hover {
-    background: #8b5cf6;
+    background: var(--accent-purple-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+    box-shadow: 0 6px 18px rgba(129, 140, 248, 0.45);
   }
 }
 
 .secondaryActions {
   @include layout.width(fill);
   @include layout.flex(row, space-between, center, 10px);
-  margin-top: 12px;
+  margin-bottom: 20px;
 }
 
 .actionBtn {
-  @include layout.flex-item-fill;
-  @include layout.inline-flex(row, center, center, 6px);
-  height: 40px;
+  flex: 1;
+  @include layout.box(
+    $padding: 9px 12px,
+    $border: 1px solid var(--border-card),
+    $radius: var(--radius-md)
+  );
   background: var(--bg-input);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  font-size: 13.5px;
-  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
+  @include layout.flex(row, center, center, 6px);
   transition: all var(--transition-fast);
 
   &:hover {
-    background: var(--bg-input-hover);
-    border-color: var(--border-card-hover);
+    border-color: var(--border-hover);
     color: var(--text-primary);
   }
 
   &.active {
-    background: var(--primary-light);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: var(--accent-purple);
+    color: var(--accent-purple);
+    background: rgba(129, 140, 248, 0.1);
   }
 }
 
@@ -117,7 +123,7 @@
   @include layout.width(fill);
   height: 1px;
   background: var(--border-card);
-  margin: 20px 0 16px 0;
+  margin-bottom: 18px;
 }
 
 .metadataList {
@@ -128,76 +134,77 @@
 .metaRow {
   @include layout.width(fill);
   @include layout.flex(row, space-between, center);
-  font-size: 13.5px;
-
-  .metaKey {
-    color: var(--text-muted);
-  }
-
-  .metaVal {
-    color: var(--text-primary);
-    font-weight: 600;
-  }
 }
 
+.metaKey {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.metaVal {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+// 2. Creator Card
 .creatorCard {
   @include layout.width(fill);
-  @include layout.flex(row, start, center, 12px);
   @include layout.box(
     $padding: 14px 18px,
     $border: 1px solid var(--border-card),
-    $radius: var(--radius-md)
+    $radius: var(--radius-lg)
   );
   background: var(--bg-card);
   box-shadow: var(--shadow-card);
+  @include layout.flex(row, start, center, 14px);
   cursor: pointer;
   transition: all var(--transition-fast);
 
   &:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--border-card-hover);
-  }
-
-  .creatorAvatar {
-    @include layout.square(38px);
-    @include layout.flex(row, center, center);
-    border-radius: var(--radius-full);
-    background: #7c3aed;
-    color: #ffffff;
-    font-size: 13px;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-
-  .creatorInfo {
-    @include layout.flex-item-fill;
-    @include layout.flex(column, start, start, 2px);
-    min-width: 0;
-
-    .creatorLabel {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      color: var(--text-muted);
-    }
-
-    .creatorNameRow {
-      @include layout.flex(row, start, center, 6px);
-
-      .creatorName {
-        font-size: 13.5px;
-        font-weight: 700;
-        color: var(--text-primary);
-      }
-    }
-  }
-
-  .creatorChevron {
-    color: var(--text-muted);
-    flex-shrink: 0;
+    border-color: var(--border-hover);
   }
 }
 
+.creatorAvatar {
+  @include layout.square(38px);
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  @include layout.flex(row, center, center);
+  flex-shrink: 0;
+}
+
+.creatorInfo {
+  flex: 1;
+  @include layout.flex(column, start, start, 2px);
+}
+
+.creatorLabel {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.creatorNameRow {
+  @include layout.flex(row, start, center, 6px);
+}
+
+.creatorName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.creatorChevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+// 3. Similar Tools Card
 .similarTitle {
   font-size: 11px;
   font-weight: 700;
@@ -246,3 +253,26 @@
   }
 }
 
+// 4. Report Button Row
+.reportRow {
+  @include layout.width(fill);
+  @include layout.flex(row, center, center, 0);
+  margin-top: 4px;
+}
+
+.reportBtn {
+  @include layout.flex(row, center, center, 6px);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+  }
+}

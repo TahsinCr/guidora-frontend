@@ -4,6 +4,7 @@ import Footer from '@/components/layout/Footer';
 import InformationCard from '@/components/home/InformationCard';
 import ProductGrid from '@/components/home/ProductGrid';
 import ToolDialog from '@/components/tool-detail/ToolDialog';
+import SubmitToolModal from '@/components/submit/SubmitToolModal';
 import { getTools, getCategories } from '@/services/toolsService';
 
 export default function App() {
@@ -24,6 +25,9 @@ export default function App() {
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+
+  // Submit Modal state
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
 
   // Active tool for dialog - synchronized with URL
   const [activeToolId, setActiveToolId] = useState(() => {
@@ -138,6 +142,29 @@ export default function App() {
     setIsMobileFilterOpen(false);
   }, []);
 
+  const handleToolCreated = useCallback((newTool) => {
+    // Refresh tools list
+    getTools({
+      category: selectedCategory,
+      search,
+      sort,
+      filterVerified,
+      verification,
+      filterPricing,
+      platform,
+      page: 1,
+      limit: 12,
+    }).then((data) => {
+      setTools(data.items || []);
+      setTotalCount(data.total || 0);
+      setHasMore(data.hasMore || false);
+    });
+
+    if (newTool?.id) {
+      handleOpenTool(newTool.id);
+    }
+  }, [selectedCategory, search, sort, filterVerified, verification, filterPricing, platform, handleOpenTool]);
+
   return (
     <div className="app-container">
       <Header
@@ -148,6 +175,7 @@ export default function App() {
           handleCloseTool();
           setSelectedCategory(catId);
         }}
+        onSubmitTool={() => setIsSubmitModalOpen(true)}
       />
 
       <main className="main-content">
@@ -196,7 +224,12 @@ export default function App() {
       </main>
 
       <Footer />
+
+      <SubmitToolModal
+        isOpen={isSubmitModalOpen}
+        onClose={() => setIsSubmitModalOpen(false)}
+        onToolCreated={handleToolCreated}
+      />
     </div>
   );
 }
-

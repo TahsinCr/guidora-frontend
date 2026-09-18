@@ -19,6 +19,10 @@ Bu proje şunları sağlar:
 - kategori, onay durumu, platform ve fiyatlandırma modeline göre çoklu filtreleme;
 - dinamik sıralama (Alaka Düzeyi, En Yüksek Puan, Popülerlik, Yenilik) ve metin tabanlı arama;
 - Figma tasarım şablonlarına birebir sadık iki sütunlu araç detay ekranı;
+- dokümantasyon ve sürüm notları için yerel Markdown (`marked`) render desteği;
+- GitHub reposundan otomatik veri çekebilen (yıldız, lisans, etiketler, README) ve çift modlu Markdown editörüne sahip "Araç Ekleme" ekranı;
+- puan kartları, yıldız seçici ve faydalı oylaması sunan etkileşimli topluluk yorumları sistemi;
+- içerik moderasyonu ve sorun bildirimi için özel raporlama modalı;
 - kullanıcının kaydırma hareketini önceden algılayan (`IntersectionObserver`) sonsuz kaydırma akışı;
 - anlamsal CSS değişkenleri (custom properties) üzerine kurulu tam çift tema (Karanlık ve Açık) desteği;
 - yer imlerine eklenebilir ve tarayıcı geçmişiyle uyumlu URL sorgu senkronizasyonu (`?tool=<id>`);
@@ -38,12 +42,13 @@ Pratik sınır şudur: istemci tarafı sunum, yerleşim matematiği, tema deği�
 Sunum Katmanı (React 18 Arayüzü)
 ├── Kabuk Düzeni       Header, Footer, Dinamik Breadcrumb
 ├── Katalog Görünümü   Hero vitrini, kategori hapları, sıralama çubuğu ve kart ızgarası
-└── Detay Modalı       Figma 2 kolonlu görünüm, sekmeler, statü metrikleri ve yan panel
+├── Detay Modalı       Figma 2 kolonlu görünüm, sekmeler, statü metrikleri ve yan panel
+└── Ekleme & Moderasyon Araç Ekleme modalı, GitHub entegrasyonu, Markdown editörü ve Raporlama
              │
              ▼
 Uygulama Durumu ve Servisler
 ├── Tema Yönetimi      Dark / Light mod ve localStorage senkronizasyonu
-├── Servis Katmanı     toolsService soyutlaması (mock veri, filtreleme ve infinite scroll)
+├── Servis Katmanı     toolsService soyutlaması (mock veri, filtreleme, yorumlar ve GitHub)
 └── URL Senkronizasyonu Arama parametreleri ile durum yönetimi (?tool=...)
              │
              ▼
@@ -56,7 +61,7 @@ Bağımlılıklar yukarıdan aşağıya doğru akar. Arayüz bileşenleri görse
 
 ## Proje Yapısı
 
-- `src/components/`: Sorumluluk alanlarına göre ayrılmış modüler arayüz bileşenleri (`layout`, `home` katalog akışı ve `tool-detail` detay görünümü).
+- `src/components/`: Sorumluluk alanlarına göre ayrılmış modüler arayüz bileşenleri (`layout`, `home`, `tool-detail`, `submit` ve `common` markdown renderer).
 - `src/services/`: Asenkron servis soyutlaması (`toolsService`) ve küratörlü veri seti (`mockData`).
 - `src/context/`: Tema tercihlerini ve `localStorage` senkronizasyonunu yöneten React context yapısı (`ThemeContext`).
 - `src/styles/`: Semantik tema değişkenlerini (`base/`) ve Figma yerleşim kurallarını (`modules/`) içeren merkezi SCSS sistemi.
@@ -105,7 +110,7 @@ Akış, `IntersectionObserver` ile parça parça yüklenir:
 
 Temalar, kök `<html>` etiketi üzerindeki `data-theme` niteliği ile değiştirilir:
 
-- **Karanlık Mod**: Koyu lacivert zemin (`#070c18`, `#0d1527`), zarif kenarlıklar (`rgba(255, 255, 255, 0.08)`) ve mor vurgular (`#818cf8`).
+- **Karanlık Mod**: Koyu lacivert zemin (`#070c18`, `#0d1527`), zarif kenarlıklar (`rgba(255, 255, 255, 0.08)`) ve mor vurgular (`#8a38f5`).
 - **Açık Mod**: Temiz arka plan (`#f8fafc`), yükseltilmiş beyaz kart yüzeyleri (`#ffffff`), belirgin kenarlıklar (`#e2e8f0`) ve koyu metin (`#0f172a`), 15:1 kontrast oranını korur.
 - Seçimler `localStorage` üzerinde saklanarak sonraki ziyaretlerde korunur.
 

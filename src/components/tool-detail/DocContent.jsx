@@ -1,8 +1,10 @@
 import React from 'react';
 import { FileText, Tag, CheckCircle2 } from 'lucide-react';
+import MarkdownRenderer from '@/components/common/MarkdownRenderer';
+import ReviewsTab from './ReviewsTab';
 import styles from './DocContent.module.scss';
 
-export default function DocContent({ tool, activeTab }) {
+export default function DocContent({ tool, activeTab, onReviewCountChange }) {
   const overviewLead = tool.overviewText?.lead || `${tool.name} is a cutting-edge platform designed to bridge the gap between creative ideation and final production. Unlike standard LLM wrappers, ${tool.name} provides a context-aware workspace where your code repositories, design assets, and marketing guidelines live together.`;
   const overviewDetail = tool.overviewText?.detail || `Whether you are a developer looking to auto-generate unit tests or a marketer crafting a month's worth of social content, our fine-tuned models adapt to your specific brand voice and coding standards.`;
   const keyFeatures = tool.keyFeatures || [
@@ -41,12 +43,16 @@ export default function DocContent({ tool, activeTab }) {
           <FileText size={18} className={styles.headerIcon} />
           <span>Release Changelog</span>
         </h2>
-        <div className={styles.changelogItem}>
-          <span className={styles.versionPill}>{tool.version || 'v2.4.1'}</span>
-          <p className={styles.paragraph}>
-            Added multi-modal image-to-code pipelines, expanded memory window to 100k tokens, and improved collaborative sync performance.
-          </p>
-        </div>
+        {tool.changelog ? (
+          <MarkdownRenderer content={tool.changelog} />
+        ) : (
+          <div className={styles.changelogItem}>
+            <span className={styles.versionPill}>{tool.version || 'v2.4.1'}</span>
+            <p className={styles.paragraph}>
+              Added multi-modal image-to-code pipelines, expanded memory window to 100k tokens, and improved collaborative sync performance.
+            </p>
+          </div>
+        )}
       </div>
     );
   }
@@ -56,11 +62,9 @@ export default function DocContent({ tool, activeTab }) {
       <div className={styles.contentCard}>
         <h2 className={styles.cardHeader}>
           <FileText size={18} className={styles.headerIcon} />
-          <span>Community Reviews ({tool.reviewCount || '128'})</span>
+          <span>Community Reviews</span>
         </h2>
-        <p className={styles.paragraph}>
-          Rated <strong>{tool.rating || 4.8} / 5.0</strong> by 128 verified AI practitioners and engineers.
-        </p>
+        <ReviewsTab toolId={tool.id} onReviewCountChange={onReviewCountChange} />
       </div>
     );
   }
@@ -87,32 +91,38 @@ export default function DocContent({ tool, activeTab }) {
   // Default: 'about' / About & Details
   return (
     <div className={styles.cardsContainer}>
-      {/* 1. Tool Overview Card */}
+      {/* 1. Tool Overview / Readme Card */}
       <div className={styles.contentCard}>
         <h2 className={styles.cardHeader}>
           <FileText size={18} className={styles.headerIcon} />
-          <span>Tool Overview</span>
+          <span>{tool.readme ? 'Documentation & Overview' : 'Tool Overview'}</span>
         </h2>
 
-        <p className={styles.paragraph}>
-          {overviewLead}
-        </p>
+        {tool.readme ? (
+          <MarkdownRenderer content={tool.readme} />
+        ) : (
+          <>
+            <p className={styles.paragraph}>
+              {overviewLead}
+            </p>
 
-        <p className={styles.paragraph}>
-          {overviewDetail}
-        </p>
+            <p className={styles.paragraph}>
+              {overviewDetail}
+            </p>
 
-        <div className={styles.featuresSection}>
-          <h3 className={styles.subHeading}>Key Features</h3>
-          <div className={styles.bulletList}>
-            {keyFeatures.map((feat, idx) => (
-              <div key={idx} className={styles.bulletItem}>
-                <span className={styles.bulletDot}>•</span>
-                <span>{feat}</span>
+            <div className={styles.featuresSection}>
+              <h3 className={styles.subHeading}>Key Features</h3>
+              <div className={styles.bulletList}>
+                {keyFeatures.map((feat, idx) => (
+                  <div key={idx} className={styles.bulletItem}>
+                    <span className={styles.bulletDot}>•</span>
+                    <span>{feat}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* 2. Classifications & Tags Card */}
@@ -136,4 +146,3 @@ export default function DocContent({ tool, activeTab }) {
     </div>
   );
 }
-

@@ -3,7 +3,13 @@ import { useTheme } from '@/context/ThemeContext';
 import { Plus, Bell, Sun, Moon, Sparkles, ChevronRight, Search } from 'lucide-react';
 import styles from './Header.module.scss';
 
-export default function Header({ onResetSearch, activeTool, onBackToDirectory, onSelectCategory }) {
+export default function Header({
+  onResetSearch,
+  activeTool,
+  onBackToDirectory,
+  onSelectCategory,
+  onSubmitTool,
+}) {
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -45,6 +51,16 @@ export default function Header({ onResetSearch, activeTool, onBackToDirectory, o
               >
                 <Search size={18} />
               </button>
+
+              <button
+                className={styles.submitBtn}
+                onClick={onSubmitTool}
+                title="Submit a new tool"
+              >
+                <Plus size={15} />
+                <span className={styles.btnText}>Submit Tool</span>
+              </button>
+
               <button
                 className={styles.iconBtn}
                 onClick={toggleTheme}
@@ -58,7 +74,11 @@ export default function Header({ onResetSearch, activeTool, onBackToDirectory, o
             </>
           ) : (
             <>
-              <button className={styles.submitBtn}>
+              <button
+                className={styles.submitBtn}
+                onClick={onSubmitTool}
+                title="Submit a new tool"
+              >
                 <Plus size={15} />
                 <span className={styles.btnText}>Submit Tool</span>
               </button>

@@ -19,6 +19,10 @@ The application provides:
 - multi-criteria filtering across categories, verification levels, platforms, and pricing models;
 - dynamic sorting (Relevance, Highest Rated, Most Popular, Newest) and text search;
 - a two-column tool detail view matching Figma design specifications;
+- native Markdown rendering (`marked`) for documentation and release changelogs;
+- a "Submit Tool" screen with GitHub repository auto-fetching (stars, license, topics, README) and a dual-mode Markdown editor;
+- an interactive community reviews system with rating breakdowns, star pickers, and helpful upvoting;
+- a content moderation and issue reporting workflow;
 - an infinite scroll feed powered by native `IntersectionObserver` with advance prefetching;
 - a complete dual-theme engine (Dark and Light) built on semantic CSS custom properties;
 - URL query parameter synchronization (`?tool=<id>`) for bookmarkable views and browser history navigation;
@@ -38,12 +42,13 @@ A useful boundary is: client-side presentation, layout math, theme tokens, and i
 Presentation Layer (React 18 UI)
 ├── Layout Shell      Header, Footer, Dynamic Breadcrumbs
 ├── Catalog Views     Hero banner, category pills, sorter bar & product grid
-└── Detail Overlays   Figma 2-column modal, tabs, status metrics & creator sidebar
+├── Detail Overlays   Figma 2-column modal, tabs, status metrics & creator sidebar
+└── Submission & QA   Submit Tool modal, GitHub auto-sync, Markdown editor & Report modal
              │
              ▼
 Application State & Services
 ├── Theme Context     Dark / Light persistence via localStorage & CSS tokens
-├── Services          toolsService abstraction (mock data, filtering & infinite scroll)
+├── Services          toolsService abstraction (mock data, filtering, reviews & GitHub fetch)
 └── URL Routing       History sync via search parameters (?tool=...)
              │
              ▼
@@ -56,7 +61,7 @@ Dependencies flow downward. UI components consume design tokens and layout mixin
 
 ## Project Structure
 
-- `src/components/`: Modular UI components organized by domain (`layout`, `home` catalog feed, and `tool-detail` view).
+- `src/components/`: Modular UI components organized by domain (`layout`, `home`, `tool-detail`, `submit`, and `common` markdown renderer).
 - `src/services/`: Asynchronous service abstraction (`toolsService`) and curated datasets (`mockData`).
 - `src/context/`: Global application state, including theme persistence (`ThemeContext`).
 - `src/styles/`: Centralized SCSS system with semantic theme tokens (`base/`) and layout mixins (`modules/`).
@@ -105,7 +110,7 @@ The feed loads tools incrementally via `IntersectionObserver`:
 
 Themes are toggled via the `data-theme` attribute on the root `<html>` element:
 
-- **Dark Mode**: Slate-to-navy background (`#070c18`, `#0d1527`), subtle borders (`rgba(255, 255, 255, 0.08)`), and violet accents (`#818cf8`).
+- **Dark Mode**: Slate-to-navy background (`#070c18`, `#0d1527`), subtle borders (`rgba(255, 255, 255, 0.08)`), and violet accents (`#8a38f5`).
 - **Light Mode**: Clean background (`#f8fafc`), elevated card surfaces (`#ffffff`), defined borders (`#e2e8f0`), and slate-900 typography (`#0f172a`), maintaining contrast ratios above 15:1.
 - Selections persist automatically in `localStorage`.
 
