@@ -38,26 +38,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- **Full-Page Submit Tool Studio**:
+  - Transformed the submit flow from a popup modal into a full-page SPA view (`?view=submit`) with client-side URL synchronization and zero page reload.
+  - Added breadcrumb bar (`Directory > Submit AI Platform & Tool`) with return navigation.
+- **Hierarchical Tag Taxonomy & TagPicker**:
+  - Implemented `src/components/submit/TagPicker.jsx` matching user reference mockup:
+    - 2-3 lines scrollable input container for selected `#` tags with instant `×` removal.
+    - Alphabetical (A-Z) index sections and Category grouping view.
+    - Mutual exclusion (`only` rule) enforcement: displays inline conflict explanation banner directly beneath the tag input if user selects an incompatible single-choice tag.
+- **Curated `@` Category Taxonomy**:
+  - Formalized single-category structure with `@` prefix in `mockData.js` and `toolsService.js`.
+- **Responsive Category Carousel**:
+  - Created `src/components/home/CategorySlider.jsx` with `<` and `>` arrow navigation buttons matching user design mockup 1 for viewports `<= 850px`.
+  - Configured left FilterBar to hide completely (`display: none`) at `<= 1080px`, expanding catalog grid to full width.
+- **Report Modal Redesign**:
+  - Redesigned `src/components/tool-detail/ReportModal.jsx` into modern interactive card selector with icons, glowing active states, target tool metadata preview, and character counter.
+
+### Changed
+
 - **Theme Variable Tokens**:
   - Added `--accent-purple`, `--accent-purple-hover`, and `--accent-purple-glow` tokens to `:root` in `_theme.scss` for consistent vibrant violet CTAs across both dark and light themes.
 - **Header Actions**:
-  - Enabled the "Submit Tool" button across both catalog and tool detail navigation states.
+  - Enabled the "Submit Tool" button across all view states with seamless SPA view switching.
 - **Compact Layouts & Responsive Sorter**:
-  - SorterBar responsive flex-wrapping at 1024px with zero dropdown clipping.
-  - Compact 210px filter sidebar matching top card rows.
-
-- **Submit Tool Studio Redesign**:
-  - Rebuilt `SubmitToolModal` into a spacious 2-column studio modal (`width: min(1140px, 95vw); height: min(860px, 90vh)`).
-  - Left column: Structured tool specifications (name, category, tagline, website, pricing, creator, license, platform pills, and bot hook configuration).
-  - Right column: Full-height Markdown studio with document toggle (`README` vs `Changelog`), formatting toolbar, write/preview tabs, and monospace syntax editor.
+  - SorterBar responsive flex-wrapping at 1080px with zero dropdown clipping.
 
 ### Fixed
 
-- **Submit Tool Modal Width & Text Squeezing**:
-  - Resolved an issue where SCSS mixin alignment caused child form inputs to collapse into narrow vertical slivers.
-  - Form sections now expand to 100% column width with crisp input borders, full responsive wrapping, and high contrast across Dark and Light themes.
-- **Light Mode Contrast & CTA Visibility**:
-  - Fixed primary button and action visibility in Light Mode ensuring maximum WCAG AA contrast.
-  - Resolved white-on-white text issues on search inputs, dropdown menus, and detail cards.
-- **Dropdown Clipping**:
-  - Eliminated horizontal scroll overflow clipping open dropdown menus on mobile viewports.
+- **Tool Detail Scaling & Right-Side Blank Space**:
+  - Fixed column wrap in `ToolDialog.module.scss` and `ToolSidebar.module.scss` at `<= 1024px`, ensuring both columns take 100% width with zero blank gap.
+- **Tab Spacing Consistency**:
+  - Removed rogue `margin-top: 20px` in `DocContent.module.scss` to ensure identical 20px spacing beneath `StatusCardGroup` across `About`, `Gallery`, `Changelog`, `Reviews`, and `Alternatives` tabs.
+- **Reviews Tab Layout & Auth Readiness**:
+  - Resolved flex/width collapse in `ReviewsTab.module.scss`, added full-width card layout, star rating hover effects, and simulated auth badge ("Posting as TahsinCr (Verified Member)").
+

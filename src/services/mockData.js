@@ -1,11 +1,106 @@
 export const CATEGORIES = [
-  { id: 'all', name: 'All Tools', count: 64 },
-  { id: 'generative-art', name: 'Generative Art', count: 12 },
-  { id: 'developer-tools', name: 'Coding Assistants', count: 14 },
-  { id: 'design-ui', name: 'Image Generation', count: 12 },
-  { id: 'llms-ai', name: 'Chatbots', count: 14 },
-  { id: 'video-motion', name: 'Video Generation', count: 12 },
+  { id: 'all', name: 'All Tools', prefix: '@', count: 64, isPopular: true },
+  { id: 'generative-art', name: 'Generative Art', prefix: '@', count: 14, color: '#A855F7', isPopular: true },
+  { id: 'developer-tools', name: 'Coding Assistants', prefix: '@', count: 16, color: '#10B981', isPopular: true },
+  { id: 'design-ui', name: 'Image Generation', prefix: '@', count: 12, color: '#06B6D4', isPopular: true },
+  { id: 'llms-ai', name: 'Chatbots', prefix: '@', count: 15, color: '#EAB308', isPopular: true },
+  { id: 'video-motion', name: 'Video Generation', prefix: '@', count: 12, color: '#EC4899', isPopular: true },
+  { id: 'data-science', name: 'Data Science', prefix: '@', count: 10, color: '#3B82F6', isPopular: false },
+  { id: 'audio-music', name: 'Audio & Music', prefix: '@', count: 8, color: '#F97316', isPopular: false },
+  { id: 'productivity', name: 'Productivity', prefix: '@', count: 11, color: '#8B5CF6', isPopular: false },
+  { id: '3d-motion', name: '3D & Motion', prefix: '@', count: 7, color: '#14B8A6', isPopular: false },
 ];
+
+export const TAG_CATEGORIES = [
+  {
+    id: 'pricing',
+    name: 'Pricing & Licensing',
+    description: 'Financial model and access terms (Single choice)',
+    isSingleSelect: true,
+    tags: [
+      { id: 'free', name: 'Free', only: true },
+      { id: 'freemium', name: 'Freemium', only: true },
+      { id: 'paid', name: 'Paid / Enterprise', only: true },
+      { id: 'open-source', name: 'Open Source', only: true },
+      { id: 'free-trial', name: 'Free Trial', only: true },
+    ],
+  },
+  {
+    id: 'platform',
+    name: 'Platform & Environment',
+    description: 'Supported client environments and targets',
+    isSingleSelect: false,
+    tags: [
+      { id: 'web', name: 'Web' },
+      { id: 'macos', name: 'macOS' },
+      { id: 'windows', name: 'Windows' },
+      { id: 'linux', name: 'Linux' },
+      { id: 'ios', name: 'iOS' },
+      { id: 'android', name: 'Android' },
+      { id: 'cli', name: 'CLI' },
+      { id: 'api', name: 'API' },
+      { id: 'extension', name: 'Extension' },
+      { id: 'docker', name: 'Docker' },
+      { id: 'wsl', name: 'WSL' },
+    ],
+  },
+  {
+    id: 'capabilities',
+    name: 'Capabilities & Architecture',
+    description: 'Technical features, model modality, and integrations',
+    isSingleSelect: false,
+    tags: [
+      { id: 'interface', name: 'Interface' },
+      { id: 'uiux', name: 'UIUX' },
+      { id: 'llm', name: 'LLM' },
+      { id: 'text-to-image', name: 'Text to Image' },
+      { id: 'image-to-video', name: 'Image to Video' },
+      { id: 'code-gen', name: 'Code Generation' },
+      { id: 'voice-synthesis', name: 'Voice Synthesis' },
+      { id: 'agents', name: 'Autonomous Agents' },
+      { id: 'rag', name: 'RAG' },
+      { id: 'fine-tuning', name: 'Fine Tuning' },
+      { id: 'multimodal', name: 'Multimodal' },
+    ],
+  },
+  {
+    id: 'deployment',
+    name: 'Deployment & Hosting',
+    description: 'Infrastructure and execution methods',
+    isSingleSelect: false,
+    tags: [
+      { id: 'cloud', name: 'Cloud SaaS' },
+      { id: 'self-hosted', name: 'Self Hosted' },
+      { id: 'offline-local', name: 'Offline Local' },
+      { id: 'serverless', name: 'Serverless' },
+      { id: 'edge', name: 'Edge Compute' },
+    ],
+  },
+  {
+    id: 'license',
+    name: 'Software License',
+    description: 'Source code and distribution rights (Single choice)',
+    isSingleSelect: true,
+    tags: [
+      { id: 'mit', name: 'MIT License', only: true },
+      { id: 'apache-2', name: 'Apache 2.0', only: true },
+      { id: 'gpl-3', name: 'GPL v3', only: true },
+      { id: 'bsd', name: 'BSD', only: true },
+      { id: 'proprietary', name: 'Proprietary', only: true },
+    ],
+  },
+];
+
+export const ALL_TAGS = TAG_CATEGORIES.flatMap((cat) =>
+  cat.tags.map((t) => ({
+    ...t,
+    tagCategoryId: cat.id,
+    tagCategoryName: cat.name,
+    isCategorySingleSelect: cat.isSingleSelect,
+    display: `#${t.name}`,
+  }))
+).sort((a, b) => a.name.localeCompare(b.name));
+
 
 export const TOOLS_DATA = [
   // --- 1 to 8: Core Featured Tools ---

@@ -120,7 +120,13 @@ export default function ReviewsTab({ toolId, onReviewCountChange }) {
       {/* 2. Write Review Form */}
       {isWriting && (
         <form className={styles.reviewForm} onSubmit={handleSubmit}>
-          <h3 className={styles.formTitle}>Share Your Experience</h3>
+          <div className={styles.formHeader}>
+            <h3 className={styles.formTitle}>Share Your Experience</h3>
+            <div className={styles.authBadge}>
+              <CheckCircle2 size={13} />
+              <span>Posting as TahsinCr (Verified Member)</span>
+            </div>
+          </div>
 
           <div className={styles.ratingSelectRow}>
             <span className={styles.formLabel}>Your Rating:</span>
@@ -179,6 +185,10 @@ export default function ReviewsTab({ toolId, onReviewCountChange }) {
               onChange={(e) => setContent(e.target.value)}
               required
             />
+          </div>
+
+          <div className={styles.authNotice}>
+            ℹ️ <strong>Backend Auth Readiness</strong>: Preview session active. Non-registered user restrictions will be enforced once the user authentication service is connected.
           </div>
 
           <div className={styles.formActions}>

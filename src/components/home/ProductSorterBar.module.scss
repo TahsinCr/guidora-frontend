@@ -65,7 +65,7 @@
     }
   }
 
-  @media (max-width: 1024px) {
+  @media (max-width: 1080px) {
     max-width: 100%;
     width: 100%;
     flex: none;
@@ -76,7 +76,7 @@
   @include layout.flex(row, end, center, 10px);
   position: relative;
 
-  @media (max-width: 1024px) {
+  @media (max-width: 1080px) {
     justify-content: flex-start;
     flex-wrap: wrap;
     width: 100%;
@@ -107,7 +107,7 @@
     color: var(--text-primary);
   }
 
-  @media (max-width: 1024px) {
+  @media (max-width: 1080px) {
     display: inline-flex;
   }
 }

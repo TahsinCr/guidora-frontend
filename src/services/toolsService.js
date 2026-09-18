@@ -1,4 +1,4 @@
-import { TOOLS_DATA, CATEGORIES } from './mockData';
+import { TOOLS_DATA, CATEGORIES, TAG_CATEGORIES, ALL_TAGS } from './mockData';
 
 // Simulated artificial network latency for realistic async behavior (80ms)
 const simulateDelay = (ms = 80) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -172,9 +172,10 @@ export async function addTool(toolData) {
   const newTool = {
     id,
     name: toolData.name,
-    category: categoryObj.label,
+    category: categoryObj.name || categoryObj.label || 'Generative Art',
     categoryId: categoryObj.id,
-    tag: toolData.tag || 'Developer Tool',
+    tag: toolData.tag || (toolData.tags?.[0]?.name || 'Developer Tool'),
+    tags: toolData.tags || [],
     pricing: toolData.pricing || 'Freemium',
     description: toolData.description,
     websiteUrl: toolData.websiteUrl || '',
@@ -417,4 +418,76 @@ export async function submitReport(toolId, reportData) {
 export async function getCategories() {
   await simulateDelay(40);
   return [...CATEGORIES];
+}
+
+/**
+ * Fetch popular categories
+ */
+export async function getPopularCategories() {
+  await simulateDelay(30);
+  return CATEGORIES.filter((c) => c.isPopular);
+}
+
+/**
+ * Fetch hierarchical tag categories
+ */
+export async function getTagCategories() {
+  await simulateDelay(40);
+  return [...TAG_CATEGORIES];
+}
+
+/**
+ * Fetch all available tags alphabetically
+ */
+export async function getAllTags() {
+  await simulateDelay(30);
+  return [...ALL_TAGS];
+}
+
+/**
+ * Validates whether a tag can be added to the tool's selected tags
+ * according to category single-select and tag 'only' constraints.
+ *
+ * @param {Array} currentTags - Array of currently selected tag objects or IDs
+ * @param {Object} tagToAdd - The tag object user wants to add
+ * @returns {Object} { valid: boolean, reason?: string }
+ */
+export function validateTagSelection(currentTags = [], tagToAdd) {
+  if (!tagToAdd) return { valid: false, reason: 'Invalid tag' };
+
+  // If tag is already selected, it can always be clicked to remove it
+  const isAlreadySelected = currentTags.some(
+    (t) => (typeof t === 'string' ? t === tagToAdd.id : t.id === tagToAdd.id)
+  );
+  if (isAlreadySelected) {
+    return { valid: true, isRemoval: true };
+  }
+
+  // Check if tag is restricted by 'only' or its category is isSingleSelect
+  const isSingle = tagToAdd.only || tagToAdd.isCategorySingleSelect;
+  if (!isSingle) {
+    return { valid: true };
+  }
+
+  // Check if any tag from the same category is already selected
+  const conflict = currentTags.find((t) => {
+    const existingCatId = typeof t === 'string'
+      ? ALL_TAGS.find((at) => at.id === t)?.tagCategoryId
+      : t.tagCategoryId;
+    return existingCatId === tagToAdd.tagCategoryId;
+  });
+
+  if (conflict) {
+    const existingName = typeof conflict === 'string'
+      ? ALL_TAGS.find((at) => at.id === conflict)?.name || conflict
+      : conflict.name;
+    const catName = tagToAdd.tagCategoryName || 'this category';
+
+    return {
+      valid: false,
+      reason: `Only one tag from "${catName}" can be selected (already selected: #${existingName}). Remove it first to switch.`,
+    };
+  }
+
+  return { valid: true };
 }

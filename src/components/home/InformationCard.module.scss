@@ -1,9 +1,11 @@
 @use '@/styles/modules/layout' as layout;
 
 .heroContainer {
-  @include layout.width(fill);
-  @include layout.flex(column, center, center, 20px);
-  padding: 40px 20px 20px 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px 10px 20px;
   position: relative;
   text-align: center;
 
@@ -21,9 +23,29 @@
     z-index: 0;
   }
 
-  @media (max-width: 768px) {
-    padding: 28px 12px 14px 12px;
-    gap: 14px;
+  @media (max-width: 850px) {
+    padding: 16px 12px 4px 12px;
+  }
+}
+
+.desktopHero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+
+  @media (max-width: 850px) {
+    display: none;
+  }
+}
+
+.mobileSliderRow {
+  display: none;
+  width: 100%;
+
+  @media (max-width: 850px) {
+    display: flex;
   }
 }
 
@@ -43,10 +65,6 @@
   @media (max-width: 900px) {
     font-size: 34px;
   }
-
-  @media (max-width: 640px) {
-    font-size: 26px;
-  }
 }
 
 .description {
@@ -56,33 +74,29 @@
   line-height: 1.6;
   position: relative;
   z-index: 1;
-
-  @media (max-width: 640px) {
-    font-size: 14px;
-  }
 }
 
 .pillsNav {
-  @include layout.flex(row, center, center, 12px);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   flex-wrap: wrap;
   max-width: 100%;
   margin-top: 12px;
   position: relative;
   z-index: 1;
-
-  @media (max-width: 640px) {
-    gap: 8px;
-  }
 }
 
 .categoryPill {
-  @include layout.inline-flex(row, center, center, 8px);
-  @include layout.box(
-    $padding: 8px 18px,
-    $border: 1px solid var(--border-card),
-    $radius: var(--radius-full)
-  );
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: var(--radius-full);
   background: var(--bg-card);
+  border: 1px solid var(--border-card);
   color: var(--text-secondary);
   font-size: 13.5px;
   font-weight: 500;
@@ -99,15 +113,21 @@
   }
 
   &.active {
-    background: var(--primary-light);
-    color: var(--primary-color);
-    border-color: var(--primary-color);
-    box-shadow: 0 0 16px var(--primary-glow);
+    background: var(--pill-color);
+    border-color: var(--pill-color);
+    color: #ffffff;
+    box-shadow: 0 0 14px var(--pill-border);
     font-weight: 600;
-  }
 
-  @media (max-width: 640px) {
-    padding: 6px 14px;
-    font-size: 12.5px;
+    .pillDot {
+      background-color: #ffffff !important;
+    }
   }
+}
+
+.pillDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }

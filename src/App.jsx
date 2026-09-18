@@ -4,7 +4,7 @@ import Footer from '@/components/layout/Footer';
 import InformationCard from '@/components/home/InformationCard';
 import ProductGrid from '@/components/home/ProductGrid';
 import ToolDialog from '@/components/tool-detail/ToolDialog';
-import SubmitToolModal from '@/components/submit/SubmitToolModal';
+import SubmitToolPage from '@/components/submit/SubmitToolPage';
 import { getTools, getCategories } from '@/services/toolsService';
 
 export default function App() {
@@ -26,10 +26,13 @@ export default function App() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Submit Modal state
-  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  // Full-page Submit Tool view state synchronized with URL (?view=submit)
+  const [isSubmitView, setIsSubmitView] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('view') === 'submit';
+  });
 
-  // Active tool for dialog - synchronized with URL
+  // Active tool for detail view - synchronized with URL (?tool=id)
   const [activeToolId, setActiveToolId] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('tool') || null;
@@ -97,12 +100,14 @@ export default function App() {
       });
   }, [page, hasMore, isLoadingMore, selectedCategory, search, sort, filterVerified, verification, filterPricing, platform]);
 
-  // Handle URL sync and browser back/forward buttons
+  // Handle URL sync and browser back/forward buttons (no page reload)
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const tool = params.get('tool');
+      const view = params.get('view');
       setActiveToolId(tool || null);
+      setIsSubmitView(view === 'submit');
       if (!tool) setActiveToolData(null);
     };
 
@@ -111,25 +116,41 @@ export default function App() {
   }, []);
 
   const handleOpenTool = useCallback((toolId) => {
+    setIsSubmitView(false);
     setActiveToolId(toolId);
     const url = new URL(window.location.href);
+    url.searchParams.delete('view');
     url.searchParams.set('tool', toolId);
     window.history.pushState({ toolId }, '', url.toString());
+  }, []);
+
+  const handleOpenSubmit = useCallback(() => {
+    setActiveToolId(null);
+    setActiveToolData(null);
+    setIsSubmitView(true);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('tool');
+    url.searchParams.set('view', 'submit');
+    window.history.pushState({ view: 'submit' }, '', url.toString());
   }, []);
 
   const handleCloseTool = useCallback(() => {
     setActiveToolId(null);
     setActiveToolData(null);
+    setIsSubmitView(false);
     const url = new URL(window.location.href);
     url.searchParams.delete('tool');
+    url.searchParams.delete('view');
     window.history.pushState({}, '', url.toString());
   }, []);
 
   const handleResetFilters = useCallback(() => {
     setActiveToolId(null);
     setActiveToolData(null);
+    setIsSubmitView(false);
     const url = new URL(window.location.href);
     url.searchParams.delete('tool');
+    url.searchParams.delete('view');
     window.history.pushState({}, '', url.toString());
 
     setSelectedCategory('all');
@@ -162,8 +183,10 @@ export default function App() {
 
     if (newTool?.id) {
       handleOpenTool(newTool.id);
+    } else {
+      handleCloseTool();
     }
-  }, [selectedCategory, search, sort, filterVerified, verification, filterPricing, platform, handleOpenTool]);
+  }, [selectedCategory, search, sort, filterVerified, verification, filterPricing, platform, handleOpenTool, handleCloseTool]);
 
   return (
     <div className="app-container">
@@ -175,11 +198,16 @@ export default function App() {
           handleCloseTool();
           setSelectedCategory(catId);
         }}
-        onSubmitTool={() => setIsSubmitModalOpen(true)}
+        onSubmitTool={handleOpenSubmit}
       />
 
       <main className="main-content">
-        {activeToolId ? (
+        {isSubmitView ? (
+          <SubmitToolPage
+            onBack={handleCloseTool}
+            onToolCreated={handleToolCreated}
+          />
+        ) : activeToolId ? (
           <ToolDialog
             toolId={activeToolId}
             onClose={handleCloseTool}
@@ -224,12 +252,6 @@ export default function App() {
       </main>
 
       <Footer />
-
-      <SubmitToolModal
-        isOpen={isSubmitModalOpen}
-        onClose={() => setIsSubmitModalOpen(false)}
-        onToolCreated={handleToolCreated}
-      />
     </div>
   );
 }

@@ -1,12 +1,15 @@
 @use '@/styles/modules/layout' as layout;
 
 .sidebarWrapper {
-  @include layout.width(340px);
-  @include layout.flex(column, start, stretch, 16px);
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   flex-shrink: 0;
 
   @media (max-width: 1024px) {
-    @include layout.width(fill);
+    width: 100%;
+    max-width: 100%;
   }
 }
 

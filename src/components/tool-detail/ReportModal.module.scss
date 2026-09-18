@@ -3,12 +3,15 @@
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(6px);
+  background: rgba(4, 7, 18, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 1000;
-  @include layout.flex(row, center, center, 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 20px;
-  animation: overlayFadeIn 0.2s ease-out;
+  animation: overlayFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes overlayFadeIn {
@@ -18,29 +21,32 @@
 
 .modalBox {
   position: relative;
-  @include layout.width(100%);
-  max-width: 480px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
   background: var(--bg-card);
   border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
   padding: 28px;
-  animation: modalScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modalScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 
   @media (max-width: 600px) {
     padding: 20px;
+    max-height: 95vh;
   }
 }
 
 @keyframes modalScaleIn {
-  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  from { opacity: 0; transform: scale(0.96) translateY(12px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .closeBtn {
   position: absolute;
-  top: 18px;
-  right: 18px;
+  top: 20px;
+  right: 20px;
   background: transparent;
   border: none;
   color: var(--text-muted);
@@ -56,22 +62,31 @@
 }
 
 .modalHeader {
-  @include layout.flex(row, flex-start, center, 14px);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
   margin-bottom: 20px;
-  padding-right: 30px;
+  padding-right: 32px;
 }
 
 .headerIconWrapper {
-  @include layout.square(40px);
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-md);
   background: rgba(239, 68, 68, 0.12);
   color: #ef4444;
-  @include layout.flex(row, center, center, 0);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
 .headerTexts {
-  @include layout.flex(column, center, flex-start, 2px);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .modalTitle {
@@ -79,6 +94,7 @@
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .modalSubtitle {
@@ -86,44 +102,193 @@
   color: var(--text-muted);
 }
 
+// Target Tool Context Card
+.targetToolCard {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  margin-bottom: 18px;
+}
+
+.targetIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.targetMeta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.targetName {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.targetCategory {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.targetLink {
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: var(--accent-purple);
+  }
+}
+
 .form {
-  @include layout.flex(column, flex-start, stretch, 18px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .inputGroup {
-  @include layout.flex(column, flex-start, stretch, 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.label {
+.sectionLabel {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
 }
 
-.radioList {
-  @include layout.flex(column, flex-start, stretch, 8px);
+.labelWithCount {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.radioItem {
-  @include layout.flex(row, flex-start, center, 10px);
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
+.charCount {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+// Reason Cards Grid
+.reasonGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reasonCard {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
   background: var(--bg-input);
   border: 1px solid var(--border-card);
   cursor: pointer;
-  font-size: 13px;
-  color: var(--text-primary);
-  transition: border-color 0.15s ease;
+  transition: all 0.15s ease;
 
   &:hover {
-    border-color: var(--accent-purple);
+    border-color: rgba(239, 68, 68, 0.4);
+    background: var(--bg-card);
   }
 
-  input[type="radio"] {
-    accent-color: var(--accent-purple);
+  &.selected {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+
+    .reasonRadio .radioInner {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .reasonIcon {
+      color: #ef4444;
+    }
+
+    .reasonTitle {
+      color: var(--text-primary);
+      font-weight: 700;
+    }
   }
 }
 
+.reasonRadio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  flex-shrink: 0;
+
+  .radioInner {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.15s ease;
+  }
+}
+
+.reasonContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reasonTitleRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.reasonIcon {
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+}
+
+.reasonTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.reasonDesc {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+// Text Inputs
 .textInput, .textArea {
   background: var(--bg-input);
   border: 1px solid var(--border-card);
@@ -131,13 +296,13 @@
   color: var(--text-primary);
   font-family: inherit;
   font-size: 13px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
   &:focus {
     outline: none;
-    border-color: var(--accent-purple);
-    box-shadow: 0 0 0 3px var(--accent-purple-glow);
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
   }
 
   &::placeholder {
@@ -147,22 +312,28 @@
 
 .textArea {
   resize: vertical;
+  min-height: 70px;
 }
 
 .formFooter {
-  @include layout.flex(row, flex-end, center, 10px);
-  margin-top: 6px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
 }
 
 .cancelBtn {
   background: transparent;
   border: 1px solid var(--border-card);
   color: var(--text-secondary);
-  padding: 9px 16px;
+  padding: 9px 18px;
   border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.15s ease;
 
   &:hover {
     background: var(--bg-input);
@@ -171,42 +342,56 @@
 }
 
 .submitBtn {
-  background: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
   border: none;
   color: #ffffff;
   padding: 9px 20px;
   border-radius: var(--radius-md);
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+  transition: all 0.15s ease;
 
   &:hover:not(:disabled) {
-    background: #dc2626;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.4);
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 }
 
-// Success state
+// Success State
 .successState {
-  @include layout.flex(column, center, center, 14px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  padding: 20px 0;
+  padding: 24px 10px;
+  gap: 14px;
 }
 
-.successIcon {
-  @include layout.square(54px);
-  border-radius: var(--radius-full);
-  background: rgba(16, 185, 129, 0.15);
-  @include layout.flex(row, center, center, 0);
+.successGlow {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
 }
 
 .successTitle {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
@@ -214,9 +399,9 @@
 
 .successMessage {
   font-size: 13.5px;
-  color: var(--text-secondary);
   line-height: 1.6;
-  max-width: 360px;
+  color: var(--text-muted);
+  max-width: 400px;
   margin: 0;
 
   strong {
@@ -225,17 +410,19 @@
 }
 
 .doneBtn {
-  margin-top: 8px;
+  margin-top: 10px;
   background: var(--accent-purple);
   border: none;
   color: #ffffff;
-  padding: 9px 24px;
+  padding: 10px 24px;
   border-radius: var(--radius-md);
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.15s ease;
 
   &:hover {
     background: var(--accent-purple-hover);
+    transform: translateY(-1px);
   }
 }
