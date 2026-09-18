@@ -19,7 +19,7 @@
     $radius: var(--radius-lg)
   );
   background: var(--bg-card);
-  @include layout.flex(column, space-between, stretch, 16px);
+  @include layout.flex(column, flex-start, stretch, 16px);
   cursor: pointer;
   position: relative;
   animation: cardEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -313,6 +313,12 @@
   margin-left: 2px;
 }
 
+.descriptionSection {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
 .description {
   font-size: 13.5px;
   line-height: 1.55;
@@ -327,6 +333,7 @@
   @include layout.width(fill);
   height: 1px;
   background: var(--border-card);
+  margin-top: auto;
 }
 
 .bottomRow {
