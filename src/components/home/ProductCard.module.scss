@@ -37,16 +37,35 @@
   &.listView {
     flex-direction: row;
     align-items: center;
-    gap: 20px;
-    padding: 18px 24px;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 16px 22px;
 
     .header {
-      flex: 1;
+      flex: 1 1 280px;
+      min-width: 0;
+    }
+
+    .leftHead {
+      gap: 14px;
+    }
+
+    .thumbnail {
+      @include layout.square(46px);
+      border-radius: 12px;
+    }
+
+    .title {
+      font-size: 15.5px;
     }
 
     .description {
-      flex: 2;
+      flex: 2 1 360px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-muted);
       -webkit-line-clamp: 2;
+      margin: 0;
     }
 
     .divider {
@@ -55,12 +74,29 @@
 
     .bottomRow {
       width: auto;
-      gap: 24px;
+      flex-shrink: 0;
+      gap: 20px;
+      justify-content: flex-end;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 900px) {
       flex-direction: column;
       align-items: stretch;
+      gap: 14px;
+      padding: 18px 20px;
+
+      .description {
+        flex: none;
+      }
+
+      .divider {
+        display: block;
+      }
+
+      .bottomRow {
+        width: 100%;
+        justify-content: space-between;
+      }
     }
   }
 }
