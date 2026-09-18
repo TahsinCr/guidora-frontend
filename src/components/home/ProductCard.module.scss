@@ -3,7 +3,7 @@
 @keyframes cardEntrance {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -13,14 +13,15 @@
 
 .card {
   @include layout.width(fill);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-card);
+  @include layout.box(
+    $padding: 24px,
+    $border: 1px solid var(--border-card),
+    $radius: var(--radius-lg)
+  );
   background: var(--bg-card);
   @include layout.flex(column, space-between, stretch, 16px);
   cursor: pointer;
   position: relative;
-  overflow: hidden;
-  padding: 0;
   animation: cardEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
   will-change: transform, border-color, box-shadow;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
@@ -29,12 +30,8 @@
 
   &:hover {
     transform: translateY(-3px);
-    border-color: var(--cat-accent, var(--border-card-hover));
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--cat-accent, transparent);
-
-    .accentLine {
-      opacity: 1;
-    }
+    border-color: var(--border-card-hover);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
   }
 
   &.listView {
@@ -42,17 +39,6 @@
     align-items: center;
     gap: 20px;
     padding: 18px 24px;
-
-    .accentLine {
-      display: none;
-    }
-
-    .cardBody {
-      flex-direction: row;
-      align-items: center;
-      gap: 20px;
-      flex: 1;
-    }
 
     .header {
       flex: 1;
@@ -79,36 +65,6 @@
   }
 }
 
-// 3px top accent stripe
-.accentLine {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  opacity: 0.6;
-  transition: opacity 0.25s ease;
-  z-index: 1;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-
-// Inner padding wrapper (so accent line sits outside)
-.card > .header,
-.card > .description,
-.card > .divider,
-.card > .bottomRow {
-  padding-left: 22px;
-  padding-right: 22px;
-}
-
-.card > .header {
-  padding-top: 22px;
-}
-
-.card > .bottomRow {
-  padding-bottom: 18px;
-}
-
 .header {
   @include layout.width(fill);
   @include layout.flex(row, start, start, 16px);
@@ -116,26 +72,15 @@
 
 .leftHead {
   @include layout.width(fill);
-  @include layout.flex(row, start, center, 14px);
+  @include layout.flex(row, start, center, 16px);
 }
 
 .thumbnail {
-  width: 52px;
-  height: 52px;
-  border-radius: 13px;
+  @include layout.square(56px);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #e2e8f0 0%, #94a3b8 100%);
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.thumbnailInner {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  opacity: 0.9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .info {
@@ -150,7 +95,7 @@
 }
 
 .title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
@@ -160,35 +105,36 @@
 }
 
 .newBadge {
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 700;
   padding: 2px 7px;
-  border-radius: 5px;
+  border-radius: 6px;
   background: var(--primary-light);
   border: 1px solid var(--primary-color);
   color: var(--primary-color);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   flex-shrink: 0;
 }
 
 .tagRow {
-  @include layout.flex(row, start, center, 7px);
+  @include layout.flex(row, start, center, 8px);
   font-size: 12px;
   flex-wrap: wrap;
 }
 
 .categoryTag {
   font-size: 11px;
-  font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 20px;
-  border: 1px solid;
-  letter-spacing: 0.01em;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--primary-light);
+  color: var(--primary-color);
+  border: 1px solid rgba(138, 56, 245, 0.2);
 }
 
 .versionText {
   color: var(--text-faint);
-  font-size: 11.5px;
+  font-size: 12px;
 }
 
 .verifiedIcons {
@@ -197,8 +143,8 @@
 }
 
 .description {
-  font-size: 13px;
-  line-height: 1.57;
+  font-size: 13.5px;
+  line-height: 1.55;
   color: var(--text-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -210,9 +156,6 @@
   @include layout.width(fill);
   height: 1px;
   background: var(--border-card);
-  margin: 0 22px;
-  width: calc(100% - 44px);
-  align-self: center;
 }
 
 .bottomRow {
@@ -237,7 +180,7 @@
 }
 
 .actions {
-  @include layout.flex(row, end, center, 6px);
+  @include layout.flex(row, end, center, 8px);
 
   .actionBtn {
     @include layout.square(30px);
@@ -249,10 +192,6 @@
     &:hover {
       color: var(--text-primary);
       background: var(--bg-input-hover);
-    }
-
-    &.bookmarked {
-      color: var(--brand-blue);
     }
   }
 }
