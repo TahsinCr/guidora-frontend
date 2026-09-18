@@ -1,0 +1,286 @@
+@use 'sass:meta';
+@use 'sass:map';
+
+// Tools
+@function map-get-default($map, $value, $default: null) {
+  @if map.has-key($map, $value) {
+    @return map.get($map, $value);
+  }
+  @return $default;
+}
+
+// Layout Size (Figma Auto-Layout terminology)
+@mixin width($size: auto, $min: null, $max: null) {
+  @if $size == fill {
+    width: 100%;
+  } @else if $size == hug {
+    width: fit-content;
+  } @else if $size != null {
+    width: $size;
+  }
+
+  min-width: $min;
+  max-width: $max;
+}
+
+@mixin height($size: auto, $min: null, $max: null) {
+  @if $size == fill {
+    height: 100%;
+  } @else if $size == hug {
+    height: fit-content;
+  } @else if $size != null {
+    height: $size;
+  }
+
+  min-height: $min;
+  max-height: $max;
+}
+
+@mixin resize($width: null, $height: null) {
+  @include width($width);
+  @include height($height);
+}
+
+@mixin border($width: 1px, $color: var(--card-border-color, #1e293b), $style: solid, $radius: null) {
+  border: $width $style $color;
+  @if $radius != null {
+    border-radius: $radius;
+  }
+}
+
+@mixin spacing($padding: null, $margin: null) {
+  @if $padding != null {
+    padding: $padding;
+  }
+  @if $margin != null {
+    margin: $margin;
+  }
+}
+
+@mixin ratio($x: 1, $y: 1) {
+  aspect-ratio: #{$x} / #{$y};
+}
+
+@mixin square($size: auto, $min: null, $max: null) {
+  @include width($size, $min, $max);
+  @include height($size, $min, $max);
+  @include ratio(1, 1);
+}
+
+@mixin circle($size: auto, $min: null, $max: null) {
+  @include square($size, $min, $max);
+  border-radius: 50%;
+}
+
+@mixin clip {
+  overflow: hidden;
+}
+
+@mixin show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+@mixin hide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+// Layout Position
+@mixin position($position: relative, $x: left, $y: top, $layer: null) {
+  position: $position;
+
+  @if $x == left { left: 0; }
+  @else if $x == right { right: 0; }
+  @else if $x == center {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  @else if $x == fill {
+    left: 0;
+    right: 0;
+  }
+  @else if $x != null { left: $x; }
+
+  @if $y == top { top: 0; }
+  @else if $y == bottom { bottom: 0; }
+  @else if $y == center {
+    top: 50%;
+    @if $x == center {
+      transform: translate(-50%, -50%);
+    } @else {
+      transform: translateY(-50%);
+    }
+  }
+  @else if $y == fill {
+    top: 0;
+    bottom: 0;
+  }
+  @else if $y != null { top: $y; }
+
+  @if $layer != null {
+    z-index: $layer;
+  }
+}
+
+@mixin position-absolute($x: left, $y: top, $layer: null) {
+  @include position(absolute, $x, $y, $layer);
+}
+
+@mixin position-relative($x: left, $y: top, $layer: null) {
+  @include position(relative, $x, $y, $layer);
+}
+
+@mixin position-fixed($x: left, $y: top, $layer: null) {
+  @include position(fixed, $x, $y, $layer);
+}
+
+@mixin position-sticky($x: left, $y: top, $layer: null) {
+  @include position(sticky, $x, $y, $layer);
+}
+
+@mixin cover($position: absolute, $layer: null) {
+  @include position($position, left, top, $layer);
+  @include resize(100%, 100%);
+}
+
+// Box & Inline
+@mixin box($width: null, $height: null, $padding: null, $margin: null, $border: null, $radius: null) {
+  @include resize($width, $height);
+  @include spacing($padding, $margin);
+  @if $border != null {
+    border: $border;
+  }
+  @if $radius != null {
+    border-radius: $radius;
+  }
+}
+
+@mixin inline-box($width: null, $height: null, $padding: null, $margin: null, $border: null, $radius: null) {
+  display: inline-block;
+  @include box($width, $height, $padding, $margin, $border, $radius);
+}
+
+// Flex Layout
+$align-map: (
+  left: flex-start,
+  right: flex-end,
+  top: flex-start,
+  bottom: flex-end,
+  start: flex-start,
+  end: flex-end,
+  center: center,
+  between: space-between,
+  around: space-around,
+  evenly: space-evenly,
+  stretch: stretch,
+  baseline: baseline
+);
+
+@mixin flex($direction: row, $x: center, $y: center, $gap: null) {
+  display: flex;
+  flex-direction: $direction;
+
+  $justify: $x;
+  $align: $y;
+  @if $direction == column {
+    $justify: $y;
+    $align: $x;
+  }
+
+  justify-content: map-get-default($align-map, $justify, $justify);
+  align-items: map-get-default($align-map, $align, $align);
+
+  @if $gap != null {
+    gap: $gap;
+  }
+}
+
+@mixin inline-flex($direction: row, $x: center, $y: center, $gap: null) {
+  @include flex($direction, $x, $y, $gap);
+  display: inline-flex;
+}
+
+@mixin flex-wrap($align: null, $reverse: false) {
+  @if ($reverse) {
+    flex-wrap: wrap-reverse;
+  } @else {
+    flex-wrap: wrap;
+  }
+
+  @if $align != null {
+    align-content: map-get-default($align-map, $align, $align);
+  }
+}
+
+@mixin flex-item($grow: 0, $shrink: 0, $basis: auto, $align: null, $order: null) {
+  flex-grow: $grow;
+  flex-shrink: $shrink;
+  flex-basis: $basis;
+  @if $align != null {
+    align-self: map-get-default($align-map, $align, $align);
+  }
+  @if $order != null {
+    order: $order;
+  }
+}
+
+@mixin flex-item-fill($basis: 0, $align: null, $order: null) {
+  @include flex-item(1, 1, $basis, $align, $order);
+}
+
+@mixin flex-item-hug($basis: auto, $align: null, $order: null) {
+  @include flex-item(0, 0, $basis, $align, $order);
+}
+
+// Grid Layout
+@mixin grid($cols: 1, $rows: null, $gap: null, $x: stretch, $y: stretch) {
+  display: grid;
+  @if $gap != null {
+    gap: $gap;
+  }
+
+  @if meta.type-of($cols) == 'number' {
+    grid-template-columns: repeat($cols, minmax(0, 1fr));
+  } @else {
+    grid-template-columns: $cols;
+  }
+
+  @if $rows != null {
+    @if meta.type-of($rows) == 'number' {
+      grid-template-rows: repeat($rows, minmax(0, 1fr));
+    } @else {
+      grid-template-rows: $rows;
+    }
+  }
+
+  justify-items: map-get-default($align-map, $x, $x);
+  align-items: map-get-default($align-map, $y, $y);
+}
+
+@mixin grid-item($col: null, $row: null, $x: null, $y: null, $order: null) {
+  @if meta.type-of($col) == 'number' {
+    grid-column: span $col;
+  } @else if $col != null {
+    grid-column: $col;
+  }
+
+  @if meta.type-of($row) == 'number' {
+    grid-row: span $row;
+  } @else if $row != null {
+    grid-row: $row;
+  }
+
+  @if $x != null {
+    justify-self: map-get-default($align-map, $x, $x);
+  }
+  @if $y != null {
+    align-self: map-get-default($align-map, $y, $y);
+  }
+  @if $order != null {
+    order: $order;
+  }
+}
+

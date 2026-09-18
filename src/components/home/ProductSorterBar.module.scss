@@ -1,0 +1,244 @@
+@use '@/styles/modules/layout' as layout;
+
+.sorterBar {
+  @include layout.width(fill);
+  @include layout.flex(row, space-between, center, 14px);
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+}
+
+.searchBox {
+  @include layout.flex(row, start, center, 12px);
+  @include layout.box(
+    $padding: 0 16px,
+    $border: 1px solid var(--border-card),
+    $radius: var(--radius-md)
+  );
+  background: var(--bg-input);
+  height: 44px;
+  flex: 1 1 300px;
+  min-width: 220px;
+  max-width: 520px;
+  transition: all var(--transition-fast);
+
+  &:focus-within {
+    background: var(--bg-input-hover);
+    border-color: var(--border-active);
+    box-shadow: 0 0 14px rgba(76, 130, 251, 0.25);
+  }
+
+  .searchIcon {
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .searchInput {
+    @include layout.width(fill);
+    border: none;
+    background: transparent;
+    font-size: 13.5px;
+    color: var(--text-primary);
+    outline: none;
+    min-width: 0;
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+  }
+
+  .clearBtn {
+    color: var(--text-muted);
+    padding: 2px;
+    display: flex;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+  }
+
+  @media (max-width: 1024px) {
+    max-width: 100%;
+    width: 100%;
+    flex: none;
+  }
+}
+
+.actionsRow {
+  @include layout.flex(row, end, center, 10px);
+  position: relative;
+
+  @media (max-width: 1024px) {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 8px;
+  }
+
+  @media (max-width: 640px) {
+    justify-content: space-between;
+  }
+}
+
+.filterMobileBtn {
+  @include layout.inline-flex(row, center, center, 6px);
+  @include layout.box($padding: 0 14px, $border: 1px solid var(--border-card), $radius: var(--radius-md));
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  height: 44px;
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--bg-input-hover);
+    color: var(--text-primary);
+  }
+
+  @media (max-width: 1024px) {
+    display: inline-flex;
+  }
+}
+
+.customDropdown {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.dropdownTrigger {
+  @include layout.inline-flex(row, center, center, 8px);
+  @include layout.box(
+    $padding: 0 14px,
+    $border: 1px solid var(--border-card),
+    $radius: var(--radius-md)
+  );
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  height: 44px;
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--bg-input-hover);
+    color: var(--text-primary);
+    border-color: var(--border-card-hover);
+  }
+
+  &.open {
+    border-color: var(--border-active);
+    color: var(--text-primary);
+  }
+
+  .chevron {
+    color: var(--text-muted);
+    transition: transform var(--transition-normal);
+
+    &.rotated {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+@keyframes popoverIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 150;
+  width: 180px;
+  @include layout.box(
+    $padding: 6px,
+    $border: 1px solid var(--border-card),
+    $radius: var(--radius-md)
+  );
+  background: var(--bg-card);
+  box-shadow: var(--shadow-modal);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  @include layout.flex(column, start, start, 2px);
+  transform-origin: top right;
+  animation: popoverIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  .menuItem {
+    @include layout.width(fill);
+    @include layout.flex(row, space-between, center);
+    @include layout.box($padding: 9px 12px, $radius: var(--radius-sm));
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    &:hover {
+      background: var(--bg-input);
+      color: var(--text-primary);
+    }
+
+    &.selected {
+      background: var(--primary-light);
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.viewTogglePill {
+  @include layout.flex(row, center, center, 3px);
+  @include layout.box(
+    $padding: 4px,
+    $border: 1px solid var(--border-card),
+    $radius: var(--radius-md)
+  );
+  background: var(--bg-input);
+  height: 44px;
+
+  .toggleBtn {
+    @include layout.square(36px);
+    @include layout.flex(row, center, center);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    transition: all var(--transition-fast);
+
+    &:hover {
+      color: var(--text-primary);
+    }
+
+    &.active {
+      background: var(--bg-card);
+      color: var(--primary-color);
+      box-shadow: var(--shadow-card);
+    }
+  }
+}

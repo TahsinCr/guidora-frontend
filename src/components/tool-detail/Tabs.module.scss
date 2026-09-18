@@ -1,0 +1,54 @@
+@use '@/styles/modules/layout' as layout;
+
+.tabsContainer {
+  @include layout.width(fill);
+  @include layout.flex(row, start, center, 8px);
+  border-bottom: 1px solid var(--border-card);
+  margin-top: 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.tabBtn {
+  @include layout.inline-flex(row, center, center, 8px);
+  padding: 12px 18px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  position: relative;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    color: var(--text-primary);
+  }
+
+  &.active {
+    color: var(--primary-color);
+    font-weight: 600;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--primary-color);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+  }
+
+  .pillBadge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: var(--radius-full);
+    background: var(--bg-input);
+    color: var(--text-secondary);
+  }
+}

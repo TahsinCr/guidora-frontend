@@ -1,0 +1,76 @@
+@use '@/styles/modules/layout' as layout;
+
+.heroCard {
+  @include layout.width(fill);
+  @include layout.box(
+    $padding: 28px 32px,
+    $border: 1px solid var(--border-card),
+    $radius: var(--radius-lg)
+  );
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+  @include layout.flex(row, start, center, 24px);
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+    gap: 16px;
+  }
+}
+
+.largeIcon {
+  @include layout.square(84px);
+  border-radius: 18px;
+  background: linear-gradient(145deg, #cbd5e1 0%, #94a3b8 100%);
+  flex-shrink: 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+
+  @media (max-width: 768px) {
+    @include layout.square(64px);
+  }
+}
+
+.detailsArea {
+  @include layout.flex-item-fill;
+  @include layout.flex(column, start, start, 8px);
+  min-width: 0;
+}
+
+.categoryRow {
+  @include layout.flex(row, start, center, 12px);
+}
+
+.categoryPill {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--primary-light);
+  color: var(--primary-color);
+  border: 1px solid rgba(138, 56, 245, 0.25);
+}
+
+.trustBadges {
+  @include layout.flex(row, start, center, 8px);
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+
+  @media (max-width: 768px) {
+    font-size: 22px;
+  }
+}
+
+.description {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-muted);
+  max-width: 680px;
+}

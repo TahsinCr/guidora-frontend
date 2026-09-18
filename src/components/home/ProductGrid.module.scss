@@ -1,0 +1,115 @@
+@use '@/styles/modules/layout' as layout;
+
+.contentLayout {
+  @include layout.width(fill);
+  @include layout.flex(row, start, start, 28px);
+  margin-top: 24px;
+
+  @media (max-width: 1024px) {
+    gap: 0;
+  }
+}
+
+.mainSection {
+  @include layout.flex-item-fill;
+  @include layout.flex(column, stretch, start, 20px);
+  min-width: 0;
+}
+
+.productGrid {
+  @include layout.width(fill);
+  @include layout.grid($cols: repeat(auto-fill, minmax(350px, 1fr)), $gap: 20px);
+
+  &.listView {
+    @include layout.grid($cols: 1, $gap: 14px);
+  }
+
+  @media (max-width: 640px) {
+    @include layout.grid($cols: 1, $gap: 14px);
+  }
+}
+
+.emptyState {
+  @include layout.width(fill);
+  @include layout.box($padding: 60px 20px, $border: 1px dashed var(--border-card), $radius: var(--radius-lg));
+  @include layout.flex(column, center, center, 14px);
+  background: var(--bg-card);
+  text-align: center;
+
+  .emptyTitle {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .emptyDesc {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    max-width: 380px;
+  }
+
+  .clearBtn {
+    @include layout.box($padding: 8px 18px, $radius: var(--radius-md));
+    background: var(--bg-input);
+    color: var(--brand-blue);
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 6px;
+
+    &:hover {
+      background: var(--bg-input-hover);
+    }
+  }
+}
+
+.scrollSentinel {
+  @include layout.width(fill);
+  height: 20px;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.loadingMoreWrapper {
+  @include layout.width(fill);
+  @include layout.flex(row, center, center, 10px);
+  padding: 28px 0 16px 0;
+
+  .pulsingDot {
+    @include layout.square(10px);
+    border-radius: var(--radius-full);
+    background: var(--brand-blue);
+    box-shadow: 0 0 12px var(--brand-blue);
+    animation: pulseDot 1.2s infinite ease-in-out;
+  }
+
+  .loadingText {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+}
+
+@keyframes pulseDot {
+  0%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+}
+
+.skeletonCard {
+  @include layout.width(fill);
+  @include layout.box($padding: 22px, $border: 1px solid var(--border-card), $radius: var(--radius-lg));
+  background: var(--bg-card);
+  height: 200px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+  100% { opacity: 0.6; }
+}

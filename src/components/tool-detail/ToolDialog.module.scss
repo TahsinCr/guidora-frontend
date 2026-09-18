@@ -1,0 +1,102 @@
+@use '@/styles/modules/layout' as layout;
+
+.toolDetailSection {
+  @include layout.width(fill);
+  @include layout.flex(column, start, stretch, 0px);
+  position: relative;
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0 0 40px 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobileBackRow {
+  @include layout.width(fill);
+  @include layout.flex(row, start, center);
+  margin-bottom: 16px;
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+  }
+
+  .backBtn {
+    @include layout.inline-flex(row, start, center, 8px);
+    color: var(--brand-blue);
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    background: rgba(76, 130, 251, 0.1);
+    border: 1px solid rgba(76, 130, 251, 0.2);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    &:hover {
+      background: rgba(76, 130, 251, 0.2);
+    }
+  }
+}
+
+.contentBody {
+  @include layout.width(fill);
+  @include layout.flex(row, start, start, 24px);
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    gap: 24px;
+  }
+}
+
+.leftColumn {
+  @include layout.flex-item-fill;
+  @include layout.flex(column, start, stretch, 0px);
+  min-width: 0;
+}
+
+.rightColumn {
+  @include layout.width(340px);
+  flex-shrink: 0;
+
+  @media (max-width: 1024px) {
+    @include layout.width(fill);
+  }
+}
+
+.loadingSkeleton {
+  @include layout.width(fill);
+  @include layout.box($padding: 40px, $border: 1px solid var(--border-card), $radius: var(--radius-lg));
+  background: var(--bg-card);
+  @include layout.flex(column, start, start, 20px);
+
+  .skeletonHead {
+    @include layout.width(fill);
+    height: 120px;
+    background: var(--bg-input);
+    border-radius: var(--radius-md);
+    animation: pulse 1.5s infinite;
+  }
+
+  .skeletonRow {
+    @include layout.width(fill);
+    height: 60px;
+    background: var(--bg-input);
+    border-radius: var(--radius-md);
+    animation: pulse 1.5s infinite;
+  }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+  100% { opacity: 0.6; }
+}

@@ -1,0 +1,248 @@
+@use '@/styles/modules/layout' as layout;
+
+.sidebarWrapper {
+  @include layout.width(340px);
+  @include layout.flex(column, start, stretch, 16px);
+  flex-shrink: 0;
+
+  @media (max-width: 1024px) {
+    @include layout.width(fill);
+  }
+}
+
+.card {
+  @include layout.width(fill);
+  @include layout.box(
+    $padding: 22px,
+    $border: 1px solid var(--border-card),
+    $radius: var(--radius-lg)
+  );
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+  @include layout.flex(column, start, stretch, 0px);
+}
+
+.scoreRow {
+  @include layout.width(fill);
+  @include layout.flex(row, space-between, center);
+  margin-bottom: 20px;
+}
+
+.ratingBox {
+  @include layout.flex(row, start, center, 10px);
+}
+
+.scoreNumber {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.starsRow {
+  @include layout.flex(row, start, center, 3px);
+}
+
+.rankBox {
+  @include layout.flex(column, center, end, 2px);
+}
+
+.rankLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.rankValue {
+  font-size: 18px;
+  font-weight: 800;
+  color: #22c55e;
+}
+
+.visitWebsiteBtn {
+  @include layout.width(fill);
+  @include layout.inline-flex(row, center, center, 8px);
+  height: 46px;
+  background: #7c3aed;
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: #8b5cf6;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+  }
+}
+
+.secondaryActions {
+  @include layout.width(fill);
+  @include layout.flex(row, space-between, center, 10px);
+  margin-top: 12px;
+}
+
+.actionBtn {
+  @include layout.flex-item-fill;
+  @include layout.inline-flex(row, center, center, 6px);
+  height: 40px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--bg-input-hover);
+    border-color: var(--border-card-hover);
+    color: var(--text-primary);
+  }
+
+  &.active {
+    background: var(--primary-light);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+}
+
+.divider {
+  @include layout.width(fill);
+  height: 1px;
+  background: var(--border-card);
+  margin: 20px 0 16px 0;
+}
+
+.metadataList {
+  @include layout.width(fill);
+  @include layout.flex(column, start, stretch, 12px);
+}
+
+.metaRow {
+  @include layout.width(fill);
+  @include layout.flex(row, space-between, center);
+  font-size: 13.5px;
+
+  .metaKey {
+    color: var(--text-muted);
+  }
+
+  .metaVal {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+}
+
+.creatorCard {
+  @include layout.width(fill);
+  @include layout.flex(row, start, center, 12px);
+  @include layout.box(
+    $padding: 14px 18px,
+    $border: 1px solid var(--border-card),
+    $radius: var(--radius-md)
+  );
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-card-hover);
+  }
+
+  .creatorAvatar {
+    @include layout.square(38px);
+    @include layout.flex(row, center, center);
+    border-radius: var(--radius-full);
+    background: #7c3aed;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .creatorInfo {
+    @include layout.flex-item-fill;
+    @include layout.flex(column, start, start, 2px);
+    min-width: 0;
+
+    .creatorLabel {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .creatorNameRow {
+      @include layout.flex(row, start, center, 6px);
+
+      .creatorName {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+    }
+  }
+
+  .creatorChevron {
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+}
+
+.similarTitle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.similarList {
+  @include layout.width(fill);
+  @include layout.flex(column, start, stretch, 10px);
+}
+
+.similarItem {
+  @include layout.width(fill);
+  @include layout.flex(row, start, center, 12px);
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+
+  &:hover {
+    background: var(--bg-input);
+  }
+
+  .similarIcon {
+    @include layout.square(38px);
+    border-radius: 10px;
+    background: linear-gradient(145deg, #cbd5e1 0%, #94a3b8 100%);
+    flex-shrink: 0;
+  }
+
+  .similarDetails {
+    @include layout.flex(column, start, start, 2px);
+
+    .similarName {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .similarSub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+  }
+}
+

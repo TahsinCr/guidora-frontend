@@ -1,0 +1,133 @@
+@use '@/styles/modules/layout' as layout;
+
+.cardsContainer {
+  @include layout.width(fill);
+  @include layout.flex(column, start, stretch, 20px);
+  margin-top: 20px;
+}
+
+.contentCard {
+  @include layout.width(fill);
+  @include layout.box(
+    $padding: 28px,
+    $border: 1px solid var(--border-card),
+    $radius: var(--radius-lg)
+  );
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+  @include layout.flex(column, start, start, 16px);
+}
+
+.cardHeader {
+  @include layout.flex(row, start, center, 10px);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+
+  .headerIcon {
+    color: var(--brand-purple);
+  }
+}
+
+.paragraph {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text-muted);
+
+  strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+}
+
+.featuresSection {
+  @include layout.width(fill);
+  @include layout.flex(column, start, start, 10px);
+  margin-top: 4px;
+}
+
+.subHeading {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.bulletList {
+  @include layout.width(fill);
+  @include layout.flex(column, start, start, 8px);
+}
+
+.bulletItem {
+  @include layout.flex(row, start, center, 10px);
+  font-size: 14px;
+  color: var(--text-secondary);
+
+  .bulletDot {
+    color: var(--brand-purple);
+    font-size: 16px;
+  }
+}
+
+.tagsSection {
+  @include layout.width(fill);
+  @include layout.flex(column, start, start, 12px);
+}
+
+.tagsLabel {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.tagsList {
+  @include layout.flex(row, start, center, 10px);
+  flex-wrap: wrap;
+}
+
+.tagPill {
+  @include layout.inline-flex(row, center, center);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius-full);
+  background: var(--bg-input);
+  border: 1px solid var(--border-card);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-input-hover);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+  }
+}
+
+.galleryGrid {
+  @include layout.width(fill);
+  @include layout.grid($cols: 2, $gap: 16px);
+}
+
+.galleryPlaceholder {
+  @include layout.box($padding: 40px 20px, $border: 1px dashed var(--border-card), $radius: var(--radius-md));
+  background: var(--bg-input);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+.changelogItem {
+  @include layout.width(fill);
+  @include layout.flex(column, start, start, 8px);
+}
+
+.versionPill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: #1e1b4b;
+  color: #c084fc;
+}
+

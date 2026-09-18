@@ -1,0 +1,45 @@
+@use './base/reset';
+@use './base/theme';
+@use './modules/layout' as layout;
+
+// Global Container - Full width edge-to-edge
+.app-container {
+  @include layout.position(relative, left, top);
+  @include layout.width(fill);
+  min-height: 100vh;
+  @include layout.flex(column, stretch, top, 0px);
+}
+
+.main-content {
+  @include layout.width(fill);
+  @include layout.flex(column, stretch, top, 28px);
+  padding: 20px 48px 80px 48px;
+
+  @media (max-width: 1200px) {
+    padding: 20px 32px 60px 32px;
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px 16px 40px 16px;
+    gap: 16px;
+  }
+}
+
+// Custom Scrollbar
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-card);
+  border-radius: 4px;
+
+  &:hover {
+    background: var(--text-muted);
+  }
+}

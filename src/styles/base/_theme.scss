@@ -1,0 +1,96 @@
+:root {
+  --primary-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --secondary-font: 'Roboto', sans-serif;
+  --tertiary-font: 'DM Sans', sans-serif;
+
+  // Figma Accents
+  --brand-purple: #8a38f5;
+  --brand-blue: #4c82fb;
+  --brand-cyan: #06b6d4;
+  --brand-green: #10b981;
+  --brand-yellow: #eab308;
+  --brand-pink: #ec4899;
+
+  --primary-color: #8a38f5;
+  --primary-hover: #7c2deb;
+  --primary-light: rgba(138, 56, 245, 0.15);
+  --primary-glow: rgba(138, 56, 245, 0.35);
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  --transition-fast: 0.15s ease-out;
+  --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root,
+.theme-dark,
+[data-theme='dark'] {
+  // Figma exact deep navy palette
+  --bg-primary: #070c18;
+  --bg-secondary: #0b1120;
+  --bg-tertiary: #10192d;
+  --bg-input: #151e32;
+  --bg-input-hover: #1c2742;
+  --bg-card: #0d1527;
+  --bg-card-hover: #131e36;
+  --bg-pill: #16192b;
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-card: rgba(255, 255, 255, 0.08);
+  --border-card-hover: rgba(255, 255, 255, 0.18);
+  --border-active: #8a38f5;
+
+  --text-primary: #ffffff;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+
+  --header-bg: rgba(7, 12, 24, 0.88);
+  --header-border: rgba(255, 255, 255, 0.08);
+
+  --modal-backdrop: rgba(4, 7, 15, 0.85);
+  --modal-bg: #0c1322;
+  --modal-border: #1e2c4a;
+
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 12px 28px rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+.theme-light,
+[data-theme='light'] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --bg-input: #f1f5f9;
+  --bg-input-hover: #e2e8f0;
+  --bg-card: #ffffff;
+  --bg-card-hover: #ffffff;
+  --bg-pill: #f1f5f9;
+
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-card: #e2e8f0;
+  --border-card-hover: #cbd5e1;
+  --border-active: #8a38f5;
+
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-faint: #94a3b8;
+
+  --header-bg: rgba(255, 255, 255, 0.9);
+  --header-border: #e2e8f0;
+
+  --modal-backdrop: rgba(15, 23, 42, 0.45);
+  --modal-bg: #ffffff;
+  --modal-border: #e2e8f0;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-card-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --shadow-modal: 0 20px 50px rgba(0, 0, 0, 0.15);
+}

@@ -1,0 +1,160 @@
+@use '@/styles/modules/layout' as layout;
+
+.headerWrapper {
+  @include layout.position-sticky(top, 0, 100);
+  @include layout.width(fill);
+  background: var(--header-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--header-border);
+}
+
+.header {
+  @include layout.width(fill);
+  @include layout.flex(row, space-between, center, 16px);
+  padding: 16px 48px;
+  height: 72px;
+
+  @media (max-width: 1200px) {
+    padding: 16px 32px;
+  }
+
+  @media (max-width: 768px) {
+    padding: 12px 16px;
+    height: 64px;
+  }
+}
+
+.leftSection {
+  @include layout.flex(row, start, center, 24px);
+  min-width: 0;
+}
+
+.logo {
+  @include layout.flex(row, start, center, 12px);
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+
+  .logoIcon {
+    @include layout.square(36px);
+    @include layout.flex(row, center, center);
+    background: linear-gradient(135deg, #8a38f5 0%, #0066fe 100%);
+    border-radius: var(--radius-md);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(138, 56, 245, 0.4);
+  }
+
+  .logoText {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+}
+
+.breadcrumbs {
+  @include layout.flex(row, start, center, 8px);
+  font-size: 13.5px;
+  font-weight: 500;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  .crumbItem {
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+
+    &:hover {
+      color: var(--text-primary);
+      text-decoration: underline;
+    }
+  }
+
+  .crumbSep {
+    color: var(--text-faint);
+    flex-shrink: 0;
+  }
+
+  .crumbCurrent {
+    color: var(--primary-color);
+    font-weight: 600;
+  }
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+.toolBar {
+  @include layout.flex(row, end, center, 14px);
+}
+
+.submitBtn {
+  @include layout.inline-flex(row, center, center, 8px);
+  @include layout.box(
+    $padding: 8px 18px,
+    $border: 1px solid var(--border-card),
+    $radius: var(--radius-full)
+  );
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 13.5px;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--bg-input-hover);
+    border-color: var(--border-card-hover);
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 640px) {
+    .btnText {
+      display: none;
+    }
+    padding: 8px 12px;
+  }
+}
+
+.iconBtn {
+  @include layout.square(38px);
+  @include layout.flex(row, center, center);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  position: relative;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    color: var(--text-primary);
+    background: var(--bg-input);
+  }
+
+  .pinkDot {
+    @include layout.square(7px);
+    background: #ec4899;
+    border-radius: var(--radius-full);
+    position: absolute;
+    top: 8px;
+    right: 9px;
+  }
+}
+
+.userAvatar {
+  @include layout.square(36px);
+  @include layout.flex(row, center, center);
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%);
+  color: #042f2e;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
+  transition: transform var(--transition-fast);
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
