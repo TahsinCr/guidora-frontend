@@ -17,6 +17,15 @@ export default function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
     }
   };
 
+  const initials = tool.name
+    ? tool.name
+        .split(' ')
+        .map((w) => w[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : 'AI';
+
   return (
     <article
       className={`${styles.card} ${viewMode === 'list' ? styles.listView : ''}`}
@@ -24,15 +33,24 @@ export default function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
     >
       <div className={styles.header}>
         <div className={styles.leftHead}>
-          <div className={styles.thumbnail} />
+          <div className={styles.thumbnail}>
+            <span className={styles.thumbInitials}>{initials}</span>
+          </div>
+
           <div className={styles.info}>
             <div className={styles.titleRow}>
               <h2 className={styles.title}>{tool.name}</h2>
               {tool.isNew && <span className={styles.newBadge}>NEW</span>}
             </div>
+
             <div className={styles.tagRow}>
-              <span className={styles.categoryTag}>{tool.tag}</span>
-              <span className={styles.versionText}>• {tool.version}</span>
+              <span className={styles.categoryTag}>{tool.tag || tool.category}</span>
+              {tool.version && <span className={styles.versionText}>• {tool.version}</span>}
+              {tool.pricing && (
+                <span className={`${styles.pricingBadge} ${styles[tool.pricing.toLowerCase().replace(/[^a-z0-9]/g, '')] || ''}`}>
+                  {tool.pricing}
+                </span>
+              )}
               <div className={styles.verifiedIcons}>
                 {tool.verified?.admin && (
                   <ShieldCheck size={14} color="#EAB308" title="Admin Verified" />
@@ -49,7 +67,16 @@ export default function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
         </div>
       </div>
 
-      <p className={styles.description}>{tool.description}</p>
+      <div className={styles.descriptionSection}>
+        <p className={styles.description}>{tool.description}</p>
+        {viewMode === 'list' && tool.platforms && tool.platforms.length > 0 && (
+          <div className={styles.platformPills}>
+            {tool.platforms.slice(0, 3).map((p) => (
+              <span key={p} className={styles.platformPill}>{p}</span>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className={styles.divider} />
 
@@ -58,25 +85,30 @@ export default function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
           <div className={styles.rating}>
             <Star size={13} fill="currentColor" />
             <span>{tool.rating}</span>
+            {tool.reviewCount && <span className={styles.reviewCount}>({tool.reviewCount})</span>}
           </div>
           <div className={styles.views}>
             <Eye size={13} />
-            <span>({tool.views})</span>
+            <span>{tool.views}</span>
           </div>
         </div>
 
         <div className={styles.actions}>
           <button
+            type="button"
             className={styles.actionBtn}
             onClick={handleExternal}
             title="Visit Website"
+            aria-label="Visit Website"
           >
             <ArrowUpRight size={17} />
           </button>
           <button
-            className={styles.actionBtn}
+            type="button"
+            className={`${styles.actionBtn} ${isBookmarked ? styles.bookmarked : ''}`}
             onClick={handleBookmark}
             title={isBookmarked ? 'Remove Bookmark' : 'Save Tool'}
+            aria-label="Save Tool"
           >
             <Bookmark size={16} fill={isBookmarked ? 'currentColor' : 'none'} />
           </button>

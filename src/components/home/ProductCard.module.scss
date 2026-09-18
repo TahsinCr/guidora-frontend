@@ -39,33 +39,68 @@
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    padding: 16px 22px;
+    padding: 16px 24px;
+    border-radius: var(--radius-md);
+
+    &:hover {
+      transform: translateX(4px);
+    }
 
     .header {
-      flex: 1 1 280px;
-      min-width: 0;
+      flex: 1 1 300px;
+      min-width: 240px;
+      max-width: 380px;
+      margin: 0;
     }
 
     .leftHead {
-      gap: 14px;
+      gap: 16px;
     }
 
     .thumbnail {
-      @include layout.square(46px);
+      @include layout.square(48px);
       border-radius: 12px;
+      flex-shrink: 0;
     }
 
     .title {
-      font-size: 15.5px;
+      font-size: 16px;
+    }
+
+    .descriptionSection {
+      flex: 2 1 340px;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
 
     .description {
-      flex: 2 1 360px;
       font-size: 13px;
       line-height: 1.5;
       color: var(--text-muted);
+      display: -webkit-box;
       -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
       margin: 0;
+    }
+
+    .platformPills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .platformPill {
+      font-size: 10.5px;
+      font-weight: 500;
+      padding: 1px 7px;
+      border-radius: 4px;
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
     }
 
     .divider {
@@ -75,17 +110,28 @@
     .bottomRow {
       width: auto;
       flex-shrink: 0;
-      gap: 20px;
+      gap: 24px;
       justify-content: flex-end;
+      padding-left: 12px;
+      border-left: 1px solid var(--border-color);
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 960px) {
       flex-direction: column;
       align-items: stretch;
       gap: 14px;
       padding: 18px 20px;
 
-      .description {
+      &:hover {
+        transform: translateY(-3px);
+      }
+
+      .header {
+        max-width: 100%;
+        flex: none;
+      }
+
+      .descriptionSection {
         flex: none;
       }
 
@@ -96,6 +142,8 @@
       .bottomRow {
         width: 100%;
         justify-content: space-between;
+        padding-left: 0;
+        border-left: none;
       }
     }
   }
@@ -114,9 +162,56 @@
 .thumbnail {
   @include layout.square(56px);
   border-radius: 14px;
-  background: linear-gradient(180deg, #e2e8f0 0%, #94a3b8 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 14px rgba(78, 92, 226, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumbInitials {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+
+.pricingBadge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1.5px 7px;
+  border-radius: 5px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  letter-spacing: 0.02em;
+
+  &.free {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10B981;
+    border-color: rgba(16, 185, 129, 0.25);
+  }
+
+  &.freemium {
+    background: rgba(78, 92, 226, 0.12);
+    color: #6366F1;
+    border-color: rgba(78, 92, 226, 0.25);
+  }
+
+  &.paid,
+  &.paidenterprise {
+    background: rgba(234, 179, 8, 0.12);
+    color: #EAB308;
+    border-color: rgba(234, 179, 8, 0.25);
+  }
+
+  &.opensource {
+    background: rgba(14, 165, 233, 0.12);
+    color: #0EA5E9;
+    border-color: rgba(14, 165, 233, 0.25);
+  }
 }
 
 .info {
@@ -199,7 +294,7 @@
 }
 
 .metrics {
-  @include layout.flex(row, start, center, 12px);
+  @include layout.flex(row, start, center, 14px);
 }
 
 .rating {
@@ -207,6 +302,12 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--brand-yellow);
+}
+
+.reviewCount {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
 .views {
@@ -219,15 +320,23 @@
   @include layout.flex(row, end, center, 8px);
 
   .actionBtn {
-    @include layout.square(30px);
+    @include layout.square(32px);
     @include layout.flex(row, center, center);
     color: var(--text-muted);
     border-radius: var(--radius-xs);
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
     transition: all var(--transition-fast);
 
     &:hover {
       color: var(--text-primary);
       background: var(--bg-input-hover);
+      border-color: var(--border-color);
+    }
+
+    &.bookmarked {
+      color: var(--primary-color);
     }
   }
 }
