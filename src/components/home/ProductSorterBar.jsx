@@ -72,7 +72,10 @@ export default function ProductSorterBar({
       </div>
 
       <div className={styles.actionsRow}>
-        <button className={styles.filterMobileBtn} onClick={onToggleMobileFilter}>
+        <button
+          className={`${styles.filterMobileBtn} ${isMobileFilterOpen ? styles.active : ''}`}
+          onClick={onToggleMobileFilter}
+        >
           <SlidersHorizontal size={15} />
           <span>Filters</span>
         </button>

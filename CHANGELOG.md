@@ -46,8 +46,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - 2-3 lines scrollable input container for selected `#` tags with instant `×` removal.
     - Alphabetical (A-Z) index sections and Category grouping view.
     - Mutual exclusion (`only` rule) enforcement: displays inline conflict explanation banner directly beneath the tag input if user selects an incompatible single-choice tag.
-- **Curated `@` Category Taxonomy**:
-  - Formalized single-category structure with `@` prefix in `mockData.js` and `toolsService.js`.
+- **Curated Category Taxonomy & Tag System**:
+  - Removed `@` prefix from category names across the application (CategorySlider, InformationCard, SubmitToolPage dropdown, tool cards, mockData).
+  - Preserved `#` prefix on tags across all views (TagPicker, ProductCard, ToolDetailView).
+- **Responsive Inline Filter Accordion**:
+  - Replaced full-screen drawer on viewport widths <= 1080px with an animated inline filter panel situated directly above the search bar.
+  - Added smooth CSS grid/max-height accordion expansion and collapse transitions.
+- **Category Slider Edge-to-Edge Alignment**:
+  - Removed horizontal padding offsets to align CategorySlider edge-to-edge with the search bar, filter panel, and card grid.
+- **Full-Page Submit Tool Studio (100% Width)**:
+  - Expanded `SubmitToolPage` to `100%` viewport container width with full-width split workspace.
 - **Responsive Category Carousel**:
   - Created `src/components/home/CategorySlider.jsx` with `<` and `>` arrow navigation buttons matching user design mockup 1 for viewports `<= 850px`.
   - Configured left FilterBar to hide completely (`display: none`) at `<= 1080px`, expanding catalog grid to full width.

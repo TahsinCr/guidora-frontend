@@ -16,6 +16,32 @@
   min-width: 0;
 }
 
+.inlineFilterWrapper {
+  width: 100%;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, margin-bottom 0.35s ease;
+  opacity: 0;
+  overflow: hidden;
+  margin-bottom: 0;
+
+  &.inlineFilterOpen {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    margin-bottom: 4px;
+  }
+
+  // Only visible on screens <= 1080px where the desktop sidebar is hidden
+  @media (min-width: 1081px) {
+    display: none !important;
+  }
+}
+
+.inlineFilterInner {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .productGrid {
   @include layout.width(fill);
   @include layout.grid($cols: repeat(auto-fill, minmax(350px, 1fr)), $gap: 20px);

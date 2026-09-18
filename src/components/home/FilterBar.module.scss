@@ -5,25 +5,22 @@
   @include layout.flex(column, start, start, 14px);
   flex-shrink: 0;
 
-  @media (max-width: 1080px) {
-    display: none;
+  &.inlineMode {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    box-shadow: var(--shadow-card);
+    position: static !important;
+    animation: none !important;
+  }
 
-    &.mobileOpen {
-      display: flex;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 250;
-      background: rgba(7, 12, 24, 0.96);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      padding: 24px 20px;
-      overflow-y: auto;
-      animation: slideDrawerIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  @media (max-width: 1080px) {
+    &:not(.inlineMode) {
+      display: none;
     }
   }
 }

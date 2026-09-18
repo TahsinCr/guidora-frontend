@@ -77,6 +77,29 @@ export default function ProductGrid({
       />
 
       <section className={styles.mainSection}>
+        {/* Animated Mobile/Responsive Inline Filter Accordion */}
+        <div
+          className={`${styles.inlineFilterWrapper} ${
+            isMobileFilterOpen ? styles.inlineFilterOpen : ''
+          }`}
+          aria-hidden={!isMobileFilterOpen}
+        >
+          <div className={styles.inlineFilterInner}>
+            <FilterBar
+              filterVerified={filterVerified}
+              onFilterVerifiedChange={onFilterVerifiedChange}
+              verification={verification}
+              onVerificationChange={onVerificationChange}
+              filterPricing={filterPricing}
+              onFilterPricingChange={onFilterPricingChange}
+              platform={platform}
+              onPlatformChange={onPlatformChange}
+              onResetFilters={onResetFilters}
+              isInline={true}
+            />
+          </div>
+        </div>
+
         <ProductSorterBar
           search={search}
           onSearchChange={onSearchChange}

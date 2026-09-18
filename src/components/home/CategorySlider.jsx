@@ -78,3 +78,4 @@ export default function CategorySlider({ categories = [], selectedCategory, onSe
     </div>
   );
 }
+

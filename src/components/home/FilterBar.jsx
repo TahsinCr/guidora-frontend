@@ -12,21 +12,28 @@ export default function FilterBar({
   onResetFilters,
   isOpenMobile,
   onCloseMobile,
+  isInline = false,
 }) {
   const [isPricingOpen, setIsPricingOpen] = useState(true);
   const [isPlatformOpen, setIsPlatformOpen] = useState(true);
 
   return (
-    <aside className={`${styles.sidebar} ${isOpenMobile ? styles.mobileOpen : ''}`}>
+    <aside
+      className={`${styles.sidebar} ${isInline ? styles.inlineMode : ''} ${
+        !isInline && isOpenMobile ? styles.mobileOpen : ''
+      }`}
+    >
       <div className={styles.topBar}>
         <span className={styles.title}>Filters</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button className={styles.resetBtn} onClick={onResetFilters}>
             Reset All
           </button>
-          <button className={styles.closeMobileBtn} onClick={onCloseMobile} title="Close">
-            <X size={20} />
-          </button>
+          {!isInline && (
+            <button className={styles.closeMobileBtn} onClick={onCloseMobile} title="Close">
+              <X size={20} />
+            </button>
+          )}
         </div>
       </div>
 

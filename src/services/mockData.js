@@ -1,14 +1,14 @@
 export const CATEGORIES = [
-  { id: 'all', name: 'All Tools', prefix: '@', count: 64, isPopular: true },
-  { id: 'generative-art', name: 'Generative Art', prefix: '@', count: 14, color: '#A855F7', isPopular: true },
-  { id: 'developer-tools', name: 'Coding Assistants', prefix: '@', count: 16, color: '#10B981', isPopular: true },
-  { id: 'design-ui', name: 'Image Generation', prefix: '@', count: 12, color: '#06B6D4', isPopular: true },
-  { id: 'llms-ai', name: 'Chatbots', prefix: '@', count: 15, color: '#EAB308', isPopular: true },
-  { id: 'video-motion', name: 'Video Generation', prefix: '@', count: 12, color: '#EC4899', isPopular: true },
-  { id: 'data-science', name: 'Data Science', prefix: '@', count: 10, color: '#3B82F6', isPopular: false },
-  { id: 'audio-music', name: 'Audio & Music', prefix: '@', count: 8, color: '#F97316', isPopular: false },
-  { id: 'productivity', name: 'Productivity', prefix: '@', count: 11, color: '#8B5CF6', isPopular: false },
-  { id: '3d-motion', name: '3D & Motion', prefix: '@', count: 7, color: '#14B8A6', isPopular: false },
+  { id: 'all', name: 'All Tools', count: 64, isPopular: true },
+  { id: 'generative-art', name: 'Generative Art', count: 14, color: '#A855F7', isPopular: true },
+  { id: 'developer-tools', name: 'Coding Assistants', count: 16, color: '#10B981', isPopular: true },
+  { id: 'design-ui', name: 'Image Generation', count: 12, color: '#06B6D4', isPopular: true },
+  { id: 'llms-ai', name: 'Chatbots', count: 15, color: '#EAB308', isPopular: true },
+  { id: 'video-motion', name: 'Video Generation', count: 12, color: '#EC4899', isPopular: true },
+  { id: 'data-science', name: 'Data Science', count: 10, color: '#3B82F6', isPopular: false },
+  { id: 'audio-music', name: 'Audio & Music', count: 8, color: '#F97316', isPopular: false },
+  { id: 'productivity', name: 'Productivity', count: 11, color: '#8B5CF6', isPopular: false },
+  { id: '3d-motion', name: '3D & Motion', count: 7, color: '#14B8A6', isPopular: false },
 ];
 
 export const TAG_CATEGORIES = [

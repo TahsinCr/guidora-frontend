@@ -310,7 +310,7 @@ export default function SubmitToolPage({ onBack, onToolCreated }) {
                   >
                     {validCategories.map((c) => (
                       <option key={c.id} value={c.id}>
-                        @{c.name}
+                        {c.name}
                       </option>
                     ))}
                   </select>
@@ -551,3 +551,4 @@ export default function SubmitToolPage({ onBack, onToolCreated }) {
     </div>
   );
 }
+

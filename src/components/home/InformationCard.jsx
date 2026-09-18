@@ -36,7 +36,7 @@ export default function InformationCard({ categories = [], selectedCategory, onS
                   className={styles.pillDot}
                   style={{ backgroundColor: pill.color || '#818cf8' }}
                 />
-                <span>@{pill.name}</span>
+                <span>{pill.name}</span>
               </button>
             );
           })}
