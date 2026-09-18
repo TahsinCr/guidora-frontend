@@ -31,7 +31,6 @@ export const MOCK_USERS = [
     location: 'Berlin, Germany',
     website: 'https://neurolabs.ai',
     joinedDate: 'November 2025',
-    organizationId: 'org_neurolabs',
     savedToolIds: ['codewizard-ai', 'figma'],
     submittedToolIds: ['vision-forge'],
     reputation: 640,

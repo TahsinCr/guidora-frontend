@@ -9,14 +9,14 @@ import {
   Award,
   Bookmark,
   Sparkles,
-  Building2,
   ExternalLink,
   Edit3,
   CheckCircle2,
   Share2,
+  X,
 } from 'lucide-react';
 import ProductCard from '@/components/home/ProductCard';
-import { getUserById } from '@/services/userService';
+import { getUserById, getCurrentUser, updateCurrentUser } from '@/services/userService';
 import { getTools } from '@/services/toolsService';
 import styles from './UserProfilePage.module.scss';
 
@@ -26,15 +26,35 @@ export default function UserProfilePage({
   onOpenTool,
 }) {
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('saved'); // 'saved' | 'submitted' | 'about'
+  const [activeTab, setActiveTab] = useState('saved'); // 'saved' | 'submitted'
   const [savedTools, setSavedTools] = useState([]);
   const [submittedTools, setSubmittedTools] = useState([]);
   const [isLoadingTools, setIsLoadingTools] = useState(true);
   const [copyNotification, setCopyNotification] = useState(false);
 
+  // Edit Profile Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editTitle, setEditTitle] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [editLocation, setEditLocation] = useState('');
+  const [editWebsite, setEditWebsite] = useState('');
+  const [editAvatar, setEditAvatar] = useState('');
+
+  const currentUser = getCurrentUser();
+  const isOwner = user && (!userId || user.id === currentUser?.id);
+
   useEffect(() => {
     const loadedUser = getUserById(userId);
     setUser(loadedUser);
+    if (loadedUser) {
+      setEditName(loadedUser.name || '');
+      setEditTitle(loadedUser.title || '');
+      setEditBio(loadedUser.bio || '');
+      setEditLocation(loadedUser.location || '');
+      setEditWebsite(loadedUser.website || '');
+      setEditAvatar(loadedUser.avatar || '');
+    }
   }, [userId]);
 
   // Load saved and submitted tools
@@ -68,6 +88,27 @@ export default function UserProfilePage({
     setTimeout(() => setCopyNotification(false), 2000);
   };
 
+  const handleSaveProfile = (e) => {
+    e.preventDefault();
+    if (!editName.trim()) return;
+
+    const initials = editAvatar.trim()
+      ? editAvatar.trim().slice(0, 2).toUpperCase()
+      : editName.trim().split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+
+    const updated = updateCurrentUser({
+      name: editName.trim(),
+      title: editTitle.trim(),
+      bio: editBio.trim(),
+      location: editLocation.trim(),
+      website: editWebsite.trim(),
+      avatar: initials,
+    });
+
+    setUser(updated);
+    setIsEditModalOpen(false);
+  };
+
   if (!user) {
     return (
       <div className={styles.loadingContainer}>
@@ -86,10 +127,23 @@ export default function UserProfilePage({
           <span>Back to Directory</span>
         </button>
 
-        <button type="button" className={styles.shareBtn} onClick={handleShare}>
-          <Share2 size={15} />
-          <span>{copyNotification ? 'Copied link!' : 'Share Profile'}</span>
-        </button>
+        <div className={styles.topBarActions}>
+          {isOwner && (
+            <button
+              type="button"
+              className={styles.editProfileBtn}
+              onClick={() => setIsEditModalOpen(true)}
+            >
+              <Edit3 size={15} />
+              <span>Edit Profile</span>
+            </button>
+          )}
+
+          <button type="button" className={styles.shareBtn} onClick={handleShare}>
+            <Share2 size={15} />
+            <span>{copyNotification ? 'Copied link!' : 'Share Profile'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Header / Banner & Card */}
@@ -112,12 +166,6 @@ export default function UserProfilePage({
               <span className={`${styles.rolePill} ${styles[user.role] || ''}`}>
                 {user.role === 'admin' ? 'Platform Admin' : user.role === 'creator' ? 'Tool Creator' : 'Community Member'}
               </span>
-              {user.organizationId && (
-                <span className={styles.orgAffiliationPill}>
-                  <Building2 size={12} />
-                  Organization Partner
-                </span>
-              )}
             </div>
 
             <p className={styles.titleText}>{user.title || 'AI Directory Contributor'}</p>
@@ -233,6 +281,120 @@ export default function UserProfilePage({
           </div>
         )}
       </div>
+
+      {/* Edit Profile Modal */}
+      {isEditModalOpen && (
+        <div
+          className={styles.modalBackdrop}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsEditModalOpen(false);
+          }}
+        >
+          <div className={styles.modalContent} role="dialog" aria-modal="true">
+            <div className={styles.modalHeader}>
+              <div className={styles.modalTitleWrap}>
+                <Edit3 size={18} color="var(--primary-color)" />
+                <span className={styles.modalTitle}>Edit Profile</span>
+              </div>
+              <button
+                type="button"
+                className={styles.closeBtn}
+                onClick={() => setIsEditModalOpen(false)}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProfile} className={styles.editForm}>
+              <div className={styles.formGrid}>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Full Name</label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="e.g. Tahsin Can"
+                    required
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Avatar Initials</label>
+                  <input
+                    type="text"
+                    maxLength={2}
+                    className={styles.input}
+                    value={editAvatar}
+                    onChange={(e) => setEditAvatar(e.target.value.toUpperCase())}
+                    placeholder="e.g. TC"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Professional Title</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="e.g. Lead AI Engineer & Product Architect"
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>About / Bio</label>
+                <textarea
+                  className={styles.textarea}
+                  rows={3}
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  placeholder="Share a short bio about what you're building or exploring..."
+                />
+              </div>
+
+              <div className={styles.formGrid}>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Location</label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={editLocation}
+                    onChange={(e) => setEditLocation(e.target.value)}
+                    placeholder="e.g. Istanbul, Turkey"
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Website / GitHub URL</label>
+                  <input
+                    type="url"
+                    className={styles.input}
+                    value={editWebsite}
+                    onChange={(e) => setEditWebsite(e.target.value)}
+                    placeholder="https://github.com/username"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.cancelBtn}
+                  onClick={() => setIsEditModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className={styles.saveBtn}>
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

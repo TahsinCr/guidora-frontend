@@ -15,7 +15,6 @@ import {
 import {
   getCurrentUser,
   getOrganizations,
-  getOrganizationById,
   adminCreateOrganization,
 } from '@/services/userService';
 import styles from './UserMenu.module.scss';
@@ -25,18 +24,13 @@ export default function UserMenu({ onOpenProfile }) {
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
   const [user, setUser] = useState(getCurrentUser());
   const [organizations, setOrganizations] = useState(getOrganizations());
-  const [userOrg, setUserOrg] = useState(null);
 
   // New Organization Form (Admin creation)
   const [newOrgName, setNewOrgName] = useState('');
   const [newOrgWebsite, setNewOrgWebsite] = useState('');
 
   useEffect(() => {
-    const u = getCurrentUser();
-    setUser(u);
-    if (u?.organizationId) {
-      setUserOrg(getOrganizationById(u.organizationId));
-    }
+    setUser(getCurrentUser());
   }, [isOpen, isOrgModalOpen]);
 
   const handleCreateOrg = (e) => {
@@ -102,29 +96,6 @@ export default function UserMenu({ onOpenProfile }) {
               </div>
               <span className={styles.userEmail}>{user?.email || 'tahsin@guidora.io'}</span>
             </div>
-          </div>
-
-          {/* Connected Organization Section */}
-          <div className={styles.orgSection}>
-            <div className={styles.orgLabel}>Organization</div>
-            {userOrg ? (
-              <div className={styles.orgCard}>
-                <div className={styles.orgBadge}>{userOrg.initials}</div>
-                <div className={styles.orgMeta}>
-                  <div className={styles.orgNameRow}>
-                    <span className={styles.orgName}>{userOrg.name}</span>
-                    {userOrg.verified && (
-                      <CheckCircle2 size={12} color="#10B981" title="Verified Organization" />
-                    )}
-                  </div>
-                  <span className={styles.orgStatus}>
-                    {userOrg.verificationSource === 'admin' ? 'Admin Verified' : 'Bot Verified'}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <span className={styles.orgStatus}>No organization assigned</span>
-            )}
           </div>
 
           {/* Action List */}
