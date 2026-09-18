@@ -6,8 +6,9 @@ const ORGANIZATIONS_KEY = 'guidora_organizations';
 export const MOCK_USERS = [
   {
     id: 'usr_tahsin_01',
-    name: 'Tahsin Can',
-    email: 'tahsin@guidora.io',
+    name: 'Tahsin Cr',
+    username: 'TahsinCr',
+    email: 'tahsincrs@gmail.com',
     role: 'admin', // 'admin' | 'creator' | 'member'
     avatar: 'TC',
     title: 'Lead AI Engineer & Product Architect',
@@ -15,7 +16,7 @@ export const MOCK_USERS = [
     location: 'Istanbul, Turkey',
     website: 'https://github.com/Tahsincr',
     joinedDate: 'September 2024',
-    organizationId: null, // Ordinary user not inherently tied to an organization
+    organizationId: null,
     savedToolIds: ['neurogen-studio', 'cursor-editor', 'midjourney', 'v0-dev'],
     submittedToolIds: ['neurogen-studio'],
     reputation: 980,
@@ -115,12 +116,11 @@ export function getCurrentUser() {
   try {
     const raw = localStorage.getItem(USER_KEY);
     if (!raw) {
-      localStorage.setItem(USER_KEY, JSON.stringify(DEFAULT_USER));
-      return DEFAULT_USER;
+      return null;
     }
     return JSON.parse(raw);
   } catch (e) {
-    return DEFAULT_USER;
+    return null;
   }
 }
 

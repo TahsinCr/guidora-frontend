@@ -7,7 +7,11 @@ import ToolDialog from '@/components/tool-detail/ToolDialog';
 import SubmitToolPage from '@/components/submit/SubmitToolPage';
 import UserProfilePage from '@/components/profile/UserProfilePage';
 import AdminDashboardPage from '@/components/admin/AdminDashboardPage';
+import AuthModal from '@/components/auth/AuthModal';
+import NotificationDrawer from '@/components/notifications/NotificationDrawer';
+import AccountSettingsModal from '@/components/settings/AccountSettingsModal';
 import { getTools, getCategories } from '@/services/toolsService';
+import { getCurrentUser } from '@/services/userService';
 
 export default function App() {
   const [categories, setCategories] = useState([]);
@@ -62,6 +66,15 @@ export default function App() {
   const [isAdminView, setIsAdminView] = useState(() => {
     return initialParams.get('view') === 'admin';
   });
+
+  // Current logged in user state
+  const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
+
+  // Modal dialog states: Auth, Notifications, Settings
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState('welcome');
+  const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   // Active tool for detail view - synchronized with URL (?tool=id)
   const [activeToolId, setActiveToolId] = useState(() => {
@@ -368,6 +381,13 @@ export default function App() {
         onSubmitTool={handleOpenSubmit}
         onOpenProfile={handleOpenProfile}
         onOpenAdmin={handleOpenAdmin}
+        onOpenNotifications={() => setIsNotifDrawerOpen(true)}
+        onOpenAuth={(mode = 'welcome') => {
+          setAuthModalMode(mode);
+          setIsAuthModalOpen(true);
+        }}
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
+        onUserChange={(updatedUser) => setCurrentUser(updatedUser)}
       />
 
       <main className="main-content">
@@ -438,6 +458,30 @@ export default function App() {
       </main>
 
       <Footer />
+
+      {/* Auth Modal (Login / Register / Welcome) */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authModalMode}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+        }}
+      />
+
+      {/* Notifications Drawer */}
+      <NotificationDrawer
+        isOpen={isNotifDrawerOpen}
+        onClose={() => setIsNotifDrawerOpen(false)}
+        onOpenTool={handleOpenTool}
+      />
+
+      {/* Account Settings & Security Modal */}
+      <AccountSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        user={currentUser}
+      />
     </div>
   );
 }

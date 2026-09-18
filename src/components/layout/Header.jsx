@@ -12,6 +12,10 @@ export default function Header({
   onSubmitTool,
   onOpenProfile,
   onOpenAdmin,
+  onOpenNotifications,
+  onOpenAuth,
+  onOpenSettings,
+  onUserChange,
 }) {
   const { theme, toggleTheme } = useTheme();
 
@@ -67,8 +71,24 @@ export default function Header({
               >
                 {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
+
+              <button
+                type="button"
+                className={styles.iconBtn}
+                onClick={onOpenNotifications}
+                title="Notifications"
+              >
+                <Bell size={18} />
+                <span className={styles.pinkDot} />
+              </button>
               
-              <UserMenu onOpenProfile={onOpenProfile} onOpenAdmin={onOpenAdmin} />
+              <UserMenu
+                onOpenProfile={onOpenProfile}
+                onOpenAdmin={onOpenAdmin}
+                onOpenSettings={onOpenSettings}
+                onOpenAuth={onOpenAuth}
+                onUserChange={onUserChange}
+              />
             </>
           ) : (
             <>
@@ -89,12 +109,23 @@ export default function Header({
                 {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
 
-              <button className={styles.iconBtn} title="Notifications">
+              <button
+                type="button"
+                className={styles.iconBtn}
+                onClick={onOpenNotifications}
+                title="Notifications"
+              >
                 <Bell size={18} />
                 <span className={styles.pinkDot} />
               </button>
 
-              <UserMenu onOpenProfile={onOpenProfile} onOpenAdmin={onOpenAdmin} />
+              <UserMenu
+                onOpenProfile={onOpenProfile}
+                onOpenAdmin={onOpenAdmin}
+                onOpenSettings={onOpenSettings}
+                onOpenAuth={onOpenAuth}
+                onUserChange={onUserChange}
+              />
             </>
           )}
         </div>

@@ -12,15 +12,17 @@ import {
   LogOut,
   Settings,
   LayoutDashboard,
+  LogIn,
 } from 'lucide-react';
 import {
   getCurrentUser,
   getOrganizations,
   adminCreateOrganization,
 } from '@/services/userService';
+import { logout } from '@/services/authService';
 import styles from './UserMenu.module.scss';
 
-export default function UserMenu({ onOpenProfile, onOpenAdmin }) {
+export default function UserMenu({ onOpenProfile, onOpenAdmin, onOpenSettings, onOpenAuth, onUserChange }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
   const [user, setUser] = useState(getCurrentUser());
@@ -56,6 +58,28 @@ export default function UserMenu({ onOpenProfile, onOpenAdmin }) {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    setUser(null);
+    setIsOpen(false);
+    if (onUserChange) onUserChange(null);
+  };
+
+  // If NOT logged in, show sleek "Sign In" button!
+  if (!user) {
+    return (
+      <button
+        type="button"
+        className={styles.loginTriggerBtn}
+        onClick={() => onOpenAuth && onOpenAuth('welcome')}
+        title="Sign In to Guidora"
+      >
+        <LogIn size={15} />
+        <span>Sign In</span>
+      </button>
+    );
+  }
+
   return (
     <div className={styles.dropdownWrapper}>
       {/* Trigger: User Avatar */}
@@ -87,7 +111,7 @@ export default function UserMenu({ onOpenProfile, onOpenAdmin }) {
             <div className={styles.largeAvatar}>{user?.avatar || 'TC'}</div>
             <div className={styles.userDetails}>
               <div className={styles.userNameRow}>
-                <span className={styles.userName}>{user?.name || 'Tahsin Can'}</span>
+                <span className={styles.userName}>{user?.name || 'Tahsin Cr'}</span>
                 {user?.role === 'admin' && (
                   <span className={styles.adminBadge}>
                     <ShieldCheck size={10} />
@@ -95,7 +119,7 @@ export default function UserMenu({ onOpenProfile, onOpenAdmin }) {
                   </span>
                 )}
               </div>
-              <span className={styles.userEmail}>{user?.email || 'tahsin@guidora.io'}</span>
+              <span className={styles.userEmail}>{user?.email || 'tahsincrs@gmail.com'}</span>
             </div>
           </div>
 
@@ -141,7 +165,10 @@ export default function UserMenu({ onOpenProfile, onOpenAdmin }) {
             <button
               type="button"
               className={styles.menuItem}
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false);
+                if (onOpenSettings) onOpenSettings();
+              }}
             >
               <Settings size={15} />
               <span>Account Settings</span>
@@ -152,7 +179,7 @@ export default function UserMenu({ onOpenProfile, onOpenAdmin }) {
             <button
               type="button"
               className={styles.menuItem}
-              onClick={() => setIsOpen(false)}
+              onClick={handleLogout}
             >
               <LogOut size={15} />
               <span>Log out</span>
