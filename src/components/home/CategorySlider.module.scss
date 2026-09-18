@@ -10,6 +10,15 @@
   padding: 4px 0;
   position: relative;
   z-index: 2;
+
+  &.arrowsHidden {
+    justify-content: center;
+
+    .scrollTrack {
+      justify-content: center;
+      flex: 0 1 auto;
+    }
+  }
 }
 
 .navBtn {

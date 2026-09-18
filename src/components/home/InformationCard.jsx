@@ -31,12 +31,13 @@ export default function InformationCard({ categories = [], selectedCategory, onS
           </p>
         </div>
 
-        {/* Both desktop and mobile use the elegant slider with left/right buttons */}
+        {/* Both desktop and mobile use the elegant slider; arrows only appear when scrolled/compact */}
         <div className={styles.sliderContainer}>
           <CategorySlider
             categories={categories}
             selectedCategory={selectedCategory}
             onSelectCategory={onSelectCategory}
+            isCompact={isScrolled}
           />
         </div>
       </div>

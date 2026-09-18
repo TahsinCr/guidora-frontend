@@ -34,6 +34,7 @@ export default function FilterBar({
   const [filterQuery, setFilterQuery] = useState('');
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(true);
   const [isVerificationOpen, setIsVerificationOpen] = useState(true);
+  const [showAllCategories, setShowAllCategories] = useState(false);
   
   // Track open/collapsed state for each tag category
   const [openTagSections, setOpenTagSections] = useState({
@@ -58,6 +59,23 @@ export default function FilterBar({
     const q = filterQuery.toLowerCase();
     return list.filter((c) => c.name.toLowerCase().includes(q));
   }, [categories, filterQuery]);
+
+  // If a category is selected, hide the others and keep only that one visible.
+  // Otherwise, cap to 6 by default, expandable to all via arrow/button.
+  const hasSelectedCategory = (selectedCategory && selectedCategory !== 'all') || selectedCategories.length > 0;
+  const visibleCategories = useMemo(() => {
+    if (hasSelectedCategory) {
+      return filteredCategories.filter(
+        (c) => selectedCategories.includes(c.id) || selectedCategory === c.id
+      );
+    }
+    if (showAllCategories || filterQuery.trim()) {
+      return filteredCategories;
+    }
+    return filteredCategories.slice(0, 6);
+  }, [filteredCategories, hasSelectedCategory, selectedCategories, selectedCategory, showAllCategories, filterQuery]);
+
+  const canExpandCategories = filteredCategories.length > 6 && !filterQuery.trim();
 
   // Hierarchical tag categories filtered by search
   const filteredTagCategories = useMemo(() => {
@@ -174,7 +192,7 @@ export default function FilterBar({
         </div>
         {isCategoriesOpen && (
           <div className={styles.optionsList}>
-            {filteredCategories.map((cat) => {
+            {visibleCategories.map((cat) => {
               const isChecked =
                 selectedCategories.includes(cat.id) || selectedCategory === cat.id;
 
@@ -196,59 +214,40 @@ export default function FilterBar({
                 </div>
               );
             })}
+
+            {hasSelectedCategory ? (
+              <button
+                type="button"
+                className={styles.showMoreBtn}
+                onClick={() => handleToggleCategory(selectedCategory)}
+              >
+                Show all categories
+              </button>
+            ) : (
+              canExpandCategories && (
+                <button
+                  type="button"
+                  className={styles.showMoreBtn}
+                  onClick={() => setShowAllCategories(!showAllCategories)}
+                >
+                  {showAllCategories ? (
+                    <>
+                      Show less <ChevronUp size={12} />
+                    </>
+                  ) : (
+                    <>
+                      Show {filteredCategories.length - 6} more <ChevronDown size={12} />
+                    </>
+                  )}
+                </button>
+              )
+            )}
           </div>
         )}
         <div className={styles.divider} />
       </div>
 
-      {/* TAG CATEGORIES (PLATFORM, PRICING, CAPABILITIES, DEPLOYMENT, LICENSE) */}
-      {filteredTagCategories.map((catGroup) => {
-        const isGroupOpen = openTagSections[catGroup.id] ?? true;
-        const selectedInGroupCount = catGroup.tags.filter((t) =>
-          selectedTags.includes(t.name)
-        ).length;
-
-        return (
-          <div key={catGroup.id} className={styles.section}>
-            <div
-              className={styles.sectionHeader}
-              onClick={() => toggleTagSection(catGroup.id)}
-            >
-              <span className={styles.headerLabel}>
-                <Hash size={13} />
-                {catGroup.name}
-                {selectedInGroupCount > 0 && (
-                  <span className={styles.groupCountPill}>({selectedInGroupCount})</span>
-                )}
-              </span>
-              {isGroupOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            </div>
-
-            {isGroupOpen && (
-              <div className={styles.tagsPillContainer}>
-                {catGroup.tags.map((t) => {
-                  const isChecked = selectedTags.includes(t.name);
-
-                  return (
-                    <button
-                      type="button"
-                      key={t.id || t.name}
-                      className={`${styles.filterTagPill} ${isChecked ? styles.tagChecked : ''}`}
-                      onClick={() => handleToggleTag(t.name, catGroup)}
-                      title={catGroup.isSingleSelect ? `${t.name} (Single choice)` : t.name}
-                    >
-                      #{t.name}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            <div className={styles.divider} />
-          </div>
-        );
-      })}
-
-      {/* VERIFICATION SECTION */}
+      {/* VERIFICATION SECTION (Placed directly below categories as a special tag/filter) */}
       <div className={styles.section}>
         <div className={styles.sectionHeader} onClick={() => setIsVerificationOpen(!isVerificationOpen)}>
           <span className={styles.headerLabel}>
@@ -302,7 +301,55 @@ export default function FilterBar({
             </div>
           </div>
         )}
+        <div className={styles.divider} />
       </div>
+
+      {/* TAG CATEGORIES (PLATFORM, PRICING, CAPABILITIES, DEPLOYMENT, LICENSE) */}
+      {filteredTagCategories.map((catGroup) => {
+        const isGroupOpen = openTagSections[catGroup.id] ?? true;
+        const selectedInGroupCount = catGroup.tags.filter((t) =>
+          selectedTags.includes(t.name)
+        ).length;
+
+        return (
+          <div key={catGroup.id} className={styles.section}>
+            <div
+              className={styles.sectionHeader}
+              onClick={() => toggleTagSection(catGroup.id)}
+            >
+              <span className={styles.headerLabel}>
+                <Hash size={13} />
+                {catGroup.name}
+                {selectedInGroupCount > 0 && (
+                  <span className={styles.groupCountPill}>({selectedInGroupCount})</span>
+                )}
+              </span>
+              {isGroupOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </div>
+
+            {isGroupOpen && (
+              <div className={styles.tagsPillContainer}>
+                {catGroup.tags.map((t) => {
+                  const isChecked = selectedTags.includes(t.name);
+
+                  return (
+                    <button
+                      type="button"
+                      key={t.id || t.name}
+                      className={`${styles.filterTagPill} ${isChecked ? styles.tagChecked : ''}`}
+                      onClick={() => handleToggleTag(t.name, catGroup)}
+                      title={catGroup.isSingleSelect ? `${t.name} (Single choice)` : t.name}
+                    >
+                      #{t.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <div className={styles.divider} />
+          </div>
+        );
+      })}
     </aside>
   );
 }

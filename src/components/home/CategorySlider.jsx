@@ -26,7 +26,12 @@ const ICON_MAP = {
   '3d-motion': Box,
 };
 
-export default function CategorySlider({ categories = [], selectedCategory, onSelectCategory }) {
+export default function CategorySlider({
+  categories = [],
+  selectedCategory,
+  onSelectCategory,
+  isCompact = false,
+}) {
   const scrollRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -62,16 +67,21 @@ export default function CategorySlider({ categories = [], selectedCategory, onSe
   const filteredCategories = categories.filter((c) => c.id !== 'all');
 
   return (
-    <div className={styles.sliderWrapper} aria-label="Category Carousel">
-      <button
-        type="button"
-        className={`${styles.navBtn} ${!canScrollLeft ? styles.navBtnDisabled : ''}`}
-        onClick={handleScrollLeft}
-        aria-label="Scroll categories left"
-        disabled={!canScrollLeft}
-      >
-        <ChevronLeft size={16} />
-      </button>
+    <div
+      className={`${styles.sliderWrapper} ${!isCompact ? styles.arrowsHidden : ''}`}
+      aria-label="Category Carousel"
+    >
+      {isCompact && (
+        <button
+          type="button"
+          className={`${styles.navBtn} ${!canScrollLeft ? styles.navBtnDisabled : ''}`}
+          onClick={handleScrollLeft}
+          aria-label="Scroll categories left"
+          disabled={!canScrollLeft}
+        >
+          <ChevronLeft size={16} />
+        </button>
+      )}
 
       <div
         className={styles.scrollTrack}
@@ -101,15 +111,17 @@ export default function CategorySlider({ categories = [], selectedCategory, onSe
         })}
       </div>
 
-      <button
-        type="button"
-        className={`${styles.navBtn} ${!canScrollRight ? styles.navBtnDisabled : ''}`}
-        onClick={handleScrollRight}
-        aria-label="Scroll categories right"
-        disabled={!canScrollRight}
-      >
-        <ChevronRight size={16} />
-      </button>
+      {isCompact && (
+        <button
+          type="button"
+          className={`${styles.navBtn} ${!canScrollRight ? styles.navBtnDisabled : ''}`}
+          onClick={handleScrollRight}
+          aria-label="Scroll categories right"
+          disabled={!canScrollRight}
+        >
+          <ChevronRight size={16} />
+        </button>
+      )}
     </div>
   );
 }
