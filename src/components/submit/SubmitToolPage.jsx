@@ -21,6 +21,7 @@ import MarkdownRenderer from '@/components/common/MarkdownRenderer';
 import TagPicker from './TagPicker';
 import { addTool, fetchGithubRepoData } from '@/services/toolsService';
 import { CATEGORIES } from '@/services/mockData';
+import { getOrganizations } from '@/services/userService';
 import styles from './SubmitToolPage.module.scss';
 
 // SVG Icon for GitHub
@@ -42,7 +43,8 @@ export default function SubmitToolPage({ onBack, onToolCreated }) {
   const [categoryId, setCategoryId] = useState('generative-art');
   const [tagline, setTagline] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
-  const [creatorName, setCreatorName] = useState('');
+  const [organizations] = useState(getOrganizations());
+  const [organizationId, setOrganizationId] = useState('org_neurolabs');
   const [selectedTags, setSelectedTags] = useState([
     { id: 'web', name: 'Web', tagCategoryId: 'platform', tagCategoryName: 'Platform & Environment' },
     { id: 'freemium', name: 'Freemium', only: true, tagCategoryId: 'pricing', tagCategoryName: 'Pricing & Licensing' },
@@ -165,12 +167,17 @@ export default function SubmitToolPage({ onBack, onToolCreated }) {
         .filter((t) => t.tagCategoryId === 'platform')
         .map((t) => t.name);
 
+      const selectedOrg = organizations.find((o) => o.id === organizationId);
+
       const newTool = await addTool({
         name: name.trim(),
         categoryId,
         description: tagline.trim(),
         websiteUrl: websiteUrl.trim(),
-        creatorName: creatorName.trim() || `${name.trim()} Labs`,
+        organizationId: selectedOrg?.id || null,
+        creatorName: selectedOrg ? selectedOrg.name : `${name.trim()} Labs`,
+        creatorInitials: selectedOrg ? selectedOrg.initials : name.trim().slice(0, 2).toUpperCase(),
+        creatorVerified: !!selectedOrg?.verified,
         pricing: pricingTag,
         license: licenseTag,
         platforms: platformTags.length > 0 ? platformTags : ['Web'],
@@ -343,14 +350,22 @@ export default function SubmitToolPage({ onBack, onToolCreated }) {
                   />
                 </div>
                 <div className={styles.inputGroup}>
-                  <label className={styles.label}>Creator / Company</label>
-                  <input
-                    type="text"
-                    className={styles.textInput}
-                    placeholder="e.g. NeuroLabs Inc."
-                    value={creatorName}
-                    onChange={(e) => setCreatorName(e.target.value)}
-                  />
+                  <label className={styles.label}>
+                    Organization / Creator
+                    <span className={styles.labelHint}>(Admin or Bot Verified)</span>
+                  </label>
+                  <select
+                    className={styles.selectInput}
+                    value={organizationId}
+                    onChange={(e) => setOrganizationId(e.target.value)}
+                  >
+                    <option value="">Independent Creator / Self-published</option>
+                    {organizations.map((org) => (
+                      <option key={org.id} value={org.id}>
+                        {org.name} {org.verified ? '✓ (Verified)' : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

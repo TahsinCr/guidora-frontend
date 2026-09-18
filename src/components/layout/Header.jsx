@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '@/context/ThemeContext';
-import { Plus, Bell, Sun, Moon, Sparkles, ChevronRight, Search } from 'lucide-react';
+import { Plus, Bell, Sun, Moon, ChevronRight, Search } from 'lucide-react';
+import UserMenu from './UserMenu';
 import styles from './Header.module.scss';
 
 export default function Header({
@@ -18,7 +19,7 @@ export default function Header({
         <div className={styles.leftSection}>
           <div className={styles.logo} onClick={onBackToDirectory || onResetSearch}>
             <div className={styles.logoIcon}>
-              <Sparkles size={20} />
+              <img src="/logo.svg" alt="Guidora Logo" className={styles.figmaLogoImg} />
             </div>
             <span className={styles.logoText}>Guidora</span>
           </div>
@@ -64,9 +65,8 @@ export default function Header({
               >
                 {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
-              <div className={styles.userAvatar} title="User Profile">
-                US
-              </div>
+              
+              <UserMenu />
             </>
           ) : (
             <>
@@ -92,9 +92,7 @@ export default function Header({
                 <span className={styles.pinkDot} />
               </button>
 
-              <div className={styles.userAvatar} title="User Profile">
-                US
-              </div>
+              <UserMenu />
             </>
           )}
         </div>

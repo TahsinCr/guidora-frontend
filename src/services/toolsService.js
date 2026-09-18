@@ -222,10 +222,11 @@ export async function addTool(toolData) {
     license: toolData.license || 'Open Source',
     monthlyVisits: '50.0k',
     rank: '#NEW',
+    organizationId: toolData.organizationId || null,
     creator: {
       name: toolData.creatorName || `${toolData.name} Team`,
-      initials: (toolData.creatorName || toolData.name).slice(0, 2).toUpperCase(),
-      verified: true,
+      initials: toolData.creatorInitials || (toolData.creatorName || toolData.name).slice(0, 2).toUpperCase(),
+      verified: toolData.creatorVerified !== undefined ? toolData.creatorVerified : true,
     },
     capabilities: toolData.capabilities || ['AI Automation', 'Developer Tool'],
     keyFeatures: toolData.keyFeatures || [
