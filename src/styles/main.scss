@@ -23,6 +23,11 @@
     padding: 16px 16px 40px 16px;
     gap: 16px;
   }
+
+  @media (max-width: 480px) {
+    padding: 12px 12px 36px 12px;
+    gap: 14px;
+  }
 }
 
 // Custom Scrollbar

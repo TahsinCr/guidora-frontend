@@ -100,13 +100,18 @@
 }
 
 .toolBar {
-  @include layout.flex(row, end, center, 14px);
+  @include layout.flex(row, end, center, 10px);
+  flex-shrink: 0;
+
+  @media (max-width: 480px) {
+    gap: 6px;
+  }
 }
 
 .submitBtn {
-  @include layout.inline-flex(row, center, center, 8px);
+  @include layout.inline-flex(row, center, center, 6px);
   @include layout.box(
-    $padding: 8px 18px,
+    $padding: 8px 16px,
     $border: 1px solid var(--border-card),
     $radius: var(--radius-full)
   );
@@ -122,16 +127,17 @@
     transform: translateY(-1px);
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 580px) {
     .btnText {
       display: none;
     }
-    padding: 8px 12px;
+    padding: 8px 10px;
+    border-radius: var(--radius-full);
   }
 }
 
 .iconBtn {
-  @include layout.square(38px);
+  @include layout.square(36px);
   @include layout.flex(row, center, center);
   border-radius: var(--radius-full);
   color: var(--text-secondary);
@@ -141,6 +147,10 @@
   &:hover {
     color: var(--text-primary);
     background: var(--bg-input);
+  }
+
+  @media (max-width: 420px) {
+    @include layout.square(32px);
   }
 
   .pinkDot {

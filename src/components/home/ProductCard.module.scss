@@ -34,6 +34,30 @@
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
   }
 
+  @media (max-width: 640px) {
+    padding: 16px;
+    gap: 12px;
+    border-radius: var(--radius-md);
+
+    .thumbnail {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+
+      .thumbInitials {
+        font-size: 15px;
+      }
+    }
+
+    .title {
+      font-size: 15.5px;
+    }
+
+    .description {
+      font-size: 13px;
+    }
+  }
+
   &.listView {
     flex-direction: row;
     align-items: center;

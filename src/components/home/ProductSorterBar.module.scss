@@ -84,22 +84,34 @@
   }
 
   @media (max-width: 640px) {
-    justify-content: space-between;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 }
 
 .filterMobileBtn {
   @include layout.inline-flex(row, center, center, 6px);
   @include layout.box($padding: 0 14px, $border: 1px solid var(--border-card), $radius: var(--radius-md));
-  background: var(--bg-input);
+  background: var(--bg-card);
   color: var(--text-secondary);
-  height: 44px;
-  font-size: 13.5px;
+  height: 42px;
+  font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
   display: none;
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   transition: all var(--transition-fast);
 
   &:hover {
@@ -108,14 +120,19 @@
   }
 
   &.active {
-    background: rgba(76, 130, 251, 0.15);
-    border-color: var(--brand-blue);
-    color: var(--brand-blue);
+    background: rgba(138, 56, 245, 0.12);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
     font-weight: 600;
   }
 
   @media (max-width: 1080px) {
     display: inline-flex;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0 10px;
+    font-size: 12.5px;
   }
 }
 
@@ -125,22 +142,28 @@
 }
 
 .dropdownTrigger {
-  @include layout.inline-flex(row, center, center, 8px);
+  @include layout.inline-flex(row, center, center, 6px);
   @include layout.box(
-    $padding: 0 14px,
+    $padding: 0 12px,
     $border: 1px solid var(--border-card),
     $radius: var(--radius-md)
   );
-  background: var(--bg-input);
+  background: var(--bg-card);
   color: var(--text-secondary);
-  height: 44px;
-  font-size: 13.5px;
+  height: 42px;
+  font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
   cursor: pointer;
   user-select: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   transition: all var(--transition-fast);
+
+  @media (max-width: 480px) {
+    padding: 0 10px;
+    font-size: 12.5px;
+  }
 
   &:hover {
     background: var(--bg-input-hover);
