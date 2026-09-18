@@ -135,3 +135,4 @@ export function adminCreateOrganization(orgData) {
   localStorage.setItem(ORGANIZATIONS_KEY, JSON.stringify(updated));
   return newOrg;
 }
+
