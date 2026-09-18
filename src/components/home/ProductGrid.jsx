@@ -12,6 +12,13 @@ export default function ProductGrid({
   onViewModeChange,
   search,
   onSearchChange,
+  categories = [],
+  selectedCategory,
+  onSelectCategory,
+  selectedCategories = [],
+  onSelectedCategoriesChange,
+  selectedTags = [],
+  onSelectedTagsChange,
   sort,
   onSortChange,
   filterVerified,
@@ -63,6 +70,13 @@ export default function ProductGrid({
   return (
     <div className={styles.contentLayout}>
       <FilterBar
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onSelectCategory={onSelectCategory}
+        selectedCategories={selectedCategories}
+        onSelectedCategoriesChange={onSelectedCategoriesChange}
+        selectedTags={selectedTags}
+        onSelectedTagsChange={onSelectedTagsChange}
         filterVerified={filterVerified}
         onFilterVerifiedChange={onFilterVerifiedChange}
         verification={verification}
@@ -86,6 +100,13 @@ export default function ProductGrid({
         >
           <div className={styles.inlineFilterInner}>
             <FilterBar
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onSelectCategory={onSelectCategory}
+              selectedCategories={selectedCategories}
+              onSelectedCategoriesChange={onSelectedCategoriesChange}
+              selectedTags={selectedTags}
+              onSelectedTagsChange={onSelectedTagsChange}
               filterVerified={filterVerified}
               onFilterVerifiedChange={onFilterVerifiedChange}
               verification={verification}

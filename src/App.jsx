@@ -16,6 +16,8 @@ export default function App() {
   const [verification, setVerification] = useState({ admin: false, community: false, bot: false });
   const [filterPricing, setFilterPricing] = useState('all');
   const [platform, setPlatform] = useState('all');
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
   const [viewMode, setViewMode] = useState('grid');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
@@ -50,6 +52,8 @@ export default function App() {
     setPage(1);
     getTools({
       category: selectedCategory,
+      selectedCategories,
+      selectedTags,
       search,
       sort,
       filterVerified,
@@ -69,7 +73,7 @@ export default function App() {
         console.error('Error fetching tools:', err);
         setIsLoading(false);
       });
-  }, [selectedCategory, search, sort, filterVerified, verification, filterPricing, platform]);
+  }, [selectedCategory, selectedCategories, selectedTags, search, sort, filterVerified, verification, filterPricing, platform]);
 
   // Load more tools (infinite scroll pagination)
   const handleLoadMore = useCallback(() => {
@@ -154,6 +158,8 @@ export default function App() {
     window.history.pushState({}, '', url.toString());
 
     setSelectedCategory('all');
+    setSelectedCategories([]);
+    setSelectedTags([]);
     setSearch('');
     setSort('relevance');
     setFilterVerified(false);
@@ -229,6 +235,13 @@ export default function App() {
               onViewModeChange={setViewMode}
               search={search}
               onSearchChange={setSearch}
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+              selectedCategories={selectedCategories}
+              onSelectedCategoriesChange={setSelectedCategories}
+              selectedTags={selectedTags}
+              onSelectedTagsChange={setSelectedTags}
               sort={sort}
               onSortChange={setSort}
               filterVerified={filterVerified}

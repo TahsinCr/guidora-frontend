@@ -27,6 +27,8 @@ function getAllTools() {
 export async function getTools({
   search = '',
   category = 'all',
+  selectedCategories = [],
+  selectedTags = [],
   sort = 'relevance',
   filterVerified = false,
   verification = { admin: false, community: false, bot: false },
@@ -39,9 +41,31 @@ export async function getTools({
 
   let filtered = getAllTools();
 
-  // Category filter
+  // Primary Category filter (from top hero/slider)
   if (category && category !== 'all') {
     filtered = filtered.filter((t) => t.categoryId === category);
+  }
+
+  // Multi-Category filter (from filter drawer/panel)
+  if (selectedCategories && selectedCategories.length > 0) {
+    filtered = filtered.filter((t) => selectedCategories.includes(t.categoryId));
+  }
+
+  // Multi-Tags filter (from filter drawer/panel)
+  if (selectedTags && selectedTags.length > 0) {
+    filtered = filtered.filter((t) => {
+      const toolTags = [
+        t.tag?.toLowerCase(),
+        ...(t.tags || []).map((x) => (typeof x === 'string' ? x : x.name || x.id || '').toLowerCase()),
+        ...(t.platforms || []).map((p) => p.toLowerCase()),
+        t.pricing?.toLowerCase(),
+      ].filter(Boolean);
+
+      return selectedTags.some((st) => {
+        const needle = st.toLowerCase().replace(/^#/, '');
+        return toolTags.some((tt) => tt.includes(needle) || needle.includes(tt));
+      });
+    });
   }
 
   // Search filter

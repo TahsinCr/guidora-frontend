@@ -2,11 +2,12 @@
 
 .sliderWrapper {
   width: 100%;
+  max-width: 1100px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
-  padding: 8px 0;
+  gap: 10px;
+  padding: 4px 0;
   position: relative;
   z-index: 2;
 }
@@ -26,10 +27,18 @@
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-fast);
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: var(--bg-input-hover);
     color: var(--text-primary);
-    border-color: var(--accent-purple);
+    border-color: var(--border-card-hover);
+    transform: scale(1.05);
+  }
+
+  &.navBtnDisabled,
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+    pointer-events: none;
   }
 }
 
@@ -43,7 +52,7 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   flex: 1;
-  padding: 4px 0;
+  padding: 4px 2px;
 
   &::-webkit-scrollbar {
     display: none;
@@ -70,12 +79,12 @@
   &:hover {
     background: var(--bg-input-hover);
     color: var(--text-primary);
-    border-color: var(--cat-color, var(--accent-purple));
+    border-color: var(--cat-color, var(--border-card-hover));
     transform: translateY(-1px);
   }
 
   &.pillActive {
-    border-color: var(--cat-color, var(--accent-purple));
+    border-color: var(--cat-color, var(--primary-color));
     background: rgba(129, 140, 248, 0.14);
     color: var(--text-primary);
     font-weight: 600;
@@ -92,4 +101,3 @@
 .catName {
   line-height: 1;
 }
-

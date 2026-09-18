@@ -25,10 +25,6 @@ export default function Header({
 
           {activeTool && (
             <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
-              <span className={styles.crumbItem} onClick={onBackToDirectory}>
-                Directory
-              </span>
-              <ChevronRight size={13} className={styles.crumbSep} />
               <span
                 className={styles.crumbItem}
                 onClick={() => onSelectCategory && onSelectCategory(activeTool.categoryId || 'all')}

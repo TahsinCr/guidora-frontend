@@ -1,5 +1,17 @@
-import React, { useRef } from 'react';
-import { ChevronLeft, ChevronRight, Circle, Terminal, Image as ImageIcon, MessageSquare, Video, Database, Music, Briefcase, Box } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  Terminal,
+  Image as ImageIcon,
+  MessageSquare,
+  Video,
+  Database,
+  Music,
+  Briefcase,
+  Box,
+} from 'lucide-react';
 import styles from './CategorySlider.module.scss';
 
 const ICON_MAP = {
@@ -16,16 +28,33 @@ const ICON_MAP = {
 
 export default function CategorySlider({ categories = [], selectedCategory, onSelectCategory }) {
   const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    setCanScrollLeft(scrollLeft > 2);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 2);
+  };
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [categories]);
 
   const handleScrollLeft = () => {
     if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: -240, behavior: 'smooth' });
+      scrollRef.current.scrollBy({ left: -280, behavior: 'smooth' });
+      setTimeout(checkScroll, 320);
     }
   };
 
   const handleScrollRight = () => {
     if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 240, behavior: 'smooth' });
+      scrollRef.current.scrollBy({ left: 280, behavior: 'smooth' });
+      setTimeout(checkScroll, 320);
     }
   };
 
@@ -33,17 +62,22 @@ export default function CategorySlider({ categories = [], selectedCategory, onSe
   const filteredCategories = categories.filter((c) => c.id !== 'all');
 
   return (
-    <div className={styles.sliderWrapper} aria-label="Mobile Category Carousel">
+    <div className={styles.sliderWrapper} aria-label="Category Carousel">
       <button
         type="button"
-        className={styles.navBtn}
+        className={`${styles.navBtn} ${!canScrollLeft ? styles.navBtnDisabled : ''}`}
         onClick={handleScrollLeft}
         aria-label="Scroll categories left"
+        disabled={!canScrollLeft}
       >
         <ChevronLeft size={16} />
       </button>
 
-      <div className={styles.scrollTrack} ref={scrollRef}>
+      <div
+        className={styles.scrollTrack}
+        ref={scrollRef}
+        onScroll={checkScroll}
+      >
         {filteredCategories.map((cat) => {
           const Icon = ICON_MAP[cat.id] || Circle;
           const isActive = selectedCategory === cat.id;
@@ -59,7 +93,7 @@ export default function CategorySlider({ categories = [], selectedCategory, onSe
               onClick={() => onSelectCategory(isActive ? 'all' : cat.id)}
             >
               <span className={styles.iconDot}>
-                <Icon size={12} color={cat.color || '#818cf8'} />
+                <Icon size={13} color={cat.color || '#818cf8'} />
               </span>
               <span className={styles.catName}>{cat.name}</span>
             </button>
@@ -69,13 +103,13 @@ export default function CategorySlider({ categories = [], selectedCategory, onSe
 
       <button
         type="button"
-        className={styles.navBtn}
+        className={`${styles.navBtn} ${!canScrollRight ? styles.navBtnDisabled : ''}`}
         onClick={handleScrollRight}
         aria-label="Scroll categories right"
+        disabled={!canScrollRight}
       >
         <ChevronRight size={16} />
       </button>
     </div>
   );
 }
-
