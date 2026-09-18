@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   ShieldCheck,
   ArrowLeft,
@@ -18,18 +18,36 @@ import {
   Bot,
   Eye,
   Edit2,
+  Edit3,
   X,
+  Download,
+  Upload,
+  RefreshCw,
+  Activity,
+  Sliders,
+  CheckSquare,
+  Square,
+  BarChart3,
+  Flame,
+  Check,
 } from 'lucide-react';
 import {
   adminGetCategories,
   adminAddCategory,
   adminDeleteCategory,
+  adminUpdateCategory,
   adminUpdateTool,
   adminDeleteTool,
+  adminRestoreTool,
   adminGetReports,
   adminResolveReport,
   adminDismissReport,
   adminGetStats,
+  adminGetLogs,
+  adminAddLog,
+  adminExportAllData,
+  adminImportAllData,
+  adminResetToDefaults,
 } from '@/services/adminService';
 import { getAllTools } from '@/services/toolsService';
 import {
@@ -51,6 +69,7 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
   const [organizations, setOrganizations] = useState([]);
   const [users, setUsers] = useState([]);
   const [reports, setReports] = useState([]);
+  const [logs, setLogs] = useState([]);
 
   // Filter / Search states
   const [toolSearch, setToolSearch] = useState('');
@@ -58,7 +77,10 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
   const [orgSearch, setOrgSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
 
-  // Modals
+  // Batch Tool Selection
+  const [selectedToolIds, setSelectedToolIds] = useState([]);
+
+  // Modals & Forms
   const [isAddCatModalOpen, setIsAddCatModalOpen] = useState(false);
   const [newCatName, setNewCatName] = useState('');
   const [newCatColor, setNewCatColor] = useState('#8A38F5');
@@ -69,6 +91,15 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
   const [newOrgWebsite, setNewOrgWebsite] = useState('');
   const [newOrgDesc, setNewOrgDesc] = useState('');
 
+  // Quick Edit Tool Modal
+  const [editingTool, setEditingTool] = useState(null);
+  const [editToolName, setEditToolName] = useState('');
+  const [editToolCategory, setEditToolCategory] = useState('');
+  const [editToolPricing, setEditToolPricing] = useState('');
+  const [editToolDesc, setEditToolDesc] = useState('');
+
+  const fileInputRef = useRef(null);
+
   // Refresh all dashboard datasets
   const refreshData = () => {
     const allT = getAllTools();
@@ -76,12 +107,14 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
     const allO = getOrganizations();
     const allU = getAllUsers();
     const allR = adminGetReports();
+    const allL = adminGetLogs();
 
     setTools(allT);
     setCategories(allC);
     setOrganizations(allO);
     setUsers(allU);
     setReports(allR);
+    setLogs(allL);
   };
 
   useEffect(() => {
@@ -157,30 +190,142 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
       [badgeType]: !tool.verified?.[badgeType],
     };
     adminUpdateTool(tool.id, { verified: nextVer });
+    adminAddLog(`Tool Badge Updated (${badgeType})`, tool.name, 'info');
     refreshData();
   };
 
   const handleDeleteTool = (toolId) => {
-    if (window.confirm('Remove this tool from the live directory?')) {
+    const found = tools.find((t) => t.id === toolId);
+    if (window.confirm(`Remove "${found?.name || toolId}" from the live directory?`)) {
       adminDeleteTool(toolId);
+      adminAddLog('Tool Deleted', found?.name || toolId, 'danger');
       refreshData();
+    }
+  };
+
+  // Quick Edit Tool
+  const handleOpenEditTool = (tool) => {
+    setEditingTool(tool);
+    setEditToolName(tool.name);
+    setEditToolCategory(tool.categoryId || categories[1]?.id || 'generative-art');
+    setEditToolPricing(tool.pricing || 'Freemium');
+    setEditToolDesc(tool.description || '');
+  };
+
+  const handleSaveToolEdit = (e) => {
+    e.preventDefault();
+    if (!editingTool || !editToolName.trim()) return;
+
+    const catObj = categories.find((c) => c.id === editToolCategory);
+    adminUpdateTool(editingTool.id, {
+      name: editToolName.trim(),
+      categoryId: editToolCategory,
+      category: catObj?.name || editingTool.category,
+      pricing: editToolPricing,
+      description: editToolDesc.trim(),
+    });
+
+    adminAddLog('Tool Metadata Updated', editToolName.trim(), 'success');
+    setEditingTool(null);
+    refreshData();
+  };
+
+  // Batch Selection Handlers
+  const handleToggleSelectAll = () => {
+    if (selectedToolIds.length === filteredTools.length) {
+      setSelectedToolIds([]);
+    } else {
+      setSelectedToolIds(filteredTools.map((t) => t.id));
+    }
+  };
+
+  const handleToggleSelectTool = (id) => {
+    setSelectedToolIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleBatchVerify = () => {
+    if (!selectedToolIds.length) return;
+    selectedToolIds.forEach((id) => {
+      adminUpdateTool(id, {
+        verified: { admin: true, community: true, audited: true },
+      });
+    });
+    adminAddLog(`Batch Verified ${selectedToolIds.length} Tools`, 'Tools Catalog', 'success');
+    setSelectedToolIds([]);
+    refreshData();
+  };
+
+  const handleBatchDelete = () => {
+    if (!selectedToolIds.length) return;
+    if (window.confirm(`Delete all ${selectedToolIds.length} selected tools?`)) {
+      selectedToolIds.forEach((id) => adminDeleteTool(id));
+      adminAddLog(`Batch Deleted ${selectedToolIds.length} Tools`, 'Tools Catalog', 'danger');
+      setSelectedToolIds([]);
+      refreshData();
+    }
+  };
+
+  // --- Backup & Restore Handlers ---
+  const handleExportBackup = () => {
+    const jsonStr = adminExportAllData();
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `guidora-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    adminAddLog('Backup Exported', 'System JSON Export', 'info');
+  };
+
+  const handleImportBackup = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        adminImportAllData(event.target.result);
+        alert('Backup data successfully imported!');
+        refreshData();
+      } catch (err) {
+        alert(err.message || 'Error restoring backup.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleResetPlatform = () => {
+    if (
+      window.confirm(
+        'DANGER: Are you sure you want to reset all admin configurations, custom tools, and categories back to factory defaults?'
+      )
+    ) {
+      adminResetToDefaults();
+      refreshData();
+      alert('Platform storage reset to defaults.');
     }
   };
 
   // --- User Handlers ---
   const handleRoleChange = (userId, nextRole) => {
     adminUpdateUserRole(userId, nextRole);
+    adminAddLog(`Role Changed (${nextRole})`, `User ${userId}`, 'warning');
     refreshData();
   };
 
   // --- Report Handlers ---
   const handleResolveReport = (reportId) => {
     adminResolveReport(reportId, 'Resolved by Admin');
+    adminAddLog('Report Resolved', `Report #${reportId}`, 'success');
     refreshData();
   };
 
   const handleDismissReport = (reportId) => {
     adminDismissReport(reportId);
+    adminAddLog('Report Dismissed', `Report #${reportId}`, 'info');
     refreshData();
   };
 
@@ -286,6 +431,16 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
           </div>
           <span className={styles.statValue}>{stats.pendingReports}</span>
         </div>
+
+        <div className={styles.statCard}>
+          <div className={styles.statHeader}>
+            <span className={styles.statLabel}>Est. Traffic</span>
+            <div className={styles.statIconWrap}>
+              <Flame size={18} color="#F97316" />
+            </div>
+          </div>
+          <span className={styles.statValue}>{stats.approxViews}</span>
+        </div>
       </div>
 
       {/* Navigation Tabs */}
@@ -348,6 +503,24 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
             </span>
           )}
         </button>
+
+        <button
+          type="button"
+          className={`${styles.tabBtn} ${activeTab === 'logs' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('logs')}
+        >
+          <Activity size={16} />
+          <span>Audit Logs ({logs.length})</span>
+        </button>
+
+        <button
+          type="button"
+          className={`${styles.tabBtn} ${activeTab === 'system' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('system')}
+        >
+          <Sliders size={16} />
+          <span>System & Backup</span>
+        </button>
       </div>
 
       {/* TAB 1: OVERVIEW */}
@@ -403,6 +576,29 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
                   onChange={(e) => setToolSearch(e.target.value)}
                 />
               </div>
+
+              {selectedToolIds.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    type="button"
+                    className={styles.secondaryBtn}
+                    onClick={handleBatchVerify}
+                    title="Verify selected tools"
+                  >
+                    <CheckSquare size={15} color="#10b981" />
+                    <span>Verify ({selectedToolIds.length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.dangerBtn}
+                    onClick={handleBatchDelete}
+                    title="Delete selected tools"
+                  >
+                    <Trash2 size={15} />
+                    <span>Delete ({selectedToolIds.length})</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -410,6 +606,16 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
             <table className={styles.dataTable}>
               <thead>
                 <tr>
+                  <th style={{ width: '40px' }}>
+                    <input
+                      type="checkbox"
+                      checked={
+                        filteredTools.length > 0 &&
+                        selectedToolIds.length === filteredTools.length
+                      }
+                      onChange={handleToggleSelectAll}
+                    />
+                  </th>
                   <th>Tool</th>
                   <th>Category</th>
                   <th>Pricing</th>
@@ -422,6 +628,13 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
               <tbody>
                 {filteredTools.map((t) => (
                   <tr key={t.id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedToolIds.includes(t.id)}
+                        onChange={() => handleToggleSelectTool(t.id)}
+                      />
+                    </td>
                     <td>
                       <div className={styles.toolCell}>
                         <div className={styles.toolInitialBadge}>
@@ -471,6 +684,14 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
                     </td>
                     <td>
                       <div className={styles.tableActions}>
+                        <button
+                          type="button"
+                          className={styles.iconActionBtn}
+                          onClick={() => handleOpenEditTool(t)}
+                          title="Quick Edit Tool Details"
+                        >
+                          <Edit3 size={15} />
+                        </button>
                         <button
                           type="button"
                           className={styles.iconActionBtn}
@@ -879,6 +1100,205 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
         </div>
       )}
 
+      {/* TAB 7: AUDIT LOGS */}
+      {activeTab === 'logs' && (
+        <div className={styles.sectionCard}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionTitleRow}>
+              <h2 className={styles.sectionTitle}>Administrative Audit Trail</h2>
+              <p className={styles.sectionSubtitle}>
+                Real-time security and modification log of actions taken within the Guidora admin environment.
+              </p>
+            </div>
+          </div>
+
+          <div className={styles.logTimeline}>
+            {logs.map((l) => (
+              <div key={l.id} className={styles.logItem}>
+                <div className={styles.logLeft}>
+                  <div className={styles.logIcon}>
+                    <Activity size={16} />
+                  </div>
+                  <div>
+                    <div className={styles.logActionText}>{l.action}</div>
+                    <div className={styles.logTargetText}>{l.target}</div>
+                  </div>
+                </div>
+
+                <div className={styles.logRight}>
+                  <span>By {l.admin}</span>
+                  <span>•</span>
+                  <span>{new Date(l.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 8: SYSTEM & BACKUP */}
+      {activeTab === 'system' && (
+        <div className={styles.sectionCard}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionTitleRow}>
+              <h2 className={styles.sectionTitle}>System Maintenance & Data Management</h2>
+              <p className={styles.sectionSubtitle}>
+                Export directory data snapshots, restore backups, or reset local sandbox data.
+              </p>
+            </div>
+          </div>
+
+          <div className={styles.systemGrid}>
+            <div className={styles.systemCard}>
+              <div>
+                <h3 className={styles.systemCardTitle}>JSON Backup Export</h3>
+                <p className={styles.systemCardDesc}>
+                  Download a full snapshot of your custom tools, newly created categories, verified organizations, and moderation logs.
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.primaryBtn}
+                onClick={handleExportBackup}
+              >
+                <Download size={16} />
+                <span>Export Platform JSON</span>
+              </button>
+            </div>
+
+            <div className={styles.systemCard}>
+              <div>
+                <h3 className={styles.systemCardTitle}>Restore From Snapshot</h3>
+                <p className={styles.systemCardDesc}>
+                  Upload a previously exported JSON backup file to instantly restore or populate the local directory state.
+                </p>
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                accept=".json"
+                onChange={handleImportBackup}
+              />
+              <button
+                type="button"
+                className={styles.secondaryBtn}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload size={16} />
+                <span>Restore Backup File</span>
+              </button>
+            </div>
+
+            <div className={`${styles.systemCard} ${styles.dangerCard}`}>
+              <div>
+                <h3 className={styles.systemCardTitle} style={{ color: '#ef4444' }}>
+                  Reset Platform Sandbox
+                </h3>
+                <p className={styles.systemCardDesc}>
+                  Clear all administrative modifications and overrides, restoring factory mock datasets. Use with caution.
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.dangerBtn}
+                onClick={handleResetPlatform}
+              >
+                <RefreshCw size={16} />
+                <span>Reset to Defaults</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Quick Edit Tool */}
+      {editingTool && (
+        <div
+          className={styles.modalBackdrop}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEditingTool(null);
+          }}
+        >
+          <div className={styles.modalCard}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Quick Edit: {editingTool.name}</h3>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => setEditingTool(null)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveToolEdit}>
+              <div className={styles.formGroup}>
+                <label>Tool Name</label>
+                <input
+                  type="text"
+                  value={editToolName}
+                  onChange={(e) => setEditToolName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Primary Category</label>
+                  <select
+                    value={editToolCategory}
+                    onChange={(e) => setEditToolCategory(e.target.value)}
+                  >
+                    {categories.filter((c) => c.id !== 'all').map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Pricing Model</label>
+                  <select
+                    value={editToolPricing}
+                    onChange={(e) => setEditToolPricing(e.target.value)}
+                  >
+                    <option value="Free">Free</option>
+                    <option value="Freemium">Freemium</option>
+                    <option value="Paid / Enterprise">Paid / Enterprise</option>
+                    <option value="Open Source">Open Source</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Description</label>
+                <textarea
+                  value={editToolDesc}
+                  onChange={(e) => setEditToolDesc(e.target.value)}
+                  rows={3}
+                  required
+                />
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.cancelBtn}
+                  onClick={() => setEditingTool(null)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className={styles.primaryBtn}>
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Modal: Add Category */}
       {isAddCatModalOpen && (
         <div
@@ -1022,3 +1442,4 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
     </div>
   );
 }
+

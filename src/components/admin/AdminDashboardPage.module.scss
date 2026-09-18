@@ -555,3 +555,126 @@
     margin-top: 8px;
   }
 }
+
+// System & Backup Actions
+.systemGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.systemCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+
+  &.dangerCard {
+    border-color: rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.04);
+  }
+}
+
+.systemCardTitle {
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.systemCardDesc {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.secondaryBtn {
+  @include layout.flex(row, center, center, 8px);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 9px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--bg-input-hover);
+    border-color: var(--border-card-hover);
+  }
+}
+
+.dangerBtn {
+  @include layout.flex(row, center, center, 8px);
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: var(--radius-md);
+  padding: 9px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: #ef4444;
+    color: #ffffff;
+  }
+}
+
+// Audit Logs Timeline
+.logTimeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.logItem {
+  @include layout.flex(row, space-between, center);
+  padding: 14px 18px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.logLeft {
+  @include layout.flex(row, start, center, 12px);
+}
+
+.logIcon {
+  @include layout.square(32px);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  color: var(--primary-color);
+}
+
+.logActionText {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.logTargetText {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.logRight {
+  @include layout.flex(row, end, center, 12px);
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+
