@@ -11,6 +11,7 @@ import {
   User,
   LogOut,
   Settings,
+  LayoutDashboard,
 } from 'lucide-react';
 import {
   getCurrentUser,
@@ -19,7 +20,7 @@ import {
 } from '@/services/userService';
 import styles from './UserMenu.module.scss';
 
-export default function UserMenu({ onOpenProfile }) {
+export default function UserMenu({ onOpenProfile, onOpenAdmin }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
   const [user, setUser] = useState(getCurrentUser());
@@ -108,6 +109,22 @@ export default function UserMenu({ onOpenProfile }) {
               <User size={15} />
               <span>View Profile</span>
             </button>
+
+            {user?.role === 'admin' && (
+              <button
+                type="button"
+                className={`${styles.menuItem} ${styles.adminMenuItem}`}
+                onClick={() => {
+                  setIsOpen(false);
+                  if (onOpenAdmin) onOpenAdmin();
+                }}
+              >
+                <LayoutDashboard size={15} color="var(--primary-color)" />
+                <span style={{ fontWeight: '600', color: 'var(--primary-color)' }}>
+                  Admin Dashboard
+                </span>
+              </button>
+            )}
 
             <button
               type="button"

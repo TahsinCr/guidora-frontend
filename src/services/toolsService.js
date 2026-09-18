@@ -1,4 +1,5 @@
 import { TOOLS_DATA, CATEGORIES, TAG_CATEGORIES, ALL_TAGS } from './mockData';
+import { adminGetCategories, getDeletedToolIds, getToolOverrides } from './adminService';
 
 // Simulated artificial network latency for realistic async behavior (80ms)
 const simulateDelay = (ms = 80) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -16,9 +17,26 @@ function getStoredCustomTools() {
   }
 }
 
-function getAllTools() {
+export function getAllTools() {
   const custom = getStoredCustomTools();
-  return [...custom, ...TOOLS_DATA];
+  const deletedIds = getDeletedToolIds();
+  const overrides = getToolOverrides();
+
+  const combined = [...custom, ...TOOLS_DATA].filter((t) => !deletedIds.includes(t.id));
+
+  return combined.map((t) => {
+    if (overrides[t.id]) {
+      return {
+        ...t,
+        ...overrides[t.id],
+        verified: {
+          ...(t.verified || {}),
+          ...(overrides[t.id].verified || {}),
+        },
+      };
+    }
+    return t;
+  });
 }
 
 /**
@@ -459,7 +477,7 @@ export async function submitReport(toolId, reportData) {
  */
 export async function getCategories() {
   await simulateDelay(40);
-  return [...CATEGORIES];
+  return adminGetCategories();
 }
 
 /**
@@ -467,7 +485,7 @@ export async function getCategories() {
  */
 export async function getPopularCategories() {
   await simulateDelay(30);
-  return CATEGORIES.filter((c) => c.isPopular);
+  return adminGetCategories().filter((c) => c.isPopular);
 }
 
 /**

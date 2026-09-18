@@ -6,6 +6,7 @@ import ProductGrid from '@/components/home/ProductGrid';
 import ToolDialog from '@/components/tool-detail/ToolDialog';
 import SubmitToolPage from '@/components/submit/SubmitToolPage';
 import UserProfilePage from '@/components/profile/UserProfilePage';
+import AdminDashboardPage from '@/components/admin/AdminDashboardPage';
 import { getTools, getCategories } from '@/services/toolsService';
 
 export default function App() {
@@ -55,6 +56,11 @@ export default function App() {
   });
   const [profileUserId, setProfileUserId] = useState(() => {
     return initialParams.get('user') || null;
+  });
+
+  // Admin Dashboard view state synchronized with URL (?view=admin)
+  const [isAdminView, setIsAdminView] = useState(() => {
+    return initialParams.get('view') === 'admin';
   });
 
   // Active tool for detail view - synchronized with URL (?tool=id)
@@ -214,6 +220,7 @@ export default function App() {
       setActiveToolId(tool || null);
       setIsSubmitView(view === 'submit');
       setIsProfileView(view === 'profile' || Boolean(user));
+      setIsAdminView(view === 'admin');
       setProfileUserId(user || null);
       if (!tool) setActiveToolData(null);
     };
@@ -225,6 +232,7 @@ export default function App() {
   const handleOpenTool = useCallback((toolId) => {
     setIsSubmitView(false);
     setIsProfileView(false);
+    setIsAdminView(false);
     setActiveToolId(toolId);
     const url = new URL(window.location.href);
     url.searchParams.delete('view');
@@ -237,6 +245,7 @@ export default function App() {
     setActiveToolId(null);
     setActiveToolData(null);
     setIsProfileView(false);
+    setIsAdminView(false);
     setIsSubmitView(true);
     const url = new URL(window.location.href);
     url.searchParams.delete('tool');
@@ -249,6 +258,7 @@ export default function App() {
     setActiveToolId(null);
     setActiveToolData(null);
     setIsSubmitView(false);
+    setIsAdminView(false);
     setIsProfileView(true);
     setProfileUserId(userId || null);
     const url = new URL(window.location.href);
@@ -263,11 +273,25 @@ export default function App() {
     window.history.pushState({ view: 'profile', user: userId }, '', url.toString());
   }, []);
 
+  const handleOpenAdmin = useCallback(() => {
+    setActiveToolId(null);
+    setActiveToolData(null);
+    setIsSubmitView(false);
+    setIsProfileView(false);
+    setIsAdminView(true);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('tool');
+    url.searchParams.delete('user');
+    url.searchParams.set('view', 'admin');
+    window.history.pushState({ view: 'admin' }, '', url.toString());
+  }, []);
+
   const handleCloseTool = useCallback(() => {
     setActiveToolId(null);
     setActiveToolData(null);
     setIsSubmitView(false);
     setIsProfileView(false);
+    setIsAdminView(false);
     const url = new URL(window.location.href);
     url.searchParams.delete('tool');
     url.searchParams.delete('view');
@@ -343,14 +367,21 @@ export default function App() {
         }}
         onSubmitTool={handleOpenSubmit}
         onOpenProfile={handleOpenProfile}
+        onOpenAdmin={handleOpenAdmin}
       />
 
       <main className="main-content">
-        {isProfileView ? (
+        {isAdminView ? (
+          <AdminDashboardPage
+            onBack={handleCloseTool}
+            onOpenTool={handleOpenTool}
+          />
+        ) : isProfileView ? (
           <UserProfilePage
             userId={profileUserId}
             onBack={handleCloseTool}
             onOpenTool={handleOpenTool}
+            onOpenAdmin={handleOpenAdmin}
           />
         ) : isSubmitView ? (
           <SubmitToolPage

@@ -124,9 +124,25 @@ export function getCurrentUser() {
   }
 }
 
+const ALL_USERS_KEY = 'guidora_all_users';
+
+export function getAllUsers() {
+  try {
+    const raw = localStorage.getItem(ALL_USERS_KEY);
+    if (!raw) {
+      localStorage.setItem(ALL_USERS_KEY, JSON.stringify(MOCK_USERS));
+      return [...MOCK_USERS];
+    }
+    return JSON.parse(raw);
+  } catch (e) {
+    return [...MOCK_USERS];
+  }
+}
+
 export function getUserById(id) {
   if (!id) return getCurrentUser();
-  const found = MOCK_USERS.find((u) => u.id === id);
+  const all = getAllUsers();
+  const found = all.find((u) => u.id === id);
   if (found) return found;
   const current = getCurrentUser();
   if (current.id === id) return current;
@@ -138,11 +154,38 @@ export function updateCurrentUser(updatedFields) {
     const current = getCurrentUser();
     const nextUser = { ...current, ...updatedFields };
     localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+
+    // Also update in all users list
+    const all = getAllUsers();
+    const updatedAll = all.map((u) => (u.id === nextUser.id ? nextUser : u));
+    localStorage.setItem(ALL_USERS_KEY, JSON.stringify(updatedAll));
+
     return nextUser;
   } catch (e) {
     return DEFAULT_USER;
   }
 }
+
+export function adminUpdateUserRole(userId, newRole) {
+  const users = getAllUsers();
+  const updated = users.map((u) => {
+    if (u.id === userId) {
+      return { ...u, role: newRole };
+    }
+    return u;
+  });
+  localStorage.setItem(ALL_USERS_KEY, JSON.stringify(updated));
+
+  const current = getCurrentUser();
+  if (current.id === userId) {
+    updateCurrentUser({ role: newRole });
+  }
+
+  return updated;
+}
+
+
+
 
 export function getOrganizations() {
   try {
@@ -185,4 +228,24 @@ export function adminCreateOrganization(orgData) {
   localStorage.setItem(ORGANIZATIONS_KEY, JSON.stringify(updated));
   return newOrg;
 }
+
+export function adminDeleteOrganization(orgId) {
+  const orgs = getOrganizations();
+  const updated = orgs.filter((o) => o.id !== orgId);
+  localStorage.setItem(ORGANIZATIONS_KEY, JSON.stringify(updated));
+  return updated;
+}
+
+export function adminToggleOrgVerification(orgId) {
+  const orgs = getOrganizations();
+  const updated = orgs.map((o) => {
+    if (o.id === orgId) {
+      return { ...o, verified: !o.verified };
+    }
+    return o;
+  });
+  localStorage.setItem(ORGANIZATIONS_KEY, JSON.stringify(updated));
+  return updated;
+}
+
 

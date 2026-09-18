@@ -11,6 +11,7 @@ export default function Header({
   onSelectCategory,
   onSubmitTool,
   onOpenProfile,
+  onOpenAdmin,
 }) {
   const { theme, toggleTheme } = useTheme();
 
@@ -67,7 +68,7 @@ export default function Header({
                 {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
               
-              <UserMenu onOpenProfile={onOpenProfile} />
+              <UserMenu onOpenProfile={onOpenProfile} onOpenAdmin={onOpenAdmin} />
             </>
           ) : (
             <>
@@ -93,7 +94,7 @@ export default function Header({
                 <span className={styles.pinkDot} />
               </button>
 
-              <UserMenu onOpenProfile={onOpenProfile} />
+              <UserMenu onOpenProfile={onOpenProfile} onOpenAdmin={onOpenAdmin} />
             </>
           )}
         </div>

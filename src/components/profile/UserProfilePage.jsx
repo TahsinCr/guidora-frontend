@@ -1,30 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft,
-  User,
-  ShieldCheck,
-  MapPin,
+  Share2,
+  Edit3,
   Globe,
+  MapPin,
   Calendar,
+  ShieldCheck,
   Award,
   Bookmark,
-  Sparkles,
+  PlusCircle,
   ExternalLink,
-  Edit3,
-  CheckCircle2,
-  Share2,
+  Sparkles,
   X,
+  LayoutDashboard,
 } from 'lucide-react';
 import ProductCard from '@/components/home/ProductCard';
-import { getUserById, getCurrentUser, updateCurrentUser } from '@/services/userService';
+import {
+  getUserById,
+  getCurrentUser,
+  updateCurrentUser,
+} from '@/services/userService';
 import { getTools } from '@/services/toolsService';
 import styles from './UserProfilePage.module.scss';
 
-export default function UserProfilePage({
-  userId,
-  onBack,
-  onOpenTool,
-}) {
+export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmin }) {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('saved'); // 'saved' | 'submitted'
   const [savedTools, setSavedTools] = useState([]);
@@ -128,6 +128,22 @@ export default function UserProfilePage({
         </button>
 
         <div className={styles.topBarActions}>
+          {isOwner && user.role === 'admin' && (
+            <button
+              type="button"
+              className={styles.editProfileBtn}
+              onClick={onOpenAdmin}
+              style={{
+                background: 'rgba(138, 56, 245, 0.12)',
+                color: 'var(--primary-color)',
+                borderColor: 'rgba(138, 56, 245, 0.3)',
+              }}
+            >
+              <LayoutDashboard size={15} />
+              <span>Admin Panel</span>
+            </button>
+          )}
+
           {isOwner && (
             <button
               type="button"
