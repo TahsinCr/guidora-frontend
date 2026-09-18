@@ -81,10 +81,6 @@ export default function ProductGrid({
         onFilterVerifiedChange={onFilterVerifiedChange}
         verification={verification}
         onVerificationChange={onVerificationChange}
-        filterPricing={filterPricing}
-        onFilterPricingChange={onFilterPricingChange}
-        platform={platform}
-        onPlatformChange={onPlatformChange}
         onResetFilters={onResetFilters}
         isOpenMobile={isMobileFilterOpen}
         onCloseMobile={() => onToggleMobileFilter()}
@@ -111,10 +107,6 @@ export default function ProductGrid({
               onFilterVerifiedChange={onFilterVerifiedChange}
               verification={verification}
               onVerificationChange={onVerificationChange}
-              filterPricing={filterPricing}
-              onFilterPricingChange={onFilterPricingChange}
-              platform={platform}
-              onPlatformChange={onPlatformChange}
               onResetFilters={onResetFilters}
               isInline={true}
             />

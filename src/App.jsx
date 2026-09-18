@@ -9,15 +9,28 @@ import { getTools, getCategories } from '@/services/toolsService';
 
 export default function App() {
   const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [search, setSearch] = useState('');
-  const [sort, setSort] = useState('relevance');
+  
+  // Read initial filter values from URL params
+  const initialParams = new URLSearchParams(window.location.search);
+  const initialCat = initialParams.get('cat') || 'all';
+  const initialTags = initialParams.get('tags') ? initialParams.get('tags').split(',').filter(Boolean) : [];
+  const initialSearch = initialParams.get('q') || '';
+  const initialSort = initialParams.get('sort') || 'relevance';
+  const initialVer = {
+    admin: initialParams.get('admin') === 'true',
+    community: initialParams.get('community') === 'true',
+    bot: initialParams.get('bot') === 'true',
+  };
+
+  const [selectedCategory, setSelectedCategory] = useState(initialCat);
+  const [selectedCategories, setSelectedCategories] = useState(() => {
+    return initialCat !== 'all' ? [initialCat] : [];
+  });
+  const [selectedTags, setSelectedTags] = useState(initialTags);
+  const [search, setSearch] = useState(initialSearch);
+  const [sort, setSort] = useState(initialSort);
   const [filterVerified, setFilterVerified] = useState(false);
-  const [verification, setVerification] = useState({ admin: false, community: false, bot: false });
-  const [filterPricing, setFilterPricing] = useState('all');
-  const [platform, setPlatform] = useState('all');
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [verification, setVerification] = useState(initialVer);
   const [viewMode, setViewMode] = useState('grid');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
@@ -30,14 +43,12 @@ export default function App() {
 
   // Full-page Submit Tool view state synchronized with URL (?view=submit)
   const [isSubmitView, setIsSubmitView] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('view') === 'submit';
+    return initialParams.get('view') === 'submit';
   });
 
   // Active tool for detail view - synchronized with URL (?tool=id)
   const [activeToolId, setActiveToolId] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('tool') || null;
+    return initialParams.get('tool') || null;
   });
   const [activeToolData, setActiveToolData] = useState(null);
 
@@ -45,6 +56,77 @@ export default function App() {
   useEffect(() => {
     getCategories().then(setCategories).catch(console.error);
   }, []);
+
+  // Category Synchronization: Top hero category selection updates selectedCategories
+  const handleSelectTopCategory = useCallback((catId) => {
+    setSelectedCategory(catId);
+    if (catId === 'all') {
+      setSelectedCategories([]);
+    } else {
+      setSelectedCategories([catId]);
+    }
+  }, []);
+
+  // Category Synchronization: FilterBar category selection updates top selectedCategory
+  const handleSelectedCategoriesChange = useCallback((newCategories) => {
+    setSelectedCategories(newCategories);
+    if (newCategories.length === 1) {
+      setSelectedCategory(newCategories[0]);
+    } else if (newCategories.length === 0) {
+      setSelectedCategory('all');
+    } else {
+      setSelectedCategory(newCategories[0]);
+    }
+  }, []);
+
+  // Update browser URL query params without reloading the page
+  useEffect(() => {
+    if (isSubmitView || activeToolId) return;
+
+    const url = new URL(window.location.href);
+    
+    // Category param
+    if (selectedCategory && selectedCategory !== 'all') {
+      url.searchParams.set('cat', selectedCategory);
+    } else if (selectedCategories.length > 0) {
+      url.searchParams.set('cat', selectedCategories.join(','));
+    } else {
+      url.searchParams.delete('cat');
+    }
+
+    // Tags param
+    if (selectedTags && selectedTags.length > 0) {
+      url.searchParams.set('tags', selectedTags.join(','));
+    } else {
+      url.searchParams.delete('tags');
+    }
+
+    // Search param
+    if (search && search.trim()) {
+      url.searchParams.set('q', search.trim());
+    } else {
+      url.searchParams.delete('q');
+    }
+
+    // Sort param
+    if (sort && sort !== 'relevance') {
+      url.searchParams.set('sort', sort);
+    } else {
+      url.searchParams.delete('sort');
+    }
+
+    // Verification params
+    if (verification.admin) url.searchParams.set('admin', 'true');
+    else url.searchParams.delete('admin');
+
+    if (verification.community) url.searchParams.set('community', 'true');
+    else url.searchParams.delete('community');
+
+    if (verification.bot) url.searchParams.set('bot', 'true');
+    else url.searchParams.delete('bot');
+
+    window.history.replaceState({}, '', url.toString());
+  }, [selectedCategory, selectedCategories, selectedTags, search, sort, verification, isSubmitView, activeToolId]);
 
   // Fetch tools whenever filters change (reset to page 1)
   useEffect(() => {
@@ -58,8 +140,6 @@ export default function App() {
       sort,
       filterVerified,
       verification,
-      filterPricing,
-      platform,
       page: 1,
       limit: 12,
     })
@@ -73,7 +153,7 @@ export default function App() {
         console.error('Error fetching tools:', err);
         setIsLoading(false);
       });
-  }, [selectedCategory, selectedCategories, selectedTags, search, sort, filterVerified, verification, filterPricing, platform]);
+  }, [selectedCategory, selectedCategories, selectedTags, search, sort, filterVerified, verification]);
 
   // Load more tools (infinite scroll pagination)
   const handleLoadMore = useCallback(() => {
@@ -83,12 +163,12 @@ export default function App() {
 
     getTools({
       category: selectedCategory,
+      selectedCategories,
+      selectedTags,
       search,
       sort,
       filterVerified,
       verification,
-      filterPricing,
-      platform,
       page: nextPage,
       limit: 12,
     })
@@ -102,7 +182,7 @@ export default function App() {
         console.error('Error loading more tools:', err);
         setIsLoadingMore(false);
       });
-  }, [page, hasMore, isLoadingMore, selectedCategory, search, sort, filterVerified, verification, filterPricing, platform]);
+  }, [page, hasMore, isLoadingMore, selectedCategory, selectedCategories, selectedTags, search, sort, filterVerified, verification]);
 
   // Handle URL sync and browser back/forward buttons (no page reload)
   useEffect(() => {
@@ -155,6 +235,13 @@ export default function App() {
     const url = new URL(window.location.href);
     url.searchParams.delete('tool');
     url.searchParams.delete('view');
+    url.searchParams.delete('cat');
+    url.searchParams.delete('tags');
+    url.searchParams.delete('q');
+    url.searchParams.delete('sort');
+    url.searchParams.delete('admin');
+    url.searchParams.delete('community');
+    url.searchParams.delete('bot');
     window.history.pushState({}, '', url.toString());
 
     setSelectedCategory('all');
@@ -164,8 +251,6 @@ export default function App() {
     setSort('relevance');
     setFilterVerified(false);
     setVerification({ admin: false, community: false, bot: false });
-    setFilterPricing('all');
-    setPlatform('all');
     setIsMobileFilterOpen(false);
   }, []);
 
@@ -173,12 +258,12 @@ export default function App() {
     // Refresh tools list
     getTools({
       category: selectedCategory,
+      selectedCategories,
+      selectedTags,
       search,
       sort,
       filterVerified,
       verification,
-      filterPricing,
-      platform,
       page: 1,
       limit: 12,
     }).then((data) => {
@@ -192,7 +277,7 @@ export default function App() {
     } else {
       handleCloseTool();
     }
-  }, [selectedCategory, search, sort, filterVerified, verification, filterPricing, platform, handleOpenTool, handleCloseTool]);
+  }, [selectedCategory, selectedCategories, selectedTags, search, sort, filterVerified, verification, handleOpenTool, handleCloseTool]);
 
   return (
     <div className="app-container">
@@ -202,7 +287,7 @@ export default function App() {
         onBackToDirectory={handleCloseTool}
         onSelectCategory={(catId) => {
           handleCloseTool();
-          setSelectedCategory(catId);
+          handleSelectTopCategory(catId);
         }}
         onSubmitTool={handleOpenSubmit}
       />
@@ -225,7 +310,7 @@ export default function App() {
             <InformationCard
               categories={categories}
               selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
+              onSelectCategory={handleSelectTopCategory}
             />
 
             <ProductGrid
@@ -237,9 +322,9 @@ export default function App() {
               onSearchChange={setSearch}
               categories={categories}
               selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
+              onSelectCategory={handleSelectTopCategory}
               selectedCategories={selectedCategories}
-              onSelectedCategoriesChange={setSelectedCategories}
+              onSelectedCategoriesChange={handleSelectedCategoriesChange}
               selectedTags={selectedTags}
               onSelectedTagsChange={setSelectedTags}
               sort={sort}
@@ -248,10 +333,6 @@ export default function App() {
               onFilterVerifiedChange={setFilterVerified}
               verification={verification}
               onVerificationChange={setVerification}
-              filterPricing={filterPricing}
-              onFilterPricingChange={setFilterPricing}
-              platform={platform}
-              onPlatformChange={setPlatform}
               onResetFilters={handleResetFilters}
               isMobileFilterOpen={isMobileFilterOpen}
               onToggleMobileFilter={() => setIsMobileFilterOpen(!isMobileFilterOpen)}

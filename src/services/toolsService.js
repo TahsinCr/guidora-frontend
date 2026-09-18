@@ -59,10 +59,12 @@ export async function getTools({
         ...(t.tags || []).map((x) => (typeof x === 'string' ? x : x.name || x.id || '').toLowerCase()),
         ...(t.platforms || []).map((p) => p.toLowerCase()),
         t.pricing?.toLowerCase(),
+        t.license?.toLowerCase(),
+        t.deployment?.toLowerCase(),
       ].filter(Boolean);
 
-      return selectedTags.some((st) => {
-        const needle = st.toLowerCase().replace(/^#/, '');
+      return selectedTags.every((st) => {
+        const needle = st.toLowerCase().replace(/^#/, '').trim();
         return toolTags.some((tt) => tt.includes(needle) || needle.includes(tt));
       });
     });

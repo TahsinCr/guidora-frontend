@@ -10,6 +10,8 @@ import {
   Search,
   Tag,
   Folder,
+  Layers,
+  Hash,
 } from 'lucide-react';
 import { TAG_CATEGORIES } from '@/services/mockData';
 import styles from './FilterBar.module.scss';
@@ -24,62 +26,92 @@ export default function FilterBar({
   onSelectedTagsChange,
   verification = { admin: false, community: false, bot: false },
   onVerificationChange,
-  filterPricing,
-  onFilterPricingChange,
-  platform = 'all',
-  onPlatformChange,
   onResetFilters,
   isOpenMobile,
   onCloseMobile,
   isInline = false,
 }) {
-  const [tagSearch, setTagSearch] = useState('');
+  const [filterQuery, setFilterQuery] = useState('');
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(true);
-  const [isTagsOpen, setIsTagsOpen] = useState(true);
   const [isVerificationOpen, setIsVerificationOpen] = useState(true);
-  const [isPricingOpen, setIsPricingOpen] = useState(false);
-  const [isPlatformOpen, setIsPlatformOpen] = useState(false);
+  
+  // Track open/collapsed state for each tag category
+  const [openTagSections, setOpenTagSections] = useState({
+    platform: true,
+    pricing: true,
+    capabilities: true,
+    deployment: false,
+    license: false,
+  });
 
-  // Filter categories by tagSearch if search is active
+  const toggleTagSection = (sectionId) => {
+    setOpenTagSections((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }));
+  };
+
+  // Filtered categories
   const filteredCategories = useMemo(() => {
     const list = categories.filter((c) => c.id !== 'all');
-    if (!tagSearch.trim()) return list;
-    const q = tagSearch.toLowerCase();
+    if (!filterQuery.trim()) return list;
+    const q = filterQuery.toLowerCase();
     return list.filter((c) => c.name.toLowerCase().includes(q));
-  }, [categories, tagSearch]);
+  }, [categories, filterQuery]);
 
-  // Flatten and filter tags from TAG_CATEGORIES
-  const allTagsList = useMemo(() => {
-    const list = [];
-    TAG_CATEGORIES.forEach((cat) => {
-      cat.tags.forEach((t) => {
-        list.push({ ...t, groupName: cat.name });
+  // Hierarchical tag categories filtered by search
+  const filteredTagCategories = useMemo(() => {
+    const q = filterQuery.toLowerCase().trim().replace(/^#/, '');
+    return TAG_CATEGORIES.map((cat) => {
+      const matchingTags = cat.tags.filter((t) => {
+        if (!q) return true;
+        return t.name.toLowerCase().includes(q) || cat.name.toLowerCase().includes(q);
       });
-    });
-    if (!tagSearch.trim()) return list;
-    const q = tagSearch.toLowerCase().replace(/^#/, '');
-    return list.filter(
-      (t) => t.name.toLowerCase().includes(q) || t.groupName.toLowerCase().includes(q)
-    );
-  }, [tagSearch]);
+      return {
+        ...cat,
+        tags: matchingTags,
+      };
+    }).filter((cat) => cat.tags.length > 0);
+  }, [filterQuery]);
 
   const handleToggleCategory = (catId) => {
-    if (!onSelectedCategoriesChange) return;
-    if (selectedCategories.includes(catId)) {
-      onSelectedCategoriesChange(selectedCategories.filter((id) => id !== catId));
-    } else {
-      onSelectedCategoriesChange([...selectedCategories, catId]);
+    if (onSelectedCategoriesChange) {
+      if (selectedCategories.includes(catId)) {
+        onSelectedCategoriesChange(selectedCategories.filter((id) => id !== catId));
+      } else {
+        onSelectedCategoriesChange([...selectedCategories, catId]);
+      }
+    } else if (onSelectCategory) {
+      onSelectCategory(selectedCategory === catId ? 'all' : catId);
     }
   };
 
-  const handleToggleTag = (tagName) => {
+  const handleToggleTag = (tagName, category) => {
     if (!onSelectedTagsChange) return;
+    
+    // If tag is already selected, unselect it
     if (selectedTags.includes(tagName)) {
       onSelectedTagsChange(selectedTags.filter((t) => t !== tagName));
-    } else {
-      onSelectedTagsChange([...selectedTags, tagName]);
+      return;
     }
+
+    // If this category is single-select, remove other tags belonging to this category first
+    let updatedTags = [...selectedTags];
+    if (category && category.isSingleSelect) {
+      const categoryTagNames = category.tags.map((t) => t.name);
+      updatedTags = updatedTags.filter((t) => !categoryTagNames.includes(t));
+    }
+
+    onSelectedTagsChange([...updatedTags, tagName]);
   };
+
+  const hasAnyActiveFilters =
+    (selectedCategory && selectedCategory !== 'all') ||
+    selectedCategories.length > 0 ||
+    selectedTags.length > 0 ||
+    verification.admin ||
+    verification.community ||
+    verification.bot;
 
   return (
     <aside
@@ -88,11 +120,20 @@ export default function FilterBar({
       }`}
     >
       <div className={styles.topBar}>
-        <span className={styles.title}>Filters</span>
+        <div className={styles.topBarLeft}>
+          <span className={styles.title}>Filters</span>
+          {hasAnyActiveFilters && (
+            <span className={styles.activeCountBadge}>
+              {selectedCategories.length + selectedTags.length + (verification.admin ? 1 : 0) + (verification.community ? 1 : 0) + (verification.bot ? 1 : 0)}
+            </span>
+          )}
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button className={styles.resetBtn} onClick={onResetFilters}>
-            Reset All
-          </button>
+          {hasAnyActiveFilters && (
+            <button className={styles.resetBtn} onClick={onResetFilters}>
+              Reset All
+            </button>
+          )}
           {!isInline && (
             <button className={styles.closeMobileBtn} onClick={onCloseMobile} title="Close">
               <X size={20} />
@@ -101,21 +142,21 @@ export default function FilterBar({
         </div>
       </div>
 
-      {/* SEARCH WITHIN FILTERS (Categories & Tags) */}
+      {/* FILTER SEARCH INPUT */}
       <div className={styles.filterSearchBox}>
         <Search size={14} className={styles.filterSearchIcon} />
         <input
           type="text"
           className={styles.filterSearchInput}
-          placeholder="Find category or #tag..."
-          value={tagSearch}
-          onChange={(e) => setTagSearch(e.target.value)}
+          placeholder="Filter categories & #tags..."
+          value={filterQuery}
+          onChange={(e) => setFilterQuery(e.target.value)}
         />
-        {tagSearch && (
+        {filterQuery && (
           <button
             type="button"
             className={styles.clearSearchBtn}
-            onClick={() => setTagSearch('')}
+            onClick={() => setFilterQuery('')}
           >
             <X size={12} />
           </button>
@@ -126,24 +167,25 @@ export default function FilterBar({
       <div className={styles.section}>
         <div className={styles.sectionHeader} onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}>
           <span className={styles.headerLabel}>
-            <Folder size={12} />
+            <Folder size={13} />
             Categories {selectedCategories.length > 0 && `(${selectedCategories.length})`}
           </span>
           {isCategoriesOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </div>
         {isCategoriesOpen && (
           <div className={styles.optionsList}>
-            {filteredCategories.slice(0, 8).map((cat) => {
-              const isChecked = selectedCategories.includes(cat.id);
+            {filteredCategories.map((cat) => {
+              const isChecked =
+                selectedCategories.includes(cat.id) || selectedCategory === cat.id;
 
               return (
                 <div
                   key={cat.id}
-                  className={styles.checkboxItem}
+                  className={`${styles.checkboxItem} ${isChecked ? styles.itemActive : ''}`}
                   onClick={() => handleToggleCategory(cat.id)}
                 >
                   <div className={`${styles.squareBox} ${isChecked ? styles.checked : ''}`}>
-                    {isChecked && <Check size={12} strokeWidth={3} />}
+                    {isChecked && <Check size={11} strokeWidth={3} />}
                   </div>
                   <span
                     className={styles.catDot}
@@ -159,40 +201,60 @@ export default function FilterBar({
         <div className={styles.divider} />
       </div>
 
-      {/* TAGS SECTION */}
-      <div className={styles.section}>
-        <div className={styles.sectionHeader} onClick={() => setIsTagsOpen(!isTagsOpen)}>
-          <span className={styles.headerLabel}>
-            <Tag size={12} />
-            Tags {selectedTags.length > 0 && `(${selectedTags.length})`}
-          </span>
-          {isTagsOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </div>
-        {isTagsOpen && (
-          <div className={styles.tagsPillContainer}>
-            {allTagsList.slice(0, 16).map((t) => {
-              const isChecked = selectedTags.includes(t.name);
+      {/* TAG CATEGORIES (PLATFORM, PRICING, CAPABILITIES, DEPLOYMENT, LICENSE) */}
+      {filteredTagCategories.map((catGroup) => {
+        const isGroupOpen = openTagSections[catGroup.id] ?? true;
+        const selectedInGroupCount = catGroup.tags.filter((t) =>
+          selectedTags.includes(t.name)
+        ).length;
 
-              return (
-                <button
-                  type="button"
-                  key={t.id || t.name}
-                  className={`${styles.filterTagPill} ${isChecked ? styles.tagChecked : ''}`}
-                  onClick={() => handleToggleTag(t.name)}
-                >
-                  #{t.name}
-                </button>
-              );
-            })}
+        return (
+          <div key={catGroup.id} className={styles.section}>
+            <div
+              className={styles.sectionHeader}
+              onClick={() => toggleTagSection(catGroup.id)}
+            >
+              <span className={styles.headerLabel}>
+                <Hash size={13} />
+                {catGroup.name}
+                {selectedInGroupCount > 0 && (
+                  <span className={styles.groupCountPill}>({selectedInGroupCount})</span>
+                )}
+              </span>
+              {isGroupOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </div>
+
+            {isGroupOpen && (
+              <div className={styles.tagsPillContainer}>
+                {catGroup.tags.map((t) => {
+                  const isChecked = selectedTags.includes(t.name);
+
+                  return (
+                    <button
+                      type="button"
+                      key={t.id || t.name}
+                      className={`${styles.filterTagPill} ${isChecked ? styles.tagChecked : ''}`}
+                      onClick={() => handleToggleTag(t.name, catGroup)}
+                      title={catGroup.isSingleSelect ? `${t.name} (Single choice)` : t.name}
+                    >
+                      #{t.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <div className={styles.divider} />
           </div>
-        )}
-        <div className={styles.divider} />
-      </div>
+        );
+      })}
 
-      {/* VERIFICATION */}
+      {/* VERIFICATION SECTION */}
       <div className={styles.section}>
         <div className={styles.sectionHeader} onClick={() => setIsVerificationOpen(!isVerificationOpen)}>
-          <span className={styles.headerLabel}>Verification</span>
+          <span className={styles.headerLabel}>
+            <ShieldCheck size={13} />
+            Verification
+          </span>
           {isVerificationOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </div>
         {isVerificationOpen && (
@@ -205,9 +267,9 @@ export default function FilterBar({
               }
             >
               <div className={`${styles.squareBox} ${verification.admin ? styles.checked : ''}`}>
-                {verification.admin && <Check size={12} strokeWidth={3} />}
+                {verification.admin && <Check size={11} strokeWidth={3} />}
               </div>
-              <ShieldCheck size={15} color="#EAB308" />
+              <ShieldCheck size={14} color="#EAB308" />
               <span className={styles.label}>Admin Verified</span>
             </div>
 
@@ -219,9 +281,9 @@ export default function FilterBar({
               }
             >
               <div className={`${styles.squareBox} ${verification.community ? styles.checked : ''}`}>
-                {verification.community && <Check size={12} strokeWidth={3} />}
+                {verification.community && <Check size={11} strokeWidth={3} />}
               </div>
-              <Sparkles size={15} color="#10B981" />
+              <Sparkles size={14} color="#10B981" />
               <span className={styles.label}>Community Choice</span>
             </div>
 
@@ -233,71 +295,11 @@ export default function FilterBar({
               }
             >
               <div className={`${styles.squareBox} ${verification.bot ? styles.checked : ''}`}>
-                {verification.bot && <Check size={12} strokeWidth={3} />}
+                {verification.bot && <Check size={11} strokeWidth={3} />}
               </div>
-              <Bot size={15} color="#A855F7" />
+              <Bot size={14} color="#A855F7" />
               <span className={styles.label}>Bot Verified</span>
             </div>
-          </div>
-        )}
-        <div className={styles.divider} />
-      </div>
-
-      {/* PRICING */}
-      <div className={styles.section}>
-        <div className={styles.sectionHeader} onClick={() => setIsPricingOpen(!isPricingOpen)}>
-          <span className={styles.headerLabel}>Pricing</span>
-          {isPricingOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </div>
-        {isPricingOpen && (
-          <div className={styles.optionsList}>
-            {['Free', 'Freemium', 'Paid / Enterprise'].map((p) => {
-              const val = p.toLowerCase().split(' ')[0];
-              const isChecked = filterPricing === val;
-
-              return (
-                <div
-                  key={p}
-                  className={styles.checkboxItem}
-                  onClick={() => onFilterPricingChange(isChecked ? 'all' : val)}
-                >
-                  <div className={`${styles.squareBox} ${isChecked ? styles.checked : ''}`}>
-                    {isChecked && <Check size={12} strokeWidth={3} />}
-                  </div>
-                  <span className={styles.label}>{p}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        <div className={styles.divider} />
-      </div>
-
-      {/* PLATFORM */}
-      <div className={styles.section}>
-        <div className={styles.sectionHeader} onClick={() => setIsPlatformOpen(!isPlatformOpen)}>
-          <span className={styles.headerLabel}>Platform</span>
-          {isPlatformOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </div>
-        {isPlatformOpen && (
-          <div className={styles.optionsList}>
-            {['Web App', 'Mobile App', 'API', 'Extension'].map((plat) => {
-              const val = plat.toLowerCase().replace(' ', '-');
-              const isChecked = platform === val;
-
-              return (
-                <div
-                  key={plat}
-                  className={styles.checkboxItem}
-                  onClick={() => onPlatformChange && onPlatformChange(isChecked ? 'all' : val)}
-                >
-                  <div className={`${styles.squareBox} ${isChecked ? styles.checked : ''}`}>
-                    {isChecked && <Check size={12} strokeWidth={3} />}
-                  </div>
-                  <span className={styles.label}>{plat}</span>
-                </div>
-              );
-            })}
           </div>
         )}
       </div>

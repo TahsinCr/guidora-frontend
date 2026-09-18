@@ -29,11 +29,31 @@
   @include layout.width(fill);
   @include layout.flex(row, space-between, center);
 
+  .topBarLeft {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .title {
     font-size: 15px;
     font-weight: 700;
     color: var(--text-primary);
     letter-spacing: -0.02em;
+  }
+
+  .activeCountBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: var(--radius-full);
+    background: var(--primary-color);
+    color: #ffffff;
   }
 
   .resetBtn {
@@ -132,6 +152,12 @@
     display: flex;
     align-items: center;
     gap: 6px;
+
+    .groupCountPill {
+      font-size: 10px;
+      color: var(--primary-color);
+      font-weight: 700;
+    }
   }
 
   &:hover {
@@ -141,21 +167,29 @@
 
 .optionsList {
   @include layout.width(fill);
-  @include layout.flex(column, start, start, 6px);
+  @include layout.flex(column, start, start, 4px);
 }
 
 .checkboxItem {
   @include layout.flex(row, start, center, 8px);
   cursor: pointer;
   user-select: none;
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--text-secondary);
-  transition: color var(--transition-fast);
-  padding: 2px 0;
+  transition: all var(--transition-fast);
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
   width: 100%;
 
   &:hover {
     color: var(--text-primary);
+    background: var(--bg-hover);
+  }
+
+  &.itemActive {
+    color: var(--text-primary);
+    background: var(--bg-active);
+    font-weight: 500;
   }
 
   .squareBox {
