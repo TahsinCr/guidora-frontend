@@ -46,8 +46,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - SorterBar responsive flex-wrapping at 1024px with zero dropdown clipping.
   - Compact 210px filter sidebar matching top card rows.
 
+- **Submit Tool Studio Redesign**:
+  - Rebuilt `SubmitToolModal` into a spacious 2-column studio modal (`width: min(1140px, 95vw); height: min(860px, 90vh)`).
+  - Left column: Structured tool specifications (name, category, tagline, website, pricing, creator, license, platform pills, and bot hook configuration).
+  - Right column: Full-height Markdown studio with document toggle (`README` vs `Changelog`), formatting toolbar, write/preview tabs, and monospace syntax editor.
+
 ### Fixed
 
+- **Submit Tool Modal Width & Text Squeezing**:
+  - Resolved an issue where SCSS mixin alignment caused child form inputs to collapse into narrow vertical slivers.
+  - Form sections now expand to 100% column width with crisp input borders, full responsive wrapping, and high contrast across Dark and Light themes.
 - **Light Mode Contrast & CTA Visibility**:
   - Fixed primary button and action visibility in Light Mode ensuring maximum WCAG AA contrast.
   - Resolved white-on-white text issues on search inputs, dropdown menus, and detail cards.

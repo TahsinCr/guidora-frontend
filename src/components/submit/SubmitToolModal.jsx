@@ -11,12 +11,15 @@ import {
   List,
   Link,
   Heading,
+  Quote,
   CheckCircle2,
   AlertCircle,
   Bot,
-  Globe,
+  ExternalLink,
   Tag,
-  DollarSign,
+  Check,
+  Layers,
+  FileText,
 } from 'lucide-react';
 import { fetchGithubRepoData, addTool, getCategories } from '@/services/toolsService';
 import MarkdownRenderer from '@/components/common/MarkdownRenderer';
@@ -41,13 +44,15 @@ function GithubIcon({ size = 18, className = '' }) {
   );
 }
 
+const ALL_PLATFORMS = ['Web', 'API', 'Mac', 'Windows', 'Linux', 'iOS', 'CLI'];
+
 export default function SubmitToolModal({ isOpen, onClose, onToolCreated }) {
   const [categories, setCategories] = useState([]);
 
   // GitHub Auto-Fetch State
   const [githubUrl, setGithubUrl] = useState('');
   const [isFetchingGithub, setIsFetchingGithub] = useState(false);
-  const [githubStatus, setGithubStatus] = useState(null); // { type: 'success' | 'error', message: '' }
+  const [githubStatus, setGithubStatus] = useState(null);
 
   // Form Fields
   const [name, setName] = useState('');
@@ -56,7 +61,7 @@ export default function SubmitToolModal({ isOpen, onClose, onToolCreated }) {
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [repoUrl, setRepoUrl] = useState('');
   const [pricing, setPricing] = useState('Freemium');
-  const [platforms, setPlatforms] = useState(['Web']);
+  const [platforms, setPlatforms] = useState(['Web', 'API']);
   const [creatorName, setCreatorName] = useState('');
   const [license, setLicense] = useState('MIT');
 
@@ -64,13 +69,13 @@ export default function SubmitToolModal({ isOpen, onClose, onToolCreated }) {
   const [editorTab, setEditorTab] = useState('write'); // 'write' | 'preview'
   const [docType, setDocType] = useState('readme'); // 'readme' | 'changelog'
   const [readme, setReadme] = useState(
-    `# Project Overview\n\nWrite detailed documentation, features, and setup instructions in Markdown here.\n\n### Key Features\n- High throughput processing\n- Native API support\n- Context-aware intelligence`
+    `# Overview\n\nDescribe how your tool works, its architecture, and real-world developer use cases.\n\n### Key Features\n- High-throughput neural processing\n- Native API & SDK integrations\n- Enterprise privacy & compliance`
   );
   const [changelog, setChangelog] = useState(
-    `## v1.0.0 - Initial Release\n\n- Public release of the platform\n- Comprehensive web dashboard\n- Initial API endpoints`
+    `## v1.0.0 - Initial Release\n\n- Public directory release\n- Full multimodal inference support\n- Webhook sync engine enabled`
   );
 
-  // Bot Hook / Automation State
+  // Bot Hook State
   const [webhookUrl, setWebhookUrl] = useState('');
   const [syncFrequency, setSyncFrequency] = useState('Daily');
 
@@ -104,23 +109,23 @@ export default function SubmitToolModal({ isOpen, onClose, onToolCreated }) {
 
     try {
       const data = await fetchGithubRepoData(githubUrl);
-      setName(data.name || name);
-      setTagline(data.description || tagline);
-      setWebsiteUrl(data.websiteUrl || websiteUrl);
-      setRepoUrl(data.repoUrl || githubUrl);
-      setLicense(data.license || license);
+      if (data.name) setName(data.name);
+      if (data.description) setTagline(data.description);
+      if (data.websiteUrl) setWebsiteUrl(data.websiteUrl);
+      if (data.repoUrl) setRepoUrl(data.repoUrl);
+      if (data.license) setLicense(data.license);
       if (data.ownerName) setCreatorName(data.ownerName);
       if (data.readme) setReadme(data.readme);
       if (data.changelog) setChangelog(data.changelog);
 
       setGithubStatus({
         type: 'success',
-        message: `Fetched "${data.name}" metadata, stars (${data.stars}), license, and README from GitHub!`,
+        message: `Successfully imported "${data.name}" (${data.stars?.toLocaleString() || 0} ★) • License: ${data.license} • README & Changelog populated.`,
       });
     } catch (err) {
       setGithubStatus({
         type: 'error',
-        message: err.message || 'Failed to fetch repository. You can still fill the fields manually.',
+        message: err.message || 'Could not reach repository. You can still fill fields manually.',
       });
     } finally {
       setIsFetchingGithub(false);
@@ -136,8 +141,9 @@ export default function SubmitToolModal({ isOpen, onClose, onToolCreated }) {
     if (syntax === 'italic') addition = `*${placeholder || 'italic text'}*`;
     if (syntax === 'code') addition = `\`${placeholder || 'code'}\``;
     if (syntax === 'heading') addition = `\n### ${placeholder || 'Heading'}\n`;
-    if (syntax === 'list') addition = `\n- Item 1\n- Item 2\n- Item 3\n`;
-    if (syntax === 'link') addition = `[Link title](https://example.com)`;
+    if (syntax === 'list') addition = `\n- Feature 1\n- Feature 2\n- Feature 3\n`;
+    if (syntax === 'quote') addition = `\n> ${placeholder || 'Important quote or note'}\n`;
+    if (syntax === 'link') addition = `[Documentation](https://example.com)`;
 
     setter(activeContent + (activeContent ? '\n' : '') + addition);
   };
@@ -189,47 +195,59 @@ export default function SubmitToolModal({ isOpen, onClose, onToolCreated }) {
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+        {/* Header Bar */}
         <div className={styles.modalHeader}>
-          <div className={styles.headerTitleRow}>
+          <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>
               <Sparkles size={20} />
             </div>
             <div>
-              <h2 className={styles.title}>Submit New AI Tool</h2>
-              <span className={styles.subtitle}>
-                Add to the Guidora catalog. Sync from GitHub or fill details manually.
+              <h2 className={styles.modalTitle}>Submit AI Platform & Tool</h2>
+              <span className={styles.modalSubtitle}>
+                Add to Guidora catalog. Sync from GitHub repository or configure manually.
               </span>
             </div>
           </div>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Close modal">
+          <button className={styles.closeBtn} onClick={onClose} aria-label="Close dialog">
             <X size={18} />
           </button>
         </div>
 
         {submitSuccess ? (
           <div className={styles.successState}>
-            <CheckCircle2 size={48} color="#10B981" />
-            <h3>Tool Submitted Successfully!</h3>
-            <p>
-              <strong>{name}</strong> has been added to the directory. Refreshing view...
+            <div className={styles.successIconCircle}>
+              <CheckCircle2 size={44} color="#10B981" />
+            </div>
+            <h3 className={styles.successHeading}>Tool Submitted to Directory!</h3>
+            <p className={styles.successSub}>
+              <strong>{name}</strong> has been indexed and added to the directory. Loading tool detail...
             </p>
           </div>
         ) : (
-          <form className={styles.form} onSubmit={handleSubmit}>
-            {/* 1. GitHub Auto-Fetch Banner */}
-            <div className={styles.githubBanner}>
-              <div className={styles.githubBannerTop}>
-                <GithubIcon size={18} className={styles.ghIcon} />
-                <span className={styles.ghTitle}>Import from GitHub Repository (Optional)</span>
+          <form className={styles.formContainer} onSubmit={handleSubmit}>
+            {/* GitHub Import Banner */}
+            <div className={styles.githubStrip}>
+              <div className={styles.githubLabelRow}>
+                <GithubIcon size={16} />
+                <span className={styles.stripLabel}>Fast Import from GitHub (Optional)</span>
               </div>
-              <div className={styles.githubInputRow}>
-                <input
-                  type="text"
-                  className={styles.ghInput}
-                  placeholder="e.g. https://github.com/vllm-project/vllm or owner/repo"
-                  value={githubUrl}
-                  onChange={(e) => setGithubUrl(e.target.value)}
-                />
+
+              <div className={styles.githubActionRow}>
+                <div className={styles.inputWrapper}>
+                  <input
+                    type="text"
+                    className={styles.githubInput}
+                    placeholder="https://github.com/owner/repo or owner/repo (e.g. facebook/react)"
+                    value={githubUrl}
+                    onChange={(e) => setGithubUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleFetchGithub();
+                      }
+                    }}
+                  />
+                </div>
                 <button
                   type="button"
                   className={styles.fetchBtn}
@@ -243,284 +261,317 @@ export default function SubmitToolModal({ isOpen, onClose, onToolCreated }) {
 
               {githubStatus && (
                 <div
-                  className={`${styles.statusAlert} ${
+                  className={`${styles.statusNotice} ${
                     githubStatus.type === 'success' ? styles.statusSuccess : styles.statusError
                   }`}
                 >
                   {githubStatus.type === 'success' ? (
-                    <CheckCircle2 size={14} />
+                    <CheckCircle2 size={15} />
                   ) : (
-                    <AlertCircle size={14} />
+                    <AlertCircle size={15} />
                   )}
                   <span>{githubStatus.message}</span>
                 </div>
               )}
             </div>
 
-            {/* 2. Core Information Grid */}
-            <div className={styles.fieldsGrid}>
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>Tool Name *</label>
-                <input
-                  type="text"
-                  className={styles.input}
-                  placeholder="e.g. NeuroGen Studio"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>Category *</label>
-                <select
-                  className={styles.select}
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                >
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.inputGroupFull}>
-                <label className={styles.label}>Short Tagline / Summary *</label>
-                <input
-                  type="text"
-                  className={styles.input}
-                  placeholder="e.g. Next-gen neural network engine for automated code synthesis"
-                  value={tagline}
-                  onChange={(e) => setTagline(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>Website URL</label>
-                <input
-                  type="url"
-                  className={styles.input}
-                  placeholder="https://example.com"
-                  value={websiteUrl}
-                  onChange={(e) => setWebsiteUrl(e.target.value)}
-                />
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>Pricing Model</label>
-                <select
-                  className={styles.select}
-                  value={pricing}
-                  onChange={(e) => setPricing(e.target.value)}
-                >
-                  <option value="Free">Free</option>
-                  <option value="Freemium">Freemium</option>
-                  <option value="Paid">Paid</option>
-                  <option value="Open Source">Open Source</option>
-                </select>
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>Creator / Company Name</label>
-                <input
-                  type="text"
-                  className={styles.input}
-                  placeholder="e.g. NeuroLabs Inc."
-                  value={creatorName}
-                  onChange={(e) => setCreatorName(e.target.value)}
-                />
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>License</label>
-                <input
-                  type="text"
-                  className={styles.input}
-                  placeholder="e.g. MIT, Apache 2.0, Proprietary"
-                  value={license}
-                  onChange={(e) => setLicense(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Platform Selector */}
-            <div className={styles.platformGroup}>
-              <label className={styles.label}>Supported Platforms</label>
-              <div className={styles.platformPills}>
-                {['Web', 'API', 'Mac', 'Windows', 'Linux', 'iOS', 'CLI'].map((plat) => {
-                  const isSelected = platforms.includes(plat);
-                  return (
-                    <button
-                      type="button"
-                      key={plat}
-                      className={`${styles.platPill} ${isSelected ? styles.platActive : ''}`}
-                      onClick={() => handlePlatformToggle(plat)}
-                    >
-                      {plat}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 3. Markdown Documentation Editor */}
-            <div className={styles.editorContainer}>
-              <div className={styles.editorNav}>
-                <div className={styles.docTypeTabs}>
-                  <button
-                    type="button"
-                    className={`${styles.docTypeBtn} ${docType === 'readme' ? styles.activeDoc : ''}`}
-                    onClick={() => setDocType('readme')}
-                  >
-                    README / Overview (MD)
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.docTypeBtn} ${docType === 'changelog' ? styles.activeDoc : ''}`}
-                    onClick={() => setDocType('changelog')}
-                  >
-                    Changelog (MD)
-                  </button>
+            {/* Main Studio Body: 2 Columns */}
+            <div className={styles.studioBody}>
+              {/* Left Column: Metadata & Form Controls */}
+              <div className={styles.formColumn}>
+                <div className={styles.sectionHeading}>
+                  <Layers size={15} />
+                  <span>Tool Specifications</span>
                 </div>
 
-                <div className={styles.viewToggle}>
-                  <button
-                    type="button"
-                    className={`${styles.viewBtn} ${editorTab === 'write' ? styles.activeView : ''}`}
-                    onClick={() => setEditorTab('write')}
-                  >
-                    <Edit3 size={13} />
-                    <span>Write</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.viewBtn} ${editorTab === 'preview' ? styles.activeView : ''}`}
-                    onClick={() => setEditorTab('preview')}
-                  >
-                    <Eye size={13} />
-                    <span>Preview</span>
-                  </button>
-                </div>
-              </div>
-
-              {editorTab === 'write' ? (
-                <>
-                  <div className={styles.editorToolbar}>
-                    <button
-                      type="button"
-                      className={styles.toolBtn}
-                      onClick={() => insertMarkdownTag('bold')}
-                      title="Bold"
-                    >
-                      <Bold size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.toolBtn}
-                      onClick={() => insertMarkdownTag('italic')}
-                      title="Italic"
-                    >
-                      <Italic size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.toolBtn}
-                      onClick={() => insertMarkdownTag('heading')}
-                      title="Heading"
-                    >
-                      <Heading size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.toolBtn}
-                      onClick={() => insertMarkdownTag('code')}
-                      title="Inline Code"
-                    >
-                      <Code size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.toolBtn}
-                      onClick={() => insertMarkdownTag('list')}
-                      title="Bullet List"
-                    >
-                      <List size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.toolBtn}
-                      onClick={() => insertMarkdownTag('link')}
-                      title="Insert Link"
-                    >
-                      <Link size={13} />
-                    </button>
+                <div className={styles.twoColGrid}>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.fieldLabel}>Tool Name *</label>
+                    <input
+                      type="text"
+                      className={styles.fieldInput}
+                      placeholder="e.g. NeuroGen Studio"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
                   </div>
 
-                  <textarea
-                    className={styles.editorTextarea}
-                    rows={8}
-                    value={docType === 'readme' ? readme : changelog}
-                    onChange={(e) => {
-                      if (docType === 'readme') setReadme(e.target.value);
-                      else setChangelog(e.target.value);
-                    }}
-                    placeholder={`Write your ${docType} in Markdown...`}
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.fieldLabel}>Category *</label>
+                    <select
+                      className={styles.fieldSelect}
+                      value={categoryId}
+                      onChange={(e) => setCategoryId(e.target.value)}
+                    >
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Short Tagline / Summary *</label>
+                  <input
+                    type="text"
+                    className={styles.fieldInput}
+                    placeholder="e.g. Real-time generative orchestration for design & code workflows"
+                    value={tagline}
+                    onChange={(e) => setTagline(e.target.value)}
+                    required
                   />
-                </>
-              ) : (
-                <div className={styles.previewBox}>
-                  <MarkdownRenderer content={docType === 'readme' ? readme : changelog} />
                 </div>
-              )}
-            </div>
 
-            {/* 4. Automation & Bot Hook Configuration (Upcoming bot integration) */}
-            <div className={styles.automationBox}>
-              <div className={styles.automationHeader}>
-                <Bot size={16} className={styles.botIcon} />
-                <div>
-                  <h4 className={styles.botTitle}>Automated Bot Sync Hook (Optional)</h4>
-                  <span className={styles.botDesc}>
-                    Configure webhooks for Guidora bots to periodically pull updated README & Changelog.
-                  </span>
+                <div className={styles.twoColGrid}>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.fieldLabel}>Website URL</label>
+                    <input
+                      type="url"
+                      className={styles.fieldInput}
+                      placeholder="https://example.com"
+                      value={websiteUrl}
+                      onChange={(e) => setWebsiteUrl(e.target.value)}
+                    />
+                  </div>
+
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.fieldLabel}>Pricing Model</label>
+                    <select
+                      className={styles.fieldSelect}
+                      value={pricing}
+                      onChange={(e) => setPricing(e.target.value)}
+                    >
+                      <option value="Free">Free</option>
+                      <option value="Freemium">Freemium</option>
+                      <option value="Paid">Paid</option>
+                      <option value="Open Source">Open Source</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles.twoColGrid}>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.fieldLabel}>Creator / Company</label>
+                    <input
+                      type="text"
+                      className={styles.fieldInput}
+                      placeholder="e.g. NeuroLabs Inc."
+                      value={creatorName}
+                      onChange={(e) => setCreatorName(e.target.value)}
+                    />
+                  </div>
+
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.fieldLabel}>License</label>
+                    <input
+                      type="text"
+                      className={styles.fieldInput}
+                      placeholder="e.g. MIT, Apache 2.0, Proprietary"
+                      value={license}
+                      onChange={(e) => setLicense(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Platforms Selector */}
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Supported Platforms</label>
+                  <div className={styles.platformPillsRow}>
+                    {ALL_PLATFORMS.map((plat) => {
+                      const isSelected = platforms.includes(plat);
+                      return (
+                        <button
+                          type="button"
+                          key={plat}
+                          className={`${styles.platformPill} ${isSelected ? styles.platformActive : ''}`}
+                          onClick={() => handlePlatformToggle(plat)}
+                        >
+                          {isSelected && <Check size={12} />}
+                          <span>{plat}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Automation & Bot Hook Box */}
+                <div className={styles.botCard}>
+                  <div className={styles.botCardHeader}>
+                    <Bot size={16} className={styles.botCardIcon} />
+                    <div className={styles.botCardText}>
+                      <span className={styles.botCardTitle}>Automated Bot Sync Hook</span>
+                      <span className={styles.botCardSub}>
+                        Configure webhooks for Guidora bots to periodically pull updated README & Changelog.
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.botInputGrid}>
+                    <input
+                      type="url"
+                      className={styles.fieldInput}
+                      placeholder="Webhook URL (e.g. https://api.site.com/hooks/guidora)"
+                      value={webhookUrl}
+                      onChange={(e) => setWebhookUrl(e.target.value)}
+                    />
+                    <select
+                      className={styles.fieldSelect}
+                      value={syncFrequency}
+                      onChange={(e) => setSyncFrequency(e.target.value)}
+                    >
+                      <option value="Hourly">Sync Hourly</option>
+                      <option value="Daily">Sync Daily</option>
+                      <option value="On Push">On Release / Push</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              <div className={styles.botInputsRow}>
-                <input
-                  type="url"
-                  className={styles.input}
-                  placeholder="Webhook URL (e.g. https://api.yourdomain.com/hooks/guidora)"
-                  value={webhookUrl}
-                  onChange={(e) => setWebhookUrl(e.target.value)}
-                />
-                <select
-                  className={styles.select}
-                  value={syncFrequency}
-                  onChange={(e) => setSyncFrequency(e.target.value)}
-                >
-                  <option value="Hourly">Sync Hourly</option>
-                  <option value="Daily">Sync Daily</option>
-                  <option value="On Push">On Release / Push</option>
-                </select>
+              {/* Right Column: Interactive Markdown Studio */}
+              <div className={styles.editorColumn}>
+                <div className={styles.editorCard}>
+                  {/* Top Bar: Doc Switcher & Mode Switcher */}
+                  <div className={styles.editorTopBar}>
+                    <div className={styles.docTabs}>
+                      <button
+                        type="button"
+                        className={`${styles.docTab} ${docType === 'readme' ? styles.docTabActive : ''}`}
+                        onClick={() => setDocType('readme')}
+                      >
+                        <FileText size={13} />
+                        <span>README / Overview</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.docTab} ${docType === 'changelog' ? styles.docTabActive : ''}`}
+                        onClick={() => setDocType('changelog')}
+                      >
+                        <Sparkles size={13} />
+                        <span>Release Changelog</span>
+                      </button>
+                    </div>
+
+                    <div className={styles.modeTabs}>
+                      <button
+                        type="button"
+                        className={`${styles.modeBtn} ${editorTab === 'write' ? styles.modeBtnActive : ''}`}
+                        onClick={() => setEditorTab('write')}
+                      >
+                        <Edit3 size={13} />
+                        <span>Write</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.modeBtn} ${editorTab === 'preview' ? styles.modeBtnActive : ''}`}
+                        onClick={() => setEditorTab('preview')}
+                      >
+                        <Eye size={13} />
+                        <span>Preview</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Formatting Toolbar */}
+                  {editorTab === 'write' && (
+                    <div className={styles.toolbarRow}>
+                      <button
+                        type="button"
+                        className={styles.toolBtn}
+                        onClick={() => insertMarkdownTag('bold')}
+                        title="Bold (**text**)"
+                      >
+                        <Bold size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.toolBtn}
+                        onClick={() => insertMarkdownTag('italic')}
+                        title="Italic (*text*)"
+                      >
+                        <Italic size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.toolBtn}
+                        onClick={() => insertMarkdownTag('heading')}
+                        title="Heading (### Title)"
+                      >
+                        <Heading size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.toolBtn}
+                        onClick={() => insertMarkdownTag('code')}
+                        title="Inline Code (`code`)"
+                      >
+                        <Code size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.toolBtn}
+                        onClick={() => insertMarkdownTag('list')}
+                        title="Bullet List (- item)"
+                      >
+                        <List size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.toolBtn}
+                        onClick={() => insertMarkdownTag('quote')}
+                        title="Quote (> quote)"
+                      >
+                        <Quote size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.toolBtn}
+                        onClick={() => insertMarkdownTag('link')}
+                        title="Link ([Title](url))"
+                      >
+                        <Link size={13} />
+                      </button>
+                      <span className={styles.toolbarHint}>Markdown syntax supported</span>
+                    </div>
+                  )}
+
+                  {/* Content Area */}
+                  <div className={styles.editorBodyArea}>
+                    {editorTab === 'write' ? (
+                      <textarea
+                        className={styles.markdownTextarea}
+                        value={docType === 'readme' ? readme : changelog}
+                        onChange={(e) => {
+                          if (docType === 'readme') setReadme(e.target.value);
+                          else setChangelog(e.target.value);
+                        }}
+                        placeholder={`Write ${docType === 'readme' ? 'README and documentation' : 'release notes and changelog'} in Markdown...`}
+                        spellCheck="false"
+                      />
+                    ) : (
+                      <div className={styles.previewCanvas}>
+                        <MarkdownRenderer content={docType === 'readme' ? readme : changelog} />
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Footer actions */}
-            <div className={styles.footerRow}>
-              <button type="button" className={styles.cancelBtn} onClick={onClose}>
+            {/* Bottom Footer Actions */}
+            <div className={styles.modalFooter}>
+              <button type="button" className={styles.cancelActionBtn} onClick={onClose}>
                 Cancel
               </button>
               <button
                 type="submit"
-                className={styles.submitBtn}
+                className={styles.submitActionBtn}
                 disabled={isSubmitting || !name.trim() || !tagline.trim()}
               >
-                <Sparkles size={15} />
-                <span>{isSubmitting ? 'Saving Tool...' : 'Submit Tool to Directory'}</span>
+                <Sparkles size={16} />
+                <span>{isSubmitting ? 'Indexing Tool...' : 'Submit Tool to Directory'}</span>
               </button>
             </div>
           </form>

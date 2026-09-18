@@ -3,54 +3,58 @@
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  z-index: 1100;
-  @include layout.flex(row, center, center, 0);
-  padding: 24px;
-  overflow-y: auto;
-  animation: overlayFadeIn 0.2s ease-out;
+  background: rgba(4, 7, 15, 0.8);
+  backdrop-filter: blur(10px);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: overlayIn 0.2s ease-out;
 
   @media (max-width: 640px) {
-    padding: 12px;
+    padding: 10px;
   }
 }
 
-@keyframes overlayFadeIn {
+@keyframes overlayIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
 .modalBox {
-  position: relative;
-  @include layout.width(100%);
-  max-width: 720px;
-  max-height: 90vh;
+  width: min(1140px, 95vw);
+  height: min(860px, 90vh);
   background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-xl);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.7);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: modalScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes modalScaleIn {
+@keyframes modalIn {
   from { opacity: 0; transform: scale(0.96) translateY(12px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+// Header
 .modalHeader {
-  @include layout.flex(row, space-between, center, 16px);
-  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
   border-bottom: 1px solid var(--border-card);
   background: var(--bg-card);
   flex-shrink: 0;
 }
 
-.headerTitleRow {
-  @include layout.flex(row, flex-start, center, 14px);
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
 .headerIcon {
@@ -58,87 +62,108 @@
   border-radius: var(--radius-md);
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: #ffffff;
-  @include layout.flex(row, center, center, 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
-.title {
+.modalTitle {
   font-size: 18px;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
+  line-height: 1.25;
 }
 
-.subtitle {
+.modalSubtitle {
   font-size: 12.5px;
   color: var(--text-muted);
 }
 
 .closeBtn {
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 6px;
+  padding: 7px;
   border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.15s ease;
 
   &:hover {
     color: var(--text-primary);
     background: var(--bg-input);
+    border-color: var(--border-card);
   }
 }
 
-.form {
-  padding: 24px;
-  overflow-y: auto;
-  @include layout.flex(column, flex-start, stretch, 20px);
+// Form Container
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
 }
 
-// 1. GitHub Banner
-.githubBanner {
-  @include layout.box(16px, 1px solid var(--border-card), var(--radius-lg));
+// GitHub Strip
+.githubStrip {
+  padding: 14px 24px;
   background: var(--bg-input);
-  @include layout.flex(column, flex-start, stretch, 12px);
+  border-bottom: 1px solid var(--border-card);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
-.githubBannerTop {
-  @include layout.flex(row, flex-start, center, 8px);
-}
-
-.ghIcon {
+.githubLabelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--text-primary);
 }
 
-.ghTitle {
-  font-size: 13px;
+.stripLabel {
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
-.githubInputRow {
+.githubActionRow {
   display: flex;
+  align-items: center;
   gap: 10px;
 
-  @media (max-width: 600px) {
+  @media (max-width: 640px) {
     flex-direction: column;
+    align-items: stretch;
   }
 }
 
-.ghInput {
+.inputWrapper {
   flex: 1;
+}
+
+.githubInput {
+  width: 100%;
   background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: inherit;
   font-size: 13px;
-  padding: 9px 12px;
-  transition: border-color 0.15s ease;
+  padding: 9px 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
   &:focus {
     outline: none;
     border-color: var(--accent-purple);
+    box-shadow: 0 0 0 3px var(--accent-purple-glow);
   }
 
   &::placeholder {
@@ -147,33 +172,39 @@
 }
 
 .fetchBtn {
-  @include layout.flex(row, center, center, 6px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   background: var(--accent-purple);
   border: none;
   color: #ffffff;
-  padding: 9px 16px;
+  padding: 9px 18px;
   border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease;
   white-space: nowrap;
+  transition: background 0.15s ease, transform 0.1s ease;
 
   &:hover:not(:disabled) {
     background: var(--accent-purple-hover);
+    transform: translateY(-1px);
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 }
 
-.statusAlert {
-  @include layout.flex(row, flex-start, center, 8px);
+.statusNotice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 8px 12px;
   border-radius: var(--radius-sm);
-  font-size: 12.5px;
+  font-size: 12px;
   line-height: 1.4;
 }
 
@@ -189,40 +220,72 @@
   border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
-// 2. Core Fields Grid
-.fieldsGrid {
+// Studio Body (2 Columns)
+.studioBody {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: 460px 1fr;
+  gap: 20px;
+  padding: 20px 24px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 
-  @media (max-width: 600px) {
+  @media (max-width: 1024px) {
     grid-template-columns: 1fr;
   }
 }
 
-.inputGroup {
-  @include layout.flex(column, flex-start, stretch, 6px);
+// Left Column: Form Controls
+.formColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.inputGroupFull {
-  grid-column: 1 / -1;
-  @include layout.flex(column, flex-start, stretch, 6px);
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-card);
 }
 
-.label {
-  font-size: 12.5px;
+.twoColGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  @media (max-width: 500px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fieldLabel {
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-secondary);
 }
 
-.input, .select {
+.fieldInput, .fieldSelect {
+  width: 100%;
   background: var(--bg-input);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: inherit;
   font-size: 13px;
-  padding: 9px 12px;
+  padding: 8px 12px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
   &:focus {
@@ -236,22 +299,27 @@
   }
 }
 
-.platformGroup {
-  @include layout.flex(column, flex-start, stretch, 8px);
+.fieldSelect {
+  cursor: pointer;
 }
 
-.platformPills {
-  @include layout.flex(row, flex-start, center, 8px);
+// Platforms
+.platformPillsRow {
+  display: flex;
   flex-wrap: wrap;
+  gap: 6px;
 }
 
-.platPill {
+.platformPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   background: var(--bg-input);
   border: 1px solid var(--border-card);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 500;
-  padding: 5px 12px;
+  padding: 4px 10px;
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -261,7 +329,7 @@
     border-color: var(--accent-purple);
   }
 
-  &.platActive {
+  &.platformActive {
     background: var(--accent-purple);
     border-color: var(--accent-purple);
     color: #ffffff;
@@ -269,32 +337,102 @@
   }
 }
 
-// 3. Markdown Editor Container
-.editorContainer {
-  @include layout.box(0, 1px solid var(--border-card), var(--radius-lg));
-  background: var(--bg-card);
-  overflow: hidden;
-  @include layout.flex(column, flex-start, stretch, 0);
+// Bot Sync Box
+.botCard {
+  background: var(--bg-input);
+  border: 1px dashed var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
 }
 
-.editorNav {
-  @include layout.flex(row, space-between, center, 12px);
-  padding: 10px 14px;
+.botCardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.botCardIcon {
+  color: var(--accent-purple);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.botCardText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.botCardTitle {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.botCardSub {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.botInputGrid {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: 8px;
+
+  @media (max-width: 500px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Right Column: Markdown Studio
+.editorColumn {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.editorCard {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.editorTopBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
   background: var(--bg-input);
   border-bottom: 1px solid var(--border-card);
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.docTypeTabs {
-  @include layout.flex(row, flex-start, center, 6px);
+.docTabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.docTypeBtn {
+.docTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: transparent;
-  border: none;
-  font-size: 12.5px;
-  font-weight: 600;
+  border: 1px solid transparent;
   color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
   padding: 5px 10px;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -304,28 +442,33 @@
     color: var(--text-primary);
   }
 
-  &.activeDoc {
+  &.docTabActive {
+    background: var(--bg-card);
+    border-color: var(--border-card);
     color: var(--accent-purple);
-    background: var(--accent-purple-glow);
   }
 }
 
-.viewToggle {
-  @include layout.flex(row, flex-end, center, 4px);
+.modeTabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   background: var(--bg-card);
   border: 1px solid var(--border-card);
   padding: 2px;
   border-radius: var(--radius-sm);
 }
 
-.viewBtn {
-  @include layout.flex(row, center, center, 4px);
+.modeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 500;
-  padding: 4px 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -334,106 +477,96 @@
     color: var(--text-primary);
   }
 
-  &.activeView {
+  &.modeBtnActive {
     background: var(--accent-purple);
     color: #ffffff;
-    font-weight: 600;
   }
 }
 
-.editorToolbar {
-  @include layout.flex(row, flex-start, center, 4px);
-  padding: 6px 12px;
-  border-bottom: 1px solid var(--border-card);
+.toolbarRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
   background: var(--bg-card);
+  border-bottom: 1px solid var(--border-card);
+  flex-wrap: wrap;
 }
 
 .toolBtn {
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   color: var(--text-secondary);
-  padding: 5px 7px;
+  padding: 4px 6px;
   border-radius: 4px;
   cursor: pointer;
-  line-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.15s ease;
 
   &:hover {
     background: var(--bg-input);
+    border-color: var(--border-card);
     color: var(--accent-purple);
   }
 }
 
-.editorTextarea {
+.toolbarHint {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding-right: 4px;
+}
+
+.editorBodyArea {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 280px;
+  position: relative;
+  overflow: hidden;
+}
+
+.markdownTextarea {
   width: 100%;
+  height: 100%;
   border: none;
   background: var(--bg-card);
   color: var(--text-primary);
   font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: 12.5px;
+  line-height: 1.65;
   padding: 14px;
-  resize: vertical;
-  min-height: 160px;
+  resize: none;
+  overflow-y: auto;
 
   &:focus {
     outline: none;
   }
 }
 
-.previewBox {
+.previewCanvas {
+  width: 100%;
+  height: 100%;
   padding: 16px;
-  max-height: 320px;
   overflow-y: auto;
   background: var(--bg-card);
 }
 
-// 4. Automation & Bot Hook Box
-.automationBox {
-  @include layout.box(14px, 1px dashed var(--border-card), var(--radius-lg));
-  background: var(--bg-input);
-  @include layout.flex(column, flex-start, stretch, 10px);
-}
-
-.automationHeader {
-  @include layout.flex(row, flex-start, center, 10px);
-}
-
-.botIcon {
-  color: var(--accent-purple);
+// Footer
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 24px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-card);
   flex-shrink: 0;
 }
 
-.botTitle {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.botDesc {
-  font-size: 11.5px;
-  color: var(--text-muted);
-}
-
-.botInputsRow {
-  display: grid;
-  grid-template-columns: 1fr 160px;
-  gap: 10px;
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-// Footer Row
-.footerRow {
-  @include layout.flex(row, flex-end, center, 12px);
-  padding-top: 10px;
-  border-top: 1px solid var(--border-card);
-}
-
-.cancelBtn {
+.cancelActionBtn {
   background: transparent;
   border: 1px solid var(--border-card);
   color: var(--text-secondary);
@@ -442,6 +575,7 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.15s ease;
 
   &:hover {
     background: var(--bg-input);
@@ -449,43 +583,69 @@
   }
 }
 
-.submitBtn {
-  @include layout.flex(row, center, center, 8px);
+.submitActionBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: var(--accent-purple);
   border: none;
   color: #ffffff;
-  padding: 10px 22px;
+  padding: 10px 24px;
   border-radius: var(--radius-md);
   font-size: 13.5px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s ease;
+  box-shadow: 0 4px 14px rgba(138, 56, 245, 0.35);
+  transition: all 0.15s ease;
 
   &:hover:not(:disabled) {
     background: var(--accent-purple-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(138, 56, 245, 0.45);
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 }
 
+// Success View
 .successState {
-  @include layout.flex(column, center, center, 14px);
-  padding: 60px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
   text-align: center;
+  gap: 16px;
+}
 
-  h3 {
-    font-size: 20px;
-    font-weight: 700;
+.successIconCircle {
+  @include layout.square(72px);
+  border-radius: var(--radius-full);
+  background: rgba(16, 185, 129, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.successHeading {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.successSub {
+  font-size: 14px;
+  color: var(--text-secondary);
+  max-width: 440px;
+  margin: 0;
+  line-height: 1.6;
+
+  strong {
     color: var(--text-primary);
-    margin: 0;
-  }
-
-  p {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin: 0;
   }
 }
