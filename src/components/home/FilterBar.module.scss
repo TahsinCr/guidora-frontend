@@ -9,11 +9,11 @@
     display: flex !important;
     width: 100% !important;
     max-width: 100% !important;
-    background: var(--bg-card);
-    border: 1px solid var(--border-card);
-    border-radius: var(--radius-lg);
-    padding: 16px 20px;
-    box-shadow: var(--shadow-card);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 12px 0 8px 0;
+    box-shadow: none;
     position: static !important;
     animation: none !important;
   }
