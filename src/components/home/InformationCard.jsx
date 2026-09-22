@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { ChevronDown } from 'lucide-react';
 import CategorySlider from './CategorySlider';
 import styles from './InformationCard.module.scss';
 
@@ -134,20 +133,6 @@ export default function InformationCard({ categories = [], selectedCategory, onS
             onSelectCategory={handleCategorySelect}
           />
         </div>
-
-        {/* Subtle quick-jump indicator to catalog & filters */}
-        <button
-          type="button"
-          className={styles.scrollDownBtn}
-          onClick={() => scrollToCatalog(true)}
-          title={t('hero.exploreTools', 'Explore Tools & Filters')}
-          aria-label={t('hero.exploreTools', 'Explore Tools & Filters')}
-        >
-          <span className={styles.scrollDownText}>
-            {t('hero.exploreCatalog', 'Explore Directory & Filters')}
-          </span>
-          <ChevronDown size={14} className={styles.scrollChevron} />
-        </button>
       </div>
     </section>
   );

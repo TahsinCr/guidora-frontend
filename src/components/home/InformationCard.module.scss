@@ -98,48 +98,6 @@
   margin-bottom: 8px;
 }
 
-.scrollDownBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-full);
-  padding: 5px 14px;
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  margin-top: 6px;
-  transition: all var(--transition-fast);
-
-  &:hover {
-    color: var(--text-primary);
-    border-color: var(--border-card-hover);
-    background: var(--bg-card);
-    transform: translateY(1px);
-
-    .scrollChevron {
-      transform: translateY(2px);
-      color: var(--brand-blue);
-    }
-  }
-
-  .scrollChevron {
-    transition: transform var(--transition-fast), color var(--transition-fast);
-    animation: gentleBounce 2s infinite ease-in-out;
-  }
-}
-
-@keyframes gentleBounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(2px);
-  }
-}
-
 // Compact layout below 850px: Slogan is hidden, only category slider is shown matching mockup
 @media (max-width: 850px) {
   .heroContainer {
@@ -155,10 +113,6 @@
   }
 
   .headingSection {
-    display: none;
-  }
-
-  .scrollDownBtn {
     display: none;
   }
 

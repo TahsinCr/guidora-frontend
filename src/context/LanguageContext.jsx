@@ -19,8 +19,6 @@ export const TRANSLATIONS = {
     'hero.titlePart2': 'for Any Task',
     'hero.subtitle': 'The most advanced directory with deep filtering, real-time community verification, and bot-assisted updates.',
     'hero.allTools': 'All Tools',
-    'hero.exploreCatalog': 'Explore Directory & Filters',
-    'hero.exploreTools': 'Explore Tools & Filters',
 
     // Categories
     'cat.all': 'All Tools',
@@ -518,8 +516,6 @@ export const TRANSLATIONS = {
     'hero.titlePart2': 'Keşfedin',
     'hero.subtitle': 'Derin filtreleme, gerçek zamanlı topluluk doğrulaması ve yapay zeka destekli güncellemeler içeren en gelişmiş dizin.',
     'hero.allTools': 'Tüm Araçlar',
-    'hero.exploreCatalog': 'Dizini & Filtreleri Keşfet',
-    'hero.exploreTools': 'Araçları & Filtreleri Keşfet',
 
     // Categories
     'cat.all': 'Tüm Araçlar',
@@ -1017,8 +1013,6 @@ export const TRANSLATIONS = {
     'hero.titlePart2': 'для любой задачи',
     'hero.subtitle': 'Самый передовой каталог с глубокой фильтрацией, верификацией сообществом и автообновлениями.',
     'hero.allTools': 'Все инструменты',
-    'hero.exploreCatalog': 'Перейти к каталогу и фильтрам',
-    'hero.exploreTools': 'Исследовать инструменты и фильтры',
 
     // Categories
     'cat.all': 'Все инструменты',

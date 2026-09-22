@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Added global `scroll-padding-top: var(--catalog-offset)` on `html` and `scroll-margin-top: var(--catalog-offset)` on `.contentLayout` (`#catalog-section`).
   - Added `scrollToCatalog(smooth)` dynamic scroll calculator in `src/components/home/InformationCard.jsx`, ensuring scrolling down brings the page to the exact catalog docking point right below the sticky navbar without clipping the "Filters" title, active badges, or search bar.
   - Implemented downward wheel & touch swipe gesture detection to smoothly animate from the hero to the catalog section.
-  - Added category pill click auto-scroll to `#catalog-section` and an animated "Explore Directory & Filters" indicator button with bilingual localization (EN, TR, RU).
+  - Added category pill click auto-scroll to `#catalog-section`. Cleanly removed the standalone "Explore Directory & Filters" indicator button and its associated handlers and translations.
 - **Floating "Scroll to Top" Button**:
   - Created `src/components/common/ScrollToTop.jsx` and `ScrollToTop.module.scss`.
   - Circular floating action button with glassmorphism, ArrowUp icon, and smooth scroll animation (`window.scrollTo({ top: 0, behavior: 'smooth' })`).
