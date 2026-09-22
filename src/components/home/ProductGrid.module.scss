@@ -17,6 +17,10 @@
   @include layout.flex-item-fill;
   @include layout.flex(column, stretch, start, 20px);
   min-width: 0;
+
+  @media (max-width: 1080px) {
+    gap: 12px;
+  }
 }
 
 .inlineFilterWrapper {
@@ -28,7 +32,12 @@
   overflow: hidden;
   margin-bottom: 0;
 
+  &:not(.inlineFilterOpen) {
+    display: none;
+  }
+
   &.inlineFilterOpen {
+    display: grid;
     grid-template-rows: 1fr;
     opacity: 1;
     margin-bottom: 4px;

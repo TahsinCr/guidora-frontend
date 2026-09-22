@@ -35,6 +35,7 @@ export const TRANSLATIONS = {
     // FilterBar
     'filter.filters': 'Filters',
     'filter.searchFilters': 'Search categories, tags...',
+    'filter.clear': 'Clear',
     'filter.clearFilters': 'Clear Filters',
     'filter.activeFilters': 'Active Filters',
     'filter.categories': 'Categories',
@@ -532,6 +533,7 @@ export const TRANSLATIONS = {
     // FilterBar
     'filter.filters': 'Filtreler',
     'filter.searchFilters': 'Kategori ve etiket ara...',
+    'filter.clear': 'Temizle',
     'filter.clearFilters': 'Filtreleri Temizle',
     'filter.activeFilters': 'Aktif Filtreler',
     'filter.categories': 'Kategoriler',
@@ -1029,6 +1031,7 @@ export const TRANSLATIONS = {
     // FilterBar
     'filter.filters': 'Фильтры',
     'filter.searchFilters': 'Поиск категорий, тегов...',
+    'filter.clear': 'Очистить',
     'filter.clearFilters': 'Сбросить фильтры',
     'filter.activeFilters': 'Активные фильтры',
     'filter.categories': 'Категории',

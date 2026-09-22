@@ -30,6 +30,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed & Fixed
 
+- **Equalized Category-to-Filter Mobile Spacing**:
+  - Eliminated redundant 20px flex gap caused by closed 0-height `.inlineFilterWrapper` and adjusted `.main-content` flex gap (`gap: 0` on screens `<= 850px`).
+  - Reduced the vertical gap between the Category Slider and the Search Bar from 44px down to 12px, making it completely uniform and identical to the Y-axis spacing between filter controls (12px - 13px).
+- **Permanent Multi-Purpose Clear / Close Button in Mobile Filters**:
+  - Rendered the Clear button ("Temizle" / "Clear") permanently inside the mobile/inline filter header next to the "Filters" title, matching user mockup `media_1790078289345.png`.
+  - Configured multi-purpose action: resets active filters if any are selected, or collapses/closes the filter panel if no selection has been made.
 - **Softer Progressive Category Scroll Transition**:
   - Replaced the hard binary threshold (`isScrolledPast` boolean switch) with continuous `requestAnimationFrame` scroll progress interpolation (`0px` to `150px`).
   - Hero and category slider now smoothly and proportionally fade (`1.0` down to `0.20`) and translate (`0px` to `-8px`) in direct sync with scroll distance, eliminating abrupt snaps.

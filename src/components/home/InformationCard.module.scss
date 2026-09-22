@@ -92,7 +92,7 @@
 // Compact layout below 850px: Slogan is hidden, only category slider is shown matching mockup
 @media (max-width: 850px) {
   .heroContainer {
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 
     &::before {
       display: none;
@@ -100,7 +100,7 @@
   }
 
   .heroInner {
-    padding: 6px 0 2px 0;
+    padding: 0;
   }
 
   .headingSection {

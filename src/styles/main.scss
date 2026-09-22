@@ -24,14 +24,16 @@ html {
     padding: 16px 32px 60px 32px;
   }
 
+  @media (max-width: 850px) {
+    gap: 0;
+  }
+
   @media (max-width: 768px) {
     padding: 16px 16px 40px 16px;
-    gap: 16px;
   }
 
   @media (max-width: 480px) {
     padding: 12px 12px 36px 12px;
-    gap: 14px;
   }
 }
 

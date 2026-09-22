@@ -117,6 +117,7 @@ export default function ProductGrid({
               onVerificationChange={onVerificationChange}
               onResetFilters={onResetFilters}
               isInline={true}
+              onCloseMobile={() => onToggleMobileFilter?.()}
             />
           </div>
         </div>

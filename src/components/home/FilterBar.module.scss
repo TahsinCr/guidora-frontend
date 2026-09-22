@@ -59,12 +59,15 @@
   }
 
   .resetBtn {
-    font-size: 11.5px;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--text-muted);
     transition: color var(--transition-fast);
     background: none;
     border: none;
     cursor: pointer;
+    padding: 4px 6px;
+    border-radius: var(--radius-sm);
 
     &:hover {
       color: var(--text-primary);

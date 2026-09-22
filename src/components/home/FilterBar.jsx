@@ -182,6 +182,14 @@ export default function FilterBar({
     verification.community ||
     verification.bot;
 
+  const handleClearOrClose = () => {
+    if (hasAnyActiveFilters) {
+      onResetFilters?.();
+    } else {
+      onCloseMobile?.();
+    }
+  };
+
   return (
     <aside
       className={`${styles.sidebar} ${isInline ? styles.inlineMode : ''} ${
@@ -198,9 +206,14 @@ export default function FilterBar({
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {hasAnyActiveFilters && (
-            <button className={styles.resetBtn} onClick={onResetFilters}>
-              {t('filter.clearFilters', 'Reset All')}
+          {(hasAnyActiveFilters || isInline) && (
+            <button
+              type="button"
+              className={styles.resetBtn}
+              onClick={handleClearOrClose}
+              title={hasAnyActiveFilters ? t('filter.clearFilters', 'Clear Filters') : t('common.close', 'Close')}
+            >
+              {t('filter.clear', 'Clear')}
             </button>
           )}
           {!isInline && (
