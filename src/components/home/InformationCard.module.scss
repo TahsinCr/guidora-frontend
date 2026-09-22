@@ -2,13 +2,12 @@
 
 .heroContainer {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 32px 0 8px 0;
   position: relative;
+  margin-bottom: 12px;
+  overflow: hidden;
   text-align: center;
-  transition: padding 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 
   &::before {
     content: '';
@@ -24,35 +23,34 @@
     transition: opacity 0.35s ease;
   }
 
-  // When scrolling down, smoothly shrink the hero
-  &.compactMode {
-    padding: 12px 0 4px 0;
+  &.isScrolledPast {
+    opacity: 0.2;
+    transform: translateY(-8px) scale(0.99);
+    pointer-events: none;
 
     &::before {
-      opacity: 0.3;
+      opacity: 0.1;
     }
-
-    .headingSection {
-      max-height: 0;
-      opacity: 0;
-      margin-bottom: 0;
-      pointer-events: none;
-      transform: translateY(-8px);
-    }
-  }
-
-  @media (max-width: 850px) {
-    padding: 12px 0 0 0;
   }
 }
 
 .heroInner {
+  min-height: 0;
   width: 100%;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
   z-index: 1;
+  padding: 24px 0 12px 0;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              padding 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(0) scale(1);
+
+  @media (max-width: 850px) {
+    padding: 12px 0 6px 0;
+  }
 }
 
 .headingSection {
@@ -72,34 +70,100 @@
 }
 
 .title {
-  font-size: 42px;
+  font-size: clamp(23px, 5.5vw, 42px);
   font-weight: 800;
   letter-spacing: -0.04em;
   color: var(--text-primary);
-  line-height: 1.15;
+  line-height: 1.18;
 
   .accent {
     color: var(--brand-blue);
   }
-
-  @media (max-width: 900px) {
-    font-size: 30px;
-  }
 }
 
 .description {
-  font-size: 15px;
+  font-size: clamp(13px, 3.5vw, 15px);
   color: var(--text-muted);
   max-width: 640px;
-  line-height: 1.55;
-
-  @media (max-width: 600px) {
-    font-size: 13.5px;
-  }
+  line-height: 1.5;
+  padding: 0 16px;
 }
 
 .sliderContainer {
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
   display: flex;
   justify-content: center;
+  margin-bottom: 8px;
 }
+
+.scrollDownBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-full);
+  padding: 5px 14px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    color: var(--text-primary);
+    border-color: var(--border-card-hover);
+    background: var(--bg-card);
+    transform: translateY(1px);
+
+    .scrollChevron {
+      transform: translateY(2px);
+      color: var(--brand-blue);
+    }
+  }
+
+  .scrollChevron {
+    transition: transform var(--transition-fast), color var(--transition-fast);
+    animation: gentleBounce 2s infinite ease-in-out;
+  }
+}
+
+@keyframes gentleBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(2px);
+  }
+}
+
+// Compact layout below 850px: Slogan is hidden, only category slider is shown matching mockup
+@media (max-width: 850px) {
+  .heroContainer {
+    margin-bottom: 8px;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  .heroInner {
+    padding: 6px 0 2px 0;
+  }
+
+  .headingSection {
+    display: none;
+  }
+
+  .scrollDownBtn {
+    display: none;
+  }
+
+  .sliderContainer {
+    margin-bottom: 0;
+  }
+}
+

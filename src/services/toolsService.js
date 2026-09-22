@@ -1,5 +1,5 @@
 import { TOOLS_DATA, CATEGORIES, TAG_CATEGORIES, ALL_TAGS } from './mockData';
-import { adminGetCategories, getDeletedToolIds, getToolOverrides } from './adminService';
+import { adminGetCategories, adminGetTagCategories, getDeletedToolIds, getToolOverrides } from './adminService';
 
 // Simulated artificial network latency for realistic async behavior (80ms)
 const simulateDelay = (ms = 80) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -431,8 +431,13 @@ export async function addReview(toolId, reviewData) {
 
   const newReview = {
     id: `rev-${Date.now()}`,
+    toolId,
+    toolName: reviewData.toolName || toolId,
+    userId: reviewData.userId || null,
     author: reviewData.author || 'Anonymous Practitioner',
     role: reviewData.role || 'Verified User',
+    title: reviewData.title || '',
+    avatar: reviewData.avatar || null,
     rating: reviewData.rating || 5,
     date: 'Just now',
     content: reviewData.content,
@@ -446,6 +451,71 @@ export async function addReview(toolId, reviewData) {
   } catch (e) {}
 
   return updated;
+}
+
+/**
+ * Delete a review from a tool.
+ */
+export async function deleteReview(toolId, reviewId) {
+  await simulateDelay(40);
+  const key = `${REVIEWS_KEY_PREFIX}${toolId}`;
+  const existing = await getReviews(toolId);
+  const updated = existing.filter((r) => r.id !== reviewId);
+  try {
+    localStorage.setItem(key, JSON.stringify(updated));
+  } catch (e) {}
+  return updated;
+}
+
+/**
+ * Get all reviews across all tools (for Admin Moderation Panel)
+ */
+export async function getAllReviews() {
+  await simulateDelay(50);
+  const allTools = await getAllTools();
+  let aggregated = [];
+
+  for (const tool of allTools) {
+    const key = `${REVIEWS_KEY_PREFIX}${tool.id}`;
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const list = JSON.parse(raw);
+        list.forEach((rev) => {
+          aggregated.push({
+            ...rev,
+            toolId: tool.id,
+            toolName: tool.name,
+            toolCategory: tool.category,
+          });
+        });
+      }
+    } catch (e) {}
+  }
+
+  // Also include seeds for default demo tools if not yet visited
+  if (aggregated.length === 0) {
+    const neuroReviews = await getReviews('neurogen-studio');
+    neuroReviews.forEach((rev) => {
+      aggregated.push({
+        ...rev,
+        toolId: 'neurogen-studio',
+        toolName: 'NeuroGen Studio',
+        toolCategory: 'Generative AI',
+      });
+    });
+  }
+
+  return aggregated.sort((a, b) => (b.id > a.id ? 1 : -1));
+}
+
+/**
+ * Get all reviews authored by a specific user across all tools
+ */
+export async function getUserReviews(userId) {
+  const all = await getAllReviews();
+  if (!userId) return [];
+  return all.filter((r) => r.userId === userId || r.author === userId);
 }
 
 /**
@@ -493,7 +563,7 @@ export async function getPopularCategories() {
  */
 export async function getTagCategories() {
   await simulateDelay(40);
-  return [...TAG_CATEGORIES];
+  return adminGetTagCategories();
 }
 
 /**
@@ -501,7 +571,19 @@ export async function getTagCategories() {
  */
 export async function getAllTags() {
   await simulateDelay(30);
-  return [...ALL_TAGS];
+  const tagCats = adminGetTagCategories();
+  const allFlattened = [];
+  tagCats.forEach((group) => {
+    (group.tags || []).forEach((t) => {
+      allFlattened.push({
+        ...t,
+        tagCategoryId: group.id,
+        tagCategoryName: group.name,
+        isCategorySingleSelect: group.isSingleSelect,
+      });
+    });
+  });
+  return allFlattened.length > 0 ? allFlattened : [...ALL_TAGS];
 }
 
 /**

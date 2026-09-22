@@ -1,30 +1,8 @@
-import React, { useRef, useState, useEffect } from 'react';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Circle,
-  Terminal,
-  Image as ImageIcon,
-  MessageSquare,
-  Video,
-  Database,
-  Music,
-  Briefcase,
-  Box,
-} from 'lucide-react';
+import { useRef, useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { getCategoryIcon } from '@/constants/categoryIcons';
 import styles from './CategorySlider.module.scss';
-
-const ICON_MAP = {
-  'generative-art': Circle,
-  'developer-tools': Terminal,
-  'design-ui': ImageIcon,
-  'llms-ai': MessageSquare,
-  'video-motion': Video,
-  'data-science': Database,
-  'audio-music': Music,
-  'productivity': Briefcase,
-  '3d-motion': Box,
-};
 
 export default function CategorySlider({
   categories = [],
@@ -32,22 +10,32 @@ export default function CategorySlider({
   onSelectCategory,
   isCompact = false,
 }) {
+  const { translateCategory } = useLanguage();
   const scrollRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  const checkScroll = () => {
+  const checkScroll = useCallback(() => {
     if (!scrollRef.current) return;
     const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
     setCanScrollLeft(scrollLeft > 2);
     setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 2);
-  };
+  }, []);
 
   useEffect(() => {
     checkScroll();
-    window.addEventListener('resize', checkScroll);
-    return () => window.removeEventListener('resize', checkScroll);
-  }, [categories]);
+    let resizeTimer;
+    const handleResize = () => {
+      cancelAnimationFrame(resizeTimer);
+      resizeTimer = requestAnimationFrame(checkScroll);
+    };
+
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => {
+      cancelAnimationFrame(resizeTimer);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [categories, isCompact, checkScroll]);
 
   const handleScrollLeft = () => {
     if (scrollRef.current) {
@@ -67,7 +55,10 @@ export default function CategorySlider({
   const filteredCategories = categories.filter((c) => c.id !== 'all');
 
   return (
-    <div className={styles.sliderWrapper} aria-label="Category Carousel">
+    <div
+      className={`${styles.sliderWrapper} ${isCompact ? styles.compactSlider : ''}`}
+      aria-label="Category Carousel"
+    >
       <button
         type="button"
         className={`${styles.navBtn} ${!canScrollLeft ? styles.navBtnDisabled : ''}`}
@@ -84,7 +75,7 @@ export default function CategorySlider({
         onScroll={checkScroll}
       >
         {filteredCategories.map((cat) => {
-          const Icon = ICON_MAP[cat.id] || Circle;
+          const Icon = getCategoryIcon(cat.id);
           const isActive = selectedCategory === cat.id;
 
           return (
@@ -100,7 +91,7 @@ export default function CategorySlider({
               <span className={styles.iconDot}>
                 <Icon size={13} color={cat.color || '#818cf8'} />
               </span>
-              <span className={styles.catName}>{cat.name}</span>
+              <span className={styles.catName}>{translateCategory(cat.id, cat.name)}</span>
             </button>
           );
         })}

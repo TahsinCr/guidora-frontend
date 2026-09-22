@@ -10,9 +10,11 @@ import {
   KeyRound,
 } from 'lucide-react';
 import { changePassword } from '@/services/authService';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from './AccountSettingsModal.module.scss';
 
 export default function AccountSettingsModal({ isOpen, onClose, user }) {
+  const { t } = useLanguage();
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -33,12 +35,12 @@ export default function AccountSettingsModal({ isOpen, onClose, user }) {
     setSuccess('');
 
     if (newPassword !== confirmPassword) {
-      setError('Yeni şifreler eşleşmiyor.');
+      setError(t('settings.passwordsMismatch', 'New passwords do not match.'));
       return;
     }
 
     if (newPassword.length < 6) {
-      setError('Şifre en az 6 karakter olmalıdır.');
+      setError(t('settings.passwordMinLength', 'Password must be at least 6 characters.'));
       return;
     }
 
@@ -46,7 +48,7 @@ export default function AccountSettingsModal({ isOpen, onClose, user }) {
     try {
       changePassword(oldPassword, newPassword);
       setIsLoading(false);
-      setSuccess('Şifreniz başarıyla güncellendi.');
+      setSuccess(t('settings.passwordUpdated', 'Your password has been updated successfully.'));
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -67,9 +69,9 @@ export default function AccountSettingsModal({ isOpen, onClose, user }) {
         <div className={styles.header}>
           <div className={styles.titleRow}>
             <Settings size={20} color="var(--primary-color)" />
-            <h2 className={styles.title}>Hesap & Güvenlik Ayarları</h2>
+            <h2 className={styles.title}>{t('settings.title', 'Account & Security Settings')}</h2>
           </div>
-          <button type="button" className={styles.closeBtn} onClick={onClose}>
+          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
             <X size={18} />
           </button>
         </div>
@@ -77,9 +79,9 @@ export default function AccountSettingsModal({ isOpen, onClose, user }) {
         <div className={styles.body}>
           {/* Section 1: Change Password */}
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Şifre Değiştir</h3>
+            <h3 className={styles.sectionTitle}>{t('settings.changePassword', 'Change Password')}</h3>
             <p className={styles.sectionDesc}>
-              Hesabınızın güvenliği için güçlü ve benzersiz bir şifre kullanın.
+              {t('settings.changePasswordDesc', 'Use a strong and unique password to protect your account.')}
             </p>
 
             {success && (
@@ -98,10 +100,10 @@ export default function AccountSettingsModal({ isOpen, onClose, user }) {
 
             <form onSubmit={handlePasswordChangeSubmit}>
               <div className={styles.formGroup}>
-                <label>Mevcut Şifre</label>
+                <label>{t('settings.currentPassword', 'Current Password')}</label>
                 <input
                   type="password"
-                  placeholder="Mevcut şifrenizi girin"
+                  placeholder="••••••••"
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
                   required
@@ -109,10 +111,10 @@ export default function AccountSettingsModal({ isOpen, onClose, user }) {
               </div>
 
               <div className={styles.formGroup}>
-                <label>Yeni Şifre</label>
+                <label>{t('settings.newPassword', 'New Password')}</label>
                 <input
                   type="password"
-                  placeholder="En az 6 karakter"
+                  placeholder="••••••••"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
@@ -120,10 +122,10 @@ export default function AccountSettingsModal({ isOpen, onClose, user }) {
               </div>
 
               <div className={styles.formGroup}>
-                <label>Yeni Şifre Tekrar</label>
+                <label>{t('settings.confirmNewPassword', 'Confirm New Password')}</label>
                 <input
                   type="password"
-                  placeholder="Yeni şifrenizi doğrulayın"
+                  placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
@@ -135,7 +137,7 @@ export default function AccountSettingsModal({ isOpen, onClose, user }) {
                 className={styles.primaryBtn}
                 disabled={isLoading}
               >
-                {isLoading ? 'Güncelleniyor...' : 'Şifreyi Güncelle'}
+                {isLoading ? t('settings.updating', 'Updating...') : t('settings.updatePassword', 'Update Password')}
               </button>
             </form>
           </div>
@@ -144,15 +146,15 @@ export default function AccountSettingsModal({ isOpen, onClose, user }) {
 
           {/* Section 2: Preferences & Notifications */}
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Bildirim Tercihleri</h3>
+            <h3 className={styles.sectionTitle}>{t('settings.notificationsTitle', 'Notification Preferences')}</h3>
             <p className={styles.sectionDesc}>
-              Hangi güncellemeler ve aktiviteler için bildirim almak istediğinizi belirleyin.
+              {t('settings.emailNotificationsDesc', 'Receive email alerts about platform updates and reviews.')}
             </p>
 
             <div className={styles.toggleRow}>
               <div className={styles.toggleInfo}>
-                <span className={styles.toggleTitle}>E-posta Bildirimleri</span>
-                <span className={styles.toggleSubtitle}>Önemli hesap ve güvenlik uyarıları</span>
+                <span className={styles.toggleTitle}>{t('settings.emailNotifications', 'Email Notifications')}</span>
+                <span className={styles.toggleSubtitle}>{t('settings.emailNotificationsDesc', 'Receive email alerts about platform updates and reviews.')}</span>
               </div>
               <label className={styles.switch}>
                 <input
@@ -166,8 +168,8 @@ export default function AccountSettingsModal({ isOpen, onClose, user }) {
 
             <div className={styles.toggleRow}>
               <div className={styles.toggleInfo}>
-                <span className={styles.toggleTitle}>Haftalık AI Bülteni</span>
-                <span className={styles.toggleSubtitle}>En popüler ve yeni eklenen AI araçları</span>
+                <span className={styles.toggleTitle}>{t('settings.weeklyDigest', 'Weekly Digest')}</span>
+                <span className={styles.toggleSubtitle}>{t('settings.weeklyDigestDesc', 'Summary of top tools and trends sent once a week.')}</span>
               </div>
               <label className={styles.switch}>
                 <input
@@ -181,8 +183,8 @@ export default function AccountSettingsModal({ isOpen, onClose, user }) {
 
             <div className={styles.toggleRow}>
               <div className={styles.toggleInfo}>
-                <span className={styles.toggleTitle}>İki Adımlı Doğrulama (2FA)</span>
-                <span className={styles.toggleSubtitle}>Girişlerde ekstra güvenlik katmanı</span>
+                <span className={styles.toggleTitle}>{t('settings.twoFactor', 'Two-Factor Authentication (2FA)')}</span>
+                <span className={styles.toggleSubtitle}>{t('settings.twoFactorDesc', 'Add an extra layer of security to your account login.')}</span>
               </div>
               <label className={styles.switch}>
                 <input
@@ -199,3 +201,4 @@ export default function AccountSettingsModal({ isOpen, onClose, user }) {
     </div>
   );
 }
+

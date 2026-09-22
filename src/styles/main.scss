@@ -2,6 +2,11 @@
 @use './base/theme';
 @use './modules/layout' as layout;
 
+html {
+  scroll-padding-top: var(--catalog-offset);
+  scroll-behavior: smooth;
+}
+
 // Global Container - Full width edge-to-edge
 .app-container {
   @include layout.position(relative, left, top);
@@ -12,11 +17,11 @@
 
 .main-content {
   @include layout.width(fill);
-  @include layout.flex(column, stretch, top, 28px);
-  padding: 20px 48px 80px 48px;
+  @include layout.flex(column, stretch, top, 20px);
+  padding: 16px 48px 80px 48px;
 
   @media (max-width: 1200px) {
-    padding: 20px 32px 60px 32px;
+    padding: 16px 32px 60px 32px;
   }
 
   @media (max-width: 768px) {

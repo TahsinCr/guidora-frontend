@@ -443,13 +443,28 @@
   border-radius: var(--radius-xl);
   width: 100%;
   max-width: 540px;
-  padding: 28px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 26px 28px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.modalBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2px 4px 8px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .modalHeader {
   @include layout.flex(row, space-between, center);
-  margin-bottom: 22px;
+  margin-bottom: 18px;
+  flex-shrink: 0;
 }
 
 .modalTitle {
@@ -467,6 +482,44 @@
 
   &:hover {
     color: var(--text-primary);
+  }
+}
+
+.modalTabsBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-card);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+}
+
+.modalTabBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    color: var(--text-primary);
+  }
+
+  &.modalTabActive {
+    background: var(--bg-card);
+    color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
 }
 
@@ -526,7 +579,10 @@
 
 .modalFooter {
   @include layout.flex(row, end, center, 12px);
-  margin-top: 26px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-card);
+  flex-shrink: 0;
 }
 
 .cancelBtn {
@@ -676,5 +732,664 @@
   font-size: 12px;
   color: var(--text-faint);
 }
+
+// Moderator Banner
+.moderatorBanner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  background: rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: var(--radius-lg);
+  margin-bottom: 24px;
+  color: #eab308;
+
+  .moderatorIconWrap {
+    @include layout.square(36px);
+    border-radius: 10px;
+    background: rgba(234, 179, 8, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .moderatorInfo {
+    flex: 1;
+
+    h4 {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+    }
+
+    p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+}
+
+// Tag Taxonomy Management
+.tagCategoriesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 16px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+.tagCategoryCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    border-color: var(--border-card-hover);
+  }
+}
+
+.tagCategoryHead {
+  @include layout.flex(row, space-between, center);
+  gap: 12px;
+  border-bottom: 1px solid var(--border-card);
+  padding-bottom: 12px;
+}
+
+.tagGroupName {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.tagGroupSlug {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.tagPillsGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.tagPillBadge {
+  @include layout.flex(row, start, center, 6px);
+  padding: 5px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  font-size: 12.5px;
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+
+  &:hover {
+    border-color: var(--primary-color);
+    background: rgba(138, 56, 245, 0.08);
+  }
+}
+
+.tagDeleteBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+  }
+}
+
+.emptyTagText {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 0;
+}
+
+// Permission Lock & Disabled Controls
+.lockedControl {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+
+  select:disabled,
+  button:disabled,
+  input:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.6;
+    background: var(--bg-secondary) !important;
+  }
+}
+
+.lockedBadge {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #eab308;
+  pointer-events: none;
+}
+
+.disabledAction {
+  opacity: 0.45;
+  cursor: not-allowed !important;
+  position: relative;
+
+  &:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+// Review Moderation Excerpt
+.reviewExcerpt {
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 320px;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Mobile Enhancements for Admin Panel
+@media (max-width: 768px) {
+  .heroSection {
+    margin-bottom: 20px;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .statCard {
+    padding: 14px 16px;
+    gap: 10px;
+  }
+
+  .statValue {
+    font-size: 22px;
+  }
+
+  .statLabel {
+    font-size: 11px;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .sectionActions {
+    flex-wrap: wrap;
+    width: 100%;
+
+    .searchBox {
+      width: 100%;
+    }
+  }
+
+  .tableWrap {
+    margin: 0 -16px;
+    padding: 0 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modalCard {
+    width: 94vw;
+    max-height: 90vh;
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .pageTitle {
+    font-size: 22px;
+  }
+
+  .tabBtn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
+// Tag Edit Button
+.tagEditBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    color: var(--primary-color);
+    background: rgba(138, 56, 245, 0.15);
+  }
+}
+
+// Dynamic Translation Trigger Button
+.btnTranslate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(138, 56, 245, 0.1);
+  border: 1px solid rgba(138, 56, 245, 0.25);
+  color: var(--primary-color);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: rgba(138, 56, 245, 0.18);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+  }
+}
+
+// Dynamic Translation Modal Specifics
+.transModalCard {
+  width: 100%;
+  max-width: 560px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 10;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.transReferenceBox {
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+
+  .transRefLabel {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 4px;
+  }
+
+  .transRefName {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .transRefDesc {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+}
+
+.transLangList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.transLangRow {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color var(--transition-fast);
+
+  &:focus-within {
+    border-color: var(--primary-color);
+  }
+}
+
+.transLangHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.transLangTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.transBadgeFilled {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.transBadgeFallback {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.transAddCustomRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+
+  input {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 12.5px;
+  }
+}
+
+// Tool Edit Studio Dialog
+.studioModalCard {
+  width: 100%;
+  max-width: 900px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.5);
+  position: relative;
+  z-index: 10;
+  max-height: 92vh;
+  overflow-y: auto;
+
+  @media (max-width: 768px) {
+    padding: 18px;
+  }
+}
+
+.studioTabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-card);
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.studioTabBtn {
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+  }
+
+  &.studioTabActive {
+    color: #ffffff;
+    background: var(--primary-color);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.tagSelectorGroup {
+  margin-bottom: 14px;
+
+  .tagSelectorGroupName {
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .tagChipsWrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+.tagChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+  }
+
+  &.tagChipSelected {
+    background: rgba(138, 56, 245, 0.15);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 600;
+  }
+}
+
+// User Status Badges in Table
+.statusBadgeActive {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.statusBadgeSuspended {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+// Review Moderation Filter Bar
+.reviewFiltersContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-card);
+  width: 100%;
+}
+
+.reviewFilterControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.ratingChipsWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  padding: 4px 6px;
+  border-radius: var(--radius-lg);
+}
+
+.ratingChipBtn {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &.activeRating {
+    background: rgba(234, 179, 8, 0.16);
+    color: #eab308;
+    font-weight: 700;
+  }
+}
+
+.activeFiltersBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.activeFilterPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(138, 56, 245, 0.12);
+  border: 1px solid rgba(138, 56, 245, 0.3);
+  color: var(--primary-color);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11.5px;
+  font-weight: 600;
+
+  button {
+    background: transparent;
+    border: none;
+    color: inherit;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 2px;
+    opacity: 0.75;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.clearFiltersBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 6px;
+
+  &:hover {
+    color: #ef4444;
+  }
+}
+
 
 

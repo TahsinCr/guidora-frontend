@@ -6,9 +6,11 @@ import Tabs from './Tabs';
 import DocContent from './DocContent';
 import ToolSidebar from './ToolSidebar';
 import { ArrowLeft } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from './ToolDialog.module.scss';
 
 export default function ToolDialog({ toolId, onClose, onSelectTool, onToolLoaded }) {
+  const { t } = useLanguage();
   const [tool, setTool] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('about');
@@ -60,9 +62,9 @@ export default function ToolDialog({ toolId, onClose, onSelectTool, onToolLoaded
   return (
     <section className={styles.toolDetailSection} aria-label="Tool Detail">
       <div className={styles.mobileBackRow}>
-        <button className={styles.backBtn} onClick={onClose} title="Back to directory">
+        <button className={styles.backBtn} onClick={onClose} title={t('header.backToDirectory', 'Back to directory')}>
           <ArrowLeft size={16} />
-          <span>Back to directory</span>
+          <span>{t('header.backToDirectory', 'Back to directory')}</span>
         </button>
       </div>
 

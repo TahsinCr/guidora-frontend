@@ -27,12 +27,29 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
 }
 
 .topBarActions {
   display: flex;
   align-items: center;
   gap: 10px;
+
+  @media (max-width: 640px) {
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+
+    button {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+  }
 }
 
 .backBtn,
@@ -274,6 +291,14 @@
   gap: 8px;
   border-bottom: 1px solid var(--border-color);
   margin-bottom: 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .tabBtn {
@@ -422,11 +447,12 @@
 .modalContent {
   width: 100%;
   max-width: 540px;
+  max-height: 92vh;
+  overflow-y: auto;
   background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-modal);
-  overflow: hidden;
   animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -580,6 +606,161 @@
   &:hover {
     opacity: 0.92;
     transform: translateY(-1px);
+  }
+}
+
+/* User Reviews Tab */
+.reviewsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.reviewCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+
+  &:hover {
+    border-color: var(--border-card-hover);
+    box-shadow: var(--shadow-card);
+  }
+
+  @media (max-width: 600px) {
+    padding: 16px;
+    gap: 10px;
+  }
+}
+
+.reviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.toolMetaLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  min-width: 0;
+
+  &:hover .toolTitle {
+    color: var(--primary-color);
+  }
+}
+
+.toolThumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(78, 92, 226, 0.2), rgba(159, 106, 240, 0.2));
+  border: 1px solid rgba(138, 56, 245, 0.3);
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.toolMetaInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.toolTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--transition-fast);
+}
+
+.reviewDate {
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+.reviewHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reviewStars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.deleteReviewBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-xs);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.25);
+  }
+}
+
+.reviewContent {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: pre-line;
+}
+
+.reviewFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color);
+}
+
+.viewToolLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--primary-color);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: rgba(138, 56, 245, 0.08);
   }
 }
 

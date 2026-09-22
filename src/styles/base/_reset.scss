@@ -8,6 +8,8 @@ html {
   font-size: 16px;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
+  overflow-anchor: none;
 }
 
 body {
@@ -19,6 +21,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color var(--transition-fast), color var(--transition-fast);
+  overflow-x: clip;
+  overflow-anchor: none;
 }
 
 a {

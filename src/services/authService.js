@@ -58,10 +58,13 @@ export function login({ usernameOrEmail, password }) {
   };
 
   localStorage.setItem(AUTH_USER_KEY, JSON.stringify(loggedInUser));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('guidora_auth_change', { detail: loggedInUser }));
+  }
   return loggedInUser;
 }
 
-export function register({ username, email, password, name }) {
+export function register({ username, email, password, name, title, bio, avatar, location }) {
   const allUsers = getAllUsers();
   const cleanEmail = email.trim().toLowerCase();
   const cleanUsername = username.trim();
@@ -70,20 +73,23 @@ export function register({ username, email, password, name }) {
     throw new Error('Bu e-posta adresi zaten kullanımda.');
   }
 
-  const initials = cleanUsername.slice(0, 2).toUpperCase();
+  const cleanName = name?.trim() || cleanUsername;
+  const initials = cleanName.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase() || cleanUsername.slice(0, 2).toUpperCase();
+
   const newUser = {
     id: `usr_${Date.now()}`,
-    name: name || cleanUsername,
+    name: cleanName,
     username: cleanUsername,
     email: cleanEmail,
     role: 'member',
-    avatar: initials,
-    title: 'AI Community Member',
-    bio: 'New explorer in the Guidora AI ecosystem.',
-    joinedDate: 'Just now',
+    avatar: avatar?.trim() || initials,
+    title: title?.trim() || 'AI Community Member',
+    bio: bio?.trim() || 'New explorer in the Guidora AI ecosystem.',
+    location: location?.trim() || 'Global',
+    joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
     savedToolIds: [],
     submittedToolIds: [],
-    reputation: 50,
+    reputation: 100,
   };
 
   const passwords = getStoredPasswords();
@@ -95,11 +101,18 @@ export function register({ username, email, password, name }) {
   localStorage.setItem('guidora_all_users', JSON.stringify(updatedAll));
   localStorage.setItem(AUTH_USER_KEY, JSON.stringify(newUser));
 
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('guidora_auth_change', { detail: newUser }));
+  }
+
   return newUser;
 }
 
 export function logout() {
   localStorage.removeItem(AUTH_USER_KEY);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('guidora_auth_change', { detail: null }));
+  }
   return true;
 }
 
@@ -121,3 +134,4 @@ export function changePassword(oldPassword, newPassword) {
 
   return true;
 }
+

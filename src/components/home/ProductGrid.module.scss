@@ -3,11 +3,13 @@
 .contentLayout {
   @include layout.width(fill);
   @include layout.flex(row, start, start, 28px);
-  margin-top: 24px;
+  margin-top: 0;
+  scroll-margin-top: var(--catalog-offset);
 
   @media (max-width: 1080px) {
     gap: 0;
-    margin-top: 8px;
+    margin-top: 0;
+    scroll-margin-top: var(--catalog-offset);
   }
 }
 

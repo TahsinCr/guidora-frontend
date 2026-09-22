@@ -3,6 +3,7 @@ import ProductCard from './ProductCard';
 import ProductSorterBar from './ProductSorterBar';
 import FilterBar from './FilterBar';
 import { Sparkles } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from './ProductGrid.module.scss';
 
 export default function ProductGrid({
@@ -39,6 +40,7 @@ export default function ProductGrid({
   isLoadingMore,
   onLoadMore,
 }) {
+  const { t } = useLanguage();
   const sentinelRef = useRef(null);
 
   // Infinite Scroll IntersectionObserver: Pre-fetches when 600px before end of page!
@@ -70,7 +72,7 @@ export default function ProductGrid({
   }, [hasMore, isLoadingMore, onLoadMore]);
 
   return (
-    <div className={styles.contentLayout}>
+    <div id="catalog-section" className={styles.contentLayout}>
       <FilterBar
         categories={categories}
         selectedCategory={selectedCategory}
@@ -139,12 +141,14 @@ export default function ProductGrid({
         ) : tools.length === 0 ? (
           <div className={styles.emptyState}>
             <Sparkles size={32} color="var(--brand-blue)" />
-            <h3 className={styles.emptyTitle}>No tools match your criteria</h3>
+            <h3 className={styles.emptyTitle}>
+              {t('sorter.noToolsFound', 'No tools match your criteria')}
+            </h3>
             <p className={styles.emptyDesc}>
-              Try adjusting your search keywords, clear active filters, or pick another category.
+              {t('sorter.tryAdjusting', 'Try adjusting your search keywords, clear active filters, or pick another category.')}
             </p>
             <button className={styles.clearBtn} onClick={onResetFilters}>
-              Reset All Filters
+              {t('filter.clearFilters', 'Reset All Filters')}
             </button>
           </div>
         ) : (
@@ -167,7 +171,7 @@ export default function ProductGrid({
         {isLoadingMore && (
           <div className={styles.loadingMoreWrapper}>
             <div className={styles.pulsingDot} />
-            <span className={styles.loadingText}>Loading more tools...</span>
+            <span className={styles.loadingText}>{t('common.loadingMore', 'Loading more tools...')}</span>
           </div>
         )}
       </section>

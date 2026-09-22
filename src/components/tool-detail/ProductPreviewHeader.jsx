@@ -1,9 +1,11 @@
 import React from 'react';
 import { ShieldCheck, Sparkles, Bot } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from './ProductPreviewHeader.module.scss';
 
 export default function ProductPreviewHeader({ tool }) {
-  const categoryName = (tool.category || 'Generative AI').toUpperCase();
+  const { t, translateCategory } = useLanguage();
+  const categoryName = translateCategory(tool.categoryId, tool.category || 'Generative AI').toUpperCase();
 
   return (
     <div className={styles.heroCard}>
@@ -13,9 +15,9 @@ export default function ProductPreviewHeader({ tool }) {
         <div className={styles.categoryRow}>
           <span className={styles.categoryPill}>{categoryName}</span>
           <div className={styles.trustBadges}>
-            <ShieldCheck size={16} color="#EAB308" title="Admin Verified" />
-            <Sparkles size={16} color="#10B981" title="Community Choice" />
-            <Bot size={16} color="#A855F7" title="Bot Verified" />
+            <ShieldCheck size={16} color="#EAB308" title={t('filter.adminVerified', 'Admin Verified')} />
+            <Sparkles size={16} color="#10B981" title={t('filter.communityChoice', 'Community Choice')} />
+            <Bot size={16} color="#A855F7" title={t('filter.botAudited', 'Bot Verified')} />
           </div>
         </div>
 

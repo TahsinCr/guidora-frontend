@@ -17,12 +17,20 @@
   border: 2px solid transparent;
   box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
   transition: all var(--transition-fast);
+  overflow: hidden;
 
   &:hover,
   &.triggerActive {
     transform: scale(1.05);
     border-color: var(--primary-color);
   }
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-full);
 }
 
 .loginTriggerBtn {
@@ -93,6 +101,7 @@
     font-size: 14px;
     font-weight: 800;
     flex-shrink: 0;
+    overflow: hidden;
   }
 
   .userDetails {

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Star, Eye, Bookmark, ArrowUpRight, ShieldCheck, Sparkles, Bot } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from './ProductCard.module.scss';
 
-export default function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
+function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
+  const { t, translateCategory, translateTag } = useLanguage();
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   const handleBookmark = (e) => {
@@ -26,6 +28,10 @@ export default function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
         .toUpperCase()
     : 'AI';
 
+  // Translate pricing if possible
+  const pricingKey = tool.pricing ? tool.pricing.toLowerCase().replace(/[^a-z0-9]/g, '-') : '';
+  const localizedPricing = tool.pricing ? t(`tag.${pricingKey}`, tool.pricing) : '';
+
   return (
     <article
       className={`${styles.card} ${viewMode === 'list' ? styles.listView : ''}`}
@@ -44,25 +50,27 @@ export default function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
                 {tool.verified && (
                   <div className={styles.verifiedIcons}>
                     {tool.verified?.admin && (
-                      <ShieldCheck size={14} color="#EAB308" title="Admin Verified" />
+                      <ShieldCheck size={14} color="#EAB308" title={t('filter.adminVerified', 'Admin Verified')} />
                     )}
                     {tool.verified?.community && (
-                      <Sparkles size={14} color="#10B981" title="Community Choice" />
+                      <Sparkles size={14} color="#10B981" title={t('filter.communityChoice', 'Community Choice')} />
                     )}
                     {tool.verified?.audited && (
-                      <Bot size={14} color="#A855F7" title="Bot Verified" />
+                      <Bot size={14} color="#A855F7" title={t('filter.botAudited', 'Bot Verified')} />
                     )}
                   </div>
                 )}
               </div>
-              {tool.isNew && <span className={styles.newBadge}>NEW</span>}
+              {tool.isNew && <span className={styles.newBadge}>{t('common.new', 'NEW')}</span>}
             </div>
 
             <div className={styles.tagRow}>
-              <span className={styles.categoryTag}>{tool.tag || tool.category}</span>
+              <span className={styles.categoryTag}>
+                {tool.category ? translateCategory(tool.category, tool.tag || tool.category) : tool.tag}
+              </span>
               {tool.pricing && (
                 <span className={`${styles.pricingBadge} ${styles[tool.pricing.toLowerCase().replace(/[^a-z0-9]/g, '')] || ''}`}>
-                  {tool.pricing}
+                  {localizedPricing}
                 </span>
               )}
               {tool.version && <span className={styles.versionText}>• {tool.version}</span>}
@@ -75,9 +83,14 @@ export default function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
         <p className={styles.description}>{tool.description}</p>
         {viewMode === 'list' && tool.platforms && tool.platforms.length > 0 && (
           <div className={styles.platformPills}>
-            {tool.platforms.slice(0, 3).map((p) => (
-              <span key={p} className={styles.platformPill}>{p}</span>
-            ))}
+            {tool.platforms.slice(0, 3).map((p) => {
+              const pSlug = p.toLowerCase().replace(/[^a-z0-9]/g, '-');
+              return (
+                <span key={p} className={styles.platformPill}>
+                  {translateTag(pSlug, p)}
+                </span>
+              );
+            })}
           </div>
         )}
       </div>
@@ -102,8 +115,8 @@ export default function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
             type="button"
             className={styles.actionBtn}
             onClick={handleExternal}
-            title="Visit Website"
-            aria-label="Visit Website"
+            title={t('tool.visitWebsite', 'Visit Website')}
+            aria-label={t('tool.visitWebsite', 'Visit Website')}
           >
             <ArrowUpRight size={17} />
           </button>
@@ -111,8 +124,8 @@ export default function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
             type="button"
             className={`${styles.actionBtn} ${isBookmarked ? styles.bookmarked : ''}`}
             onClick={handleBookmark}
-            title={isBookmarked ? 'Remove Bookmark' : 'Save Tool'}
-            aria-label="Save Tool"
+            title={isBookmarked ? t('tool.saved', 'Remove Bookmark') : t('tool.save', 'Save Tool')}
+            aria-label={t('tool.save', 'Save Tool')}
           >
             <Bookmark size={16} fill={isBookmarked ? 'currentColor' : 'none'} />
           </button>
@@ -121,3 +134,5 @@ export default function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
     </article>
   );
 }
+
+export default React.memo(ProductCard);

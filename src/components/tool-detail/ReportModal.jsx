@@ -12,42 +12,54 @@ import {
   Send,
 } from 'lucide-react';
 import { submitReport } from '@/services/toolsService';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from './ReportModal.module.scss';
 
 const REPORT_REASONS = [
   {
     id: 'broken_link',
     icon: Link2,
+    titleKey: 'report.reasonBrokenLink',
     title: 'Broken Link / Service Down',
+    descKey: 'report.reasonBrokenLinkDesc',
     desc: 'Website or API endpoint is dead or unreachable',
   },
   {
     id: 'outdated_info',
     icon: Clock,
+    titleKey: 'report.reasonOutdated',
     title: 'Outdated Information',
+    descKey: 'report.reasonOutdatedDesc',
     desc: 'Pricing, feature set, or version specs are inaccurate',
   },
   {
     id: 'spam_malicious',
     icon: ShieldAlert,
+    titleKey: 'report.reasonSpam',
     title: 'Spam or Malicious',
+    descKey: 'report.reasonSpamDesc',
     desc: 'Suspected malware, deceptive copy, or unsafe service',
   },
   {
     id: 'copyright',
     icon: FileText,
+    titleKey: 'report.reasonCopyright',
     title: 'Copyright Infringement',
+    descKey: 'report.reasonCopyrightDesc',
     desc: 'Unauthorized use of trademarks, intellectual property, or code',
   },
   {
     id: 'other',
     icon: HelpCircle,
+    titleKey: 'report.reasonOther',
     title: 'Other Concern',
+    descKey: 'report.reasonOtherDesc',
     desc: 'Duplicate listing or general policy issue',
   },
 ];
 
 export default function ReportModal({ tool, isOpen, onClose }) {
+  const { t } = useLanguage();
   const [reason, setReason] = useState('broken_link');
   const [details, setDetails] = useState('');
   const [email, setEmail] = useState('');
@@ -105,7 +117,7 @@ export default function ReportModal({ tool, isOpen, onClose }) {
               been notified and will review <strong>{tool.name}</strong> within 24 hours.
             </p>
             <button className={styles.doneBtn} onClick={handleClose}>
-              Return to Tool
+              {t('common.back', 'Return to Tool')}
             </button>
           </div>
         ) : (
@@ -116,8 +128,8 @@ export default function ReportModal({ tool, isOpen, onClose }) {
                 <ShieldAlert size={20} />
               </div>
               <div className={styles.headerTexts}>
-                <h3 className={styles.modalTitle}>Report Content or Issue</h3>
-                <span className={styles.modalSubtitle}>Help maintain community trust & directory quality</span>
+                <h3 className={styles.modalTitle}>{t('report.title', 'Report Content or Issue')}</h3>
+                <span className={styles.modalSubtitle}>{t('report.subtitle', 'Help maintain community trust & directory quality')}</span>
               </div>
             </div>
 
@@ -145,7 +157,7 @@ export default function ReportModal({ tool, isOpen, onClose }) {
 
             {/* Reason Cards */}
             <div className={styles.inputGroup}>
-              <label className={styles.sectionLabel}>Select Reason *</label>
+              <label className={styles.sectionLabel}>{t('report.reason', 'Select Reason')} *</label>
               <div className={styles.reasonGrid}>
                 {REPORT_REASONS.map((r) => {
                   const Icon = r.icon;
@@ -164,9 +176,9 @@ export default function ReportModal({ tool, isOpen, onClose }) {
                       <div className={styles.reasonContent}>
                         <div className={styles.reasonTitleRow}>
                           <Icon size={15} className={styles.reasonIcon} />
-                          <span className={styles.reasonTitle}>{r.title}</span>
+                          <span className={styles.reasonTitle}>{t(r.titleKey, r.title)}</span>
                         </div>
-                        <span className={styles.reasonDesc}>{r.desc}</span>
+                        <span className={styles.reasonDesc}>{t(r.descKey, r.desc)}</span>
                       </div>
                     </div>
                   );
@@ -177,14 +189,14 @@ export default function ReportModal({ tool, isOpen, onClose }) {
             {/* Additional Details */}
             <div className={styles.inputGroup}>
               <div className={styles.labelWithCount}>
-                <label className={styles.sectionLabel}>Additional Context (Optional)</label>
+                <label className={styles.sectionLabel}>{t('report.details', 'Additional Details')}</label>
                 <span className={styles.charCount}>{details.length}/500</span>
               </div>
               <textarea
                 className={styles.textArea}
                 rows={3}
                 maxLength={500}
-                placeholder="Provide specific links, reproduction steps, or details to help our moderation team..."
+                placeholder={t('report.detailsPlaceholder', 'Provide specific links, reproduction steps, or details to help our moderation team...')}
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
               />
@@ -192,7 +204,7 @@ export default function ReportModal({ tool, isOpen, onClose }) {
 
             {/* Email Contact */}
             <div className={styles.inputGroup}>
-              <label className={styles.sectionLabel}>Your Email (Optional for updates)</label>
+              <label className={styles.sectionLabel}>{t('report.yourEmail', 'Your Email (Optional for updates)')}</label>
               <input
                 type="email"
                 className={styles.textInput}
@@ -205,7 +217,7 @@ export default function ReportModal({ tool, isOpen, onClose }) {
             {/* Actions */}
             <div className={styles.formFooter}>
               <button type="button" className={styles.cancelBtn} onClick={handleClose}>
-                Cancel
+                {t('common.cancel', 'Cancel')}
               </button>
               <button
                 type="submit"
@@ -213,7 +225,7 @@ export default function ReportModal({ tool, isOpen, onClose }) {
                 disabled={isSubmitting}
               >
                 <Send size={14} />
-                <span>{isSubmitting ? 'Submitting...' : 'Submit Report'}</span>
+                <span>{isSubmitting ? t('report.submitting', 'Submitting...') : t('report.submit', 'Submit Report')}</span>
               </button>
             </div>
           </form>

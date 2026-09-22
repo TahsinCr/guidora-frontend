@@ -1,11 +1,165 @@
-import { CATEGORIES } from './mockData';
-import { getOrganizations } from './userService';
+import { CATEGORIES, TAG_CATEGORIES } from './mockData';
+import { getOrganizations, adminUpdateOrganization } from './userService';
 
-const CATEGORIES_KEY = 'guidora_custom_categories';
+export { adminUpdateOrganization };
+
+export const CATEGORIES_KEY = 'guidora_custom_categories';
+export const TAGS_KEY = 'guidora_custom_tags';
 const DELETED_TOOLS_KEY = 'guidora_deleted_tool_ids';
 const TOOL_OVERRIDES_KEY = 'guidora_tool_overrides';
 const REPORTS_KEY = 'guidora_reports';
 const USERS_KEY = 'guidora_all_users';
+
+function notifyTaxonomyChange() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('guidora_taxonomy_change'));
+  }
+}
+
+// --- Tag Categories & Tags Management ---
+export function adminGetTagCategories() {
+  try {
+    const raw = localStorage.getItem(TAGS_KEY);
+    if (!raw) {
+      localStorage.setItem(TAGS_KEY, JSON.stringify(TAG_CATEGORIES));
+      return [...TAG_CATEGORIES];
+    }
+    return JSON.parse(raw);
+  } catch (e) {
+    return [...TAG_CATEGORIES];
+  }
+}
+
+export function adminUpdateTagCategory(tagCategoryId, { name, translations = {}, isSingleSelect }) {
+  const currentCategories = adminGetTagCategories();
+  const updated = currentCategories.map((group) => {
+    if (group.id === tagCategoryId) {
+      return {
+        ...group,
+        name: name !== undefined ? name.trim() : group.name,
+        translations: {
+          ...(group.translations || {}),
+          ...translations,
+        },
+        isSingleSelect: isSingleSelect !== undefined ? Boolean(isSingleSelect) : group.isSingleSelect,
+      };
+    }
+    return group;
+  });
+  localStorage.setItem(TAGS_KEY, JSON.stringify(updated));
+  notifyTaxonomyChange();
+  return updated;
+}
+
+export function adminAddTagCategory({ id, name, translations = {}, isSingleSelect = false }) {
+  const currentCategories = adminGetTagCategories();
+  const slug = (id || name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  if (!slug || !name?.trim()) {
+    throw new Error('Valid category name is required.');
+  }
+  if (currentCategories.some((c) => c.id === slug || c.name.toLowerCase() === name.trim().toLowerCase())) {
+    throw new Error('A tag category with this name or ID already exists.');
+  }
+  const newCat = {
+    id: slug,
+    name: name.trim(),
+    translations: { ...translations },
+    isSingleSelect: Boolean(isSingleSelect),
+    tags: [],
+  };
+  const updated = [...currentCategories, newCat];
+  localStorage.setItem(TAGS_KEY, JSON.stringify(updated));
+  notifyTaxonomyChange();
+  return newCat;
+}
+
+export function adminDeleteTagCategory(tagCategoryId) {
+  const currentCategories = adminGetTagCategories();
+  const updated = currentCategories.filter((g) => g.id !== tagCategoryId);
+  localStorage.setItem(TAGS_KEY, JSON.stringify(updated));
+  notifyTaxonomyChange();
+  return updated;
+}
+
+export function adminAddTag(tagCategoryId, { name, translations = {}, isSingleSelect = false }) {
+  const currentCategories = adminGetTagCategories();
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  
+  const updated = currentCategories.map((group) => {
+    if (group.id === tagCategoryId) {
+      if (group.tags.some((t) => t.id === slug || t.name.toLowerCase() === name.toLowerCase())) {
+        throw new Error('This tag already exists in this category.');
+      }
+      return {
+        ...group,
+        tags: [
+          ...group.tags,
+          {
+            id: slug,
+            name: name.trim(),
+            translations: {
+              tr: translations?.tr?.trim() || '',
+              ru: translations?.ru?.trim() || '',
+            },
+            only: group.isSingleSelect || isSingleSelect,
+          },
+        ],
+      };
+    }
+    return group;
+  });
+
+  localStorage.setItem(TAGS_KEY, JSON.stringify(updated));
+  notifyTaxonomyChange();
+  return updated;
+}
+
+export function adminDeleteTag(tagCategoryId, tagId) {
+  const currentCategories = adminGetTagCategories();
+  const updated = currentCategories.map((group) => {
+    if (group.id === tagCategoryId) {
+      return {
+        ...group,
+        tags: group.tags.filter((t) => t.id !== tagId && t.name !== tagId),
+      };
+    }
+    return group;
+  });
+
+  localStorage.setItem(TAGS_KEY, JSON.stringify(updated));
+  notifyTaxonomyChange();
+  return updated;
+}
+
+export function adminUpdateTag(tagCategoryId, tagId, updates) {
+  const currentCategories = adminGetTagCategories();
+  const updated = currentCategories.map((group) => {
+    if (group.id === tagCategoryId) {
+      return {
+        ...group,
+        tags: group.tags.map((tag) => {
+          if (tag.id === tagId) {
+            return {
+              ...tag,
+              name: updates.name !== undefined ? updates.name.trim() : tag.name,
+              translations: {
+                ...(tag.translations || {}),
+                ...(updates.translations || {}),
+              },
+              only: updates.only !== undefined ? updates.only : tag.only,
+            };
+          }
+          return tag;
+        }),
+      };
+    }
+    return group;
+  });
+
+  localStorage.setItem(TAGS_KEY, JSON.stringify(updated));
+  notifyTaxonomyChange();
+  return updated;
+}
 
 // --- Categories ---
 export function adminGetCategories() {
@@ -21,7 +175,7 @@ export function adminGetCategories() {
   }
 }
 
-export function adminAddCategory({ name, color = '#8A38F5', isPopular = false }) {
+export function adminAddCategory({ name, translations = {}, color = '#8A38F5', isPopular = false }) {
   const current = adminGetCategories();
   const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   
@@ -32,6 +186,10 @@ export function adminAddCategory({ name, color = '#8A38F5', isPopular = false })
   const newCat = {
     id,
     name: name.trim(),
+    translations: {
+      tr: translations?.tr?.trim() || '',
+      ru: translations?.ru?.trim() || '',
+    },
     count: 0,
     color,
     isPopular: Boolean(isPopular),
@@ -39,6 +197,7 @@ export function adminAddCategory({ name, color = '#8A38F5', isPopular = false })
 
   const updated = [...current, newCat];
   localStorage.setItem(CATEGORIES_KEY, JSON.stringify(updated));
+  notifyTaxonomyChange();
   return newCat;
 }
 
@@ -46,11 +205,18 @@ export function adminUpdateCategory(catId, updates) {
   const current = adminGetCategories();
   const updated = current.map((c) => {
     if (c.id === catId) {
-      return { ...c, ...updates };
+      return {
+        ...c,
+        ...updates,
+        translations: updates.translations !== undefined
+          ? { ...(c.translations || {}), ...updates.translations }
+          : c.translations,
+      };
     }
     return c;
   });
   localStorage.setItem(CATEGORIES_KEY, JSON.stringify(updated));
+  notifyTaxonomyChange();
   return updated;
 }
 
@@ -61,6 +227,7 @@ export function adminDeleteCategory(catId) {
   const current = adminGetCategories();
   const updated = current.filter((c) => c.id !== catId);
   localStorage.setItem(CATEGORIES_KEY, JSON.stringify(updated));
+  notifyTaxonomyChange();
   return updated;
 }
 

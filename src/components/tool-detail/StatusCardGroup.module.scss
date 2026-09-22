@@ -10,7 +10,7 @@
   }
 
   @media (max-width: 480px) {
-    @include layout.grid($cols: 1, $gap: 10px);
+    @include layout.grid($cols: repeat(2, 1fr), $gap: 8px);
   }
 }
 
@@ -24,6 +24,25 @@
   background: var(--bg-card);
   box-shadow: var(--shadow-card);
   transition: all var(--transition-fast);
+
+  @media (max-width: 480px) {
+    padding: 10px 12px;
+    gap: 10px;
+
+    .gridIconBox {
+      width: 32px !important;
+      height: 32px !important;
+      min-width: 32px !important;
+    }
+
+    .content .value {
+      font-size: 13px !important;
+    }
+
+    .content .label {
+      font-size: 9.5px !important;
+    }
+  }
 
   &:hover {
     border-color: var(--border-card-hover);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 import {
   Bell,
   X,
@@ -17,6 +18,7 @@ import {
 import styles from './NotificationDrawer.module.scss';
 
 export default function NotificationDrawer({ isOpen, onClose, onOpenTool }) {
+  const { t } = useLanguage();
   const [notifications, setNotifications] = useState([]);
 
   const refreshNotifs = () => {
@@ -60,9 +62,9 @@ export default function NotificationDrawer({ isOpen, onClose, onOpenTool }) {
         <div className={styles.header}>
           <div className={styles.titleRow}>
             <Bell size={18} color="var(--primary-color)" />
-            <h2 className={styles.title}>Bildirimler</h2>
+            <h2 className={styles.title}>{t('notif.title', 'Notifications')}</h2>
             {unreadCount > 0 && (
-              <span className={styles.badge}>{unreadCount} Yeni</span>
+              <span className={styles.badge}>{unreadCount} {t('notif.newBadge', 'New')}</span>
             )}
           </div>
           <button type="button" className={styles.closeBtn} onClick={onClose}>
@@ -78,14 +80,14 @@ export default function NotificationDrawer({ isOpen, onClose, onOpenTool }) {
               className={styles.textActionBtn}
               onClick={handleMarkAll}
             >
-              Tümünü okundu yap
+              {t('notif.markAllAsRead', 'Mark all as read')}
             </button>
             <button
               type="button"
               className={`${styles.textActionBtn} ${styles.danger}`}
               onClick={handleClearAll}
             >
-              Temizle
+              {t('notif.clearAll', 'Clear All')}
             </button>
           </div>
         )}
@@ -94,7 +96,7 @@ export default function NotificationDrawer({ isOpen, onClose, onOpenTool }) {
         {notifications.length === 0 ? (
           <div className={styles.emptyState}>
             <CheckCircle2 size={40} color="#10b981" />
-            <p>Harika! Hiç okunmamış bildiriminiz yok.</p>
+            <p>{t('notif.empty', 'No unread notifications.')}</p>
           </div>
         ) : (
           <div className={styles.list}>
@@ -122,7 +124,7 @@ export default function NotificationDrawer({ isOpen, onClose, onOpenTool }) {
                   </span>
                   {n.link && (
                     <span style={{ color: 'var(--brand-blue)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      İncele <ExternalLink size={11} />
+                      {t('notif.view', 'View')} <ExternalLink size={11} />
                     </span>
                   )}
                 </div>
@@ -134,3 +136,4 @@ export default function NotificationDrawer({ isOpen, onClose, onOpenTool }) {
     </>
   );
 }
+

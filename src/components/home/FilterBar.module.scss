@@ -4,6 +4,8 @@
   @include layout.width(230px);
   @include layout.flex(column, start, start, 12px);
   flex-shrink: 0;
+  align-self: start;
+  padding-right: 4px;
 
   &.inlineMode {
     display: flex !important;
@@ -112,6 +114,10 @@
     outline: none;
     color: var(--text-primary);
     font-size: 12px;
+
+    @media (max-width: 768px) {
+      font-size: 16px;
+    }
 
     &::placeholder {
       color: var(--text-faint);

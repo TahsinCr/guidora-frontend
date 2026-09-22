@@ -1,10 +1,13 @@
 import React from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Plus, Bell, Sun, Moon, ChevronRight, Search } from 'lucide-react';
 import UserMenu from './UserMenu';
+import LanguageDropdown from './LanguageDropdown';
 import styles from './Header.module.scss';
 
 export default function Header({
+  currentUser,
   onResetSearch,
   activeTool,
   onBackToDirectory,
@@ -18,6 +21,7 @@ export default function Header({
   onUserChange,
 }) {
   const { theme, toggleTheme } = useTheme();
+  const { t, translateCategory } = useLanguage();
 
   return (
     <header className={styles.headerWrapper}>
@@ -36,7 +40,7 @@ export default function Header({
                 className={styles.crumbItem}
                 onClick={() => onSelectCategory && onSelectCategory(activeTool.categoryId || 'all')}
               >
-                {activeTool.category || 'Generative AI'}
+                {translateCategory(activeTool.categoryId, activeTool.category || 'Generative AI')}
               </span>
               <ChevronRight size={13} className={styles.crumbSep} />
               <span className={styles.crumbCurrent}>{activeTool.name}</span>
@@ -50,7 +54,7 @@ export default function Header({
               <button
                 className={styles.iconBtn}
                 onClick={onBackToDirectory}
-                title="Search Tools"
+                title={t('header.backToDirectory', 'Back to Directory')}
               >
                 <Search size={18} />
               </button>
@@ -58,16 +62,18 @@ export default function Header({
               <button
                 className={styles.submitBtn}
                 onClick={onSubmitTool}
-                title="Submit a new tool"
+                title={t('header.submitTool', 'Submit Tool')}
               >
                 <Plus size={15} />
-                <span className={styles.btnText}>Submit Tool</span>
+                <span className={styles.btnText}>{t('header.submitTool', 'Submit Tool')}</span>
               </button>
+
+              <LanguageDropdown />
 
               <button
                 className={styles.iconBtn}
                 onClick={toggleTheme}
-                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                title={theme === 'dark' ? t('header.switchToLight', 'Switch to Light Mode') : t('header.switchToDark', 'Switch to Dark Mode')}
               >
                 {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
@@ -76,13 +82,14 @@ export default function Header({
                 type="button"
                 className={styles.iconBtn}
                 onClick={onOpenNotifications}
-                title="Notifications"
+                title={t('header.notifications', 'Notifications')}
               >
                 <Bell size={18} />
                 <span className={styles.pinkDot} />
               </button>
               
               <UserMenu
+                currentUser={currentUser}
                 onOpenProfile={onOpenProfile}
                 onOpenAdmin={onOpenAdmin}
                 onOpenSettings={onOpenSettings}
@@ -95,16 +102,18 @@ export default function Header({
               <button
                 className={styles.submitBtn}
                 onClick={onSubmitTool}
-                title="Submit a new tool"
+                title={t('header.submitTool', 'Submit Tool')}
               >
                 <Plus size={15} />
-                <span className={styles.btnText}>Submit Tool</span>
+                <span className={styles.btnText}>{t('header.submitTool', 'Submit Tool')}</span>
               </button>
+
+              <LanguageDropdown />
 
               <button
                 className={styles.iconBtn}
                 onClick={toggleTheme}
-                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                title={theme === 'dark' ? t('header.switchToLight', 'Switch to Light Mode') : t('header.switchToDark', 'Switch to Dark Mode')}
               >
                 {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
@@ -113,13 +122,14 @@ export default function Header({
                 type="button"
                 className={styles.iconBtn}
                 onClick={onOpenNotifications}
-                title="Notifications"
+                title={t('header.notifications', 'Notifications')}
               >
                 <Bell size={18} />
                 <span className={styles.pinkDot} />
               </button>
 
               <UserMenu
+                currentUser={currentUser}
                 onOpenProfile={onOpenProfile}
                 onOpenAdmin={onOpenAdmin}
                 onOpenSettings={onOpenSettings}

@@ -59,3 +59,4 @@ export function clearAllNotifications() {
   localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify([]));
   return [];
 }
+

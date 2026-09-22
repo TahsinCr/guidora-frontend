@@ -29,6 +29,17 @@
 
   --transition-fast: 0.15s ease-out;
   --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+  // Layout & Navbar Offsets
+  --header-height: 72px;
+  --catalog-offset: calc(var(--header-height) + 16px);
+}
+
+@media (max-width: 768px) {
+  :root {
+    --header-height: 64px;
+    --catalog-offset: calc(var(--header-height) + 12px);
+  }
 }
 
 :root,

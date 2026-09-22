@@ -1,7 +1,9 @@
 @use '@/styles/modules/layout' as layout;
 
 .headerWrapper {
-  @include layout.position-sticky(top, 0, 100);
+  position: sticky;
+  top: 0;
+  z-index: 100;
   @include layout.width(fill);
   background: var(--header-bg);
   backdrop-filter: blur(16px);
@@ -61,6 +63,10 @@
     font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--text-primary);
+
+    @media (max-width: 540px) {
+      display: none;
+    }
   }
 }
 

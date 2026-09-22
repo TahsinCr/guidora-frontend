@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import InformationCard from '@/components/home/InformationCard';
@@ -10,6 +10,7 @@ import AdminDashboardPage from '@/components/admin/AdminDashboardPage';
 import AuthModal from '@/components/auth/AuthModal';
 import NotificationDrawer from '@/components/notifications/NotificationDrawer';
 import AccountSettingsModal from '@/components/settings/AccountSettingsModal';
+import ScrollToTop from '@/components/common/ScrollToTop';
 import { getTools, getCategories } from '@/services/toolsService';
 import { getCurrentUser } from '@/services/userService';
 
@@ -47,7 +48,6 @@ export default function App() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [totalCount, setTotalCount] = useState(0);
 
   // Full-page Submit Tool view state synchronized with URL (?view=submit)
   const [isSubmitView, setIsSubmitView] = useState(() => {
@@ -69,6 +69,30 @@ export default function App() {
 
   // Current logged in user state
   const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
+
+  useEffect(() => {
+    const handleAuthEvent = (e) => {
+      setCurrentUser(e.detail);
+      if (!e.detail) {
+        // Logged out: redirect immediately to main directory home
+        setIsAdminView(false);
+        setIsProfileView(false);
+        setIsSubmitView(false);
+        setActiveToolId(null);
+        setActiveToolData(null);
+        setIsSettingsModalOpen(false);
+        setIsNotifDrawerOpen(false);
+        setIsAuthModalOpen(false);
+        const url = new URL(window.location.href);
+        url.searchParams.delete('tool');
+        url.searchParams.delete('view');
+        url.searchParams.delete('user');
+        window.history.pushState({}, '', url.pathname + (url.search ? url.search : ''));
+      }
+    };
+    window.addEventListener('guidora_auth_change', handleAuthEvent);
+    return () => window.removeEventListener('guidora_auth_change', handleAuthEvent);
+  }, []);
 
   // Modal dialog states: Auth, Notifications, Settings
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -184,7 +208,6 @@ export default function App() {
       .then((data) => {
         setTools(data.items || []);
         setHasMore(data.hasMore || false);
-        setTotalCount(data.total || 0);
         setIsLoading(false);
       })
       .catch((err) => {
@@ -357,7 +380,6 @@ export default function App() {
       limit: 12,
     }).then((data) => {
       setTools(data.items || []);
-      setTotalCount(data.total || 0);
       setHasMore(data.hasMore || false);
     });
 
@@ -371,6 +393,7 @@ export default function App() {
   return (
     <div className="app-container">
       <Header
+        currentUser={currentUser}
         onResetSearch={handleResetFilters}
         activeTool={activeToolData}
         onBackToDirectory={handleCloseTool}
@@ -456,6 +479,8 @@ export default function App() {
           </>
         )}
       </main>
+
+      <ScrollToTop />
 
       <Footer />
 

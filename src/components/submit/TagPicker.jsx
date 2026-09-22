@@ -2,9 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { Search, X, AlertCircle, Hash, Layers, Check, ChevronRight } from 'lucide-react';
 import { TAG_CATEGORIES, ALL_TAGS } from '@/services/mockData';
 import { validateTagSelection } from '@/services/toolsService';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from './TagPicker.module.scss';
 
 export default function TagPicker({ selectedTags = [], onChange }) {
+  const { t, translateTagCategory, translateTag } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('alphabetical'); // 'alphabetical' | 'category'
   const [conflictMessage, setConflictMessage] = useState(null);
@@ -12,17 +14,22 @@ export default function TagPicker({ selectedTags = [], onChange }) {
   // Group tags alphabetically (A-Z)
   const alphabeticalGroups = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    const filtered = ALL_TAGS.filter((t) => {
+    const filtered = ALL_TAGS.filter((tItem) => {
       if (!q) return true;
+      const translatedName = translateTag(tItem.id, tItem.name).toLowerCase();
+      const translatedCat = translateTagCategory(tItem.tagCategoryId, tItem.tagCategoryName).toLowerCase();
       return (
-        t.name.toLowerCase().includes(q) ||
-        t.tagCategoryName.toLowerCase().includes(q)
+        tItem.name.toLowerCase().includes(q) ||
+        translatedName.includes(q) ||
+        tItem.tagCategoryName.toLowerCase().includes(q) ||
+        translatedCat.includes(q)
       );
     });
 
     const groups = {};
     filtered.forEach((tag) => {
-      const firstLetter = tag.name.charAt(0).toUpperCase();
+      const translatedName = translateTag(tag.id, tag.name);
+      const firstLetter = (translatedName || tag.name).charAt(0).toUpperCase();
       if (!groups[firstLetter]) groups[firstLetter] = [];
       groups[firstLetter].push(tag);
     });
@@ -33,17 +40,21 @@ export default function TagPicker({ selectedTags = [], onChange }) {
         letter,
         tags: groups[letter],
       }));
-  }, [searchQuery]);
+  }, [searchQuery, translateTag, translateTagCategory]);
 
   // Group tags by Tag Category
   const categoryGroups = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     return TAG_CATEGORIES.map((cat) => {
-      const filteredTags = cat.tags.filter((t) => {
+      const transCat = translateTagCategory(cat.id, cat.name).toLowerCase();
+      const filteredTags = cat.tags.filter((tItem) => {
         if (!q) return true;
+        const transTag = translateTag(tItem.id, tItem.name).toLowerCase();
         return (
-          t.name.toLowerCase().includes(q) ||
-          cat.name.toLowerCase().includes(q)
+          tItem.name.toLowerCase().includes(q) ||
+          transTag.includes(q) ||
+          cat.name.toLowerCase().includes(q) ||
+          transCat.includes(q)
         );
       });
       return {
@@ -51,7 +62,7 @@ export default function TagPicker({ selectedTags = [], onChange }) {
         tags: filteredTags,
       };
     }).filter((cat) => cat.tags.length > 0);
-  }, [searchQuery]);
+  }, [searchQuery, translateTag, translateTagCategory]);
 
   const isSelected = (tagId) => {
     return selectedTags.some((t) => (typeof t === 'string' ? t === tagId : t.id === tagId));
@@ -101,34 +112,35 @@ export default function TagPicker({ selectedTags = [], onChange }) {
       <div className={styles.headerRow}>
         <label className={styles.label}>
           <Hash size={14} className={styles.hashIcon} />
-          <span>Tags & Capabilities (Unlimited)</span>
+          <span>{t('tagPicker.tagsAndCapabilities', 'Tags & Capabilities (Unlimited)')}</span>
         </label>
-        <span className={styles.countBadge}>{selectedTags.length} selected</span>
+        <span className={styles.countBadge}>{selectedTags.length} {t('tagPicker.selected', 'selected')}</span>
       </div>
 
       {/* 1. Selected Tags Input Container (2-3 lines height with auto-scroll) */}
       <div className={styles.selectedBox} aria-label="Selected tags list">
         {selectedTags.length === 0 ? (
           <span className={styles.placeholderText}>
-            No tags selected yet. Search and click tags below to add them to your tool (#Web, #Freemium, #LLM)...
+            {t('tagPicker.placeholder', 'No tags selected yet. Search and click tags below to add them to your tool (#Web, #Freemium, #LLM)...')}
           </span>
         ) : (
           <div className={styles.selectedTagsWrap}>
             {selectedTags.map((tag) => {
               const tagId = typeof tag === 'string' ? tag : tag.id;
               const tagName = typeof tag === 'string'
-                ? ALL_TAGS.find((t) => t.id === tag)?.name || tag
+                ? ALL_TAGS.find((tItem) => tItem.id === tag)?.name || tag
                 : tag.name;
+              const displayTagName = translateTag(tagId, tagName);
 
               return (
                 <span key={tagId} className={styles.activeTagPill}>
-                  <span className={styles.tagName}>#{tagName}</span>
+                  <span className={styles.tagName}>#{displayTagName}</span>
                   <button
                     type="button"
                     className={styles.removeBtn}
                     onClick={(e) => handleRemoveTag(tagId, e)}
-                    title={`Remove #${tagName}`}
-                    aria-label={`Remove #${tagName}`}
+                    title={`${t('tagPicker.removeTag', 'Remove')} #${displayTagName}`}
+                    aria-label={`${t('tagPicker.removeTag', 'Remove')} #${displayTagName}`}
                   >
                     <X size={12} />
                   </button>
@@ -162,7 +174,7 @@ export default function TagPicker({ selectedTags = [], onChange }) {
             <input
               type="text"
               className={styles.searchInput}
-              placeholder="Search tags by keyword (e.g. #Interface, #Web, #Free)..."
+              placeholder={t('tagPicker.searchPlaceholder', 'Search tags by keyword (e.g. #Interface, #Web, #Free)...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -183,7 +195,7 @@ export default function TagPicker({ selectedTags = [], onChange }) {
               className={`${styles.toggleBtn} ${viewMode === 'alphabetical' ? styles.activeToggle : ''}`}
               onClick={() => setViewMode('alphabetical')}
             >
-              A-Z
+              {t('tagPicker.az', 'A-Z')}
             </button>
             <button
               type="button"
@@ -191,7 +203,7 @@ export default function TagPicker({ selectedTags = [], onChange }) {
               onClick={() => setViewMode('category')}
             >
               <Layers size={13} />
-              <span>Category</span>
+              <span>{t('tagPicker.category', 'Category')}</span>
             </button>
           </div>
         </div>
@@ -200,7 +212,7 @@ export default function TagPicker({ selectedTags = [], onChange }) {
         <div className={styles.tagsScrollList}>
           {viewMode === 'alphabetical' ? (
             alphabeticalGroups.length === 0 ? (
-              <div className={styles.noResults}>No tags matching "{searchQuery}"</div>
+              <div className={styles.noResults}>{t('tagPicker.noTagsMatching', 'No tags matching')} "{searchQuery}"</div>
             ) : (
               alphabeticalGroups.map((group) => (
                 <div key={group.letter} className={styles.alphabeticalSection}>
@@ -212,6 +224,8 @@ export default function TagPicker({ selectedTags = [], onChange }) {
                     {group.tags.map((tag) => {
                       const active = isSelected(tag.id);
                       const restricted = isTagRestricted(tag);
+                      const displayTagName = translateTag(tag.id, tag.name);
+                      const displayCategoryName = translateTagCategory(tag.tagCategoryId, tag.tagCategoryName);
 
                       return (
                         <button
@@ -223,12 +237,12 @@ export default function TagPicker({ selectedTags = [], onChange }) {
                           onClick={() => handleTagClick(tag)}
                           title={
                             restricted
-                              ? `Single-choice restriction for ${tag.tagCategoryName}. Click to inspect.`
-                              : tag.tagCategoryName
+                              ? `${displayCategoryName} (${t('filter.selectOnlyOne', 'Single choice')})`
+                              : displayCategoryName
                           }
                         >
                           <span className={styles.pillBullet}>•</span>
-                          <span className={styles.pillText}>#{tag.name}</span>
+                          <span className={styles.pillText}>#{displayTagName}</span>
                           {active && <Check size={12} className={styles.checkIcon} />}
                         </button>
                       );
@@ -239,14 +253,14 @@ export default function TagPicker({ selectedTags = [], onChange }) {
             )
           ) : (
             categoryGroups.length === 0 ? (
-              <div className={styles.noResults}>No categories matching "{searchQuery}"</div>
+              <div className={styles.noResults}>{t('tagPicker.noCatMatching', 'No categories matching')} "{searchQuery}"</div>
             ) : (
               categoryGroups.map((cat) => (
                 <div key={cat.id} className={styles.categorySection}>
                   <div className={styles.catHeader}>
-                    <span className={styles.catTitle}>{cat.name}</span>
+                    <span className={styles.catTitle}>{translateTagCategory(cat.id, cat.name)}</span>
                     <span className={styles.catHint}>
-                      {cat.isSingleSelect ? '(Only 1 allowed)' : '(Multiple allowed)'}
+                      {cat.isSingleSelect ? t('tagPicker.onlyOneAllowed', '(Only 1 allowed)') : t('tagPicker.multipleAllowed', '(Multiple allowed)')}
                     </span>
                   </div>
                   <div className={styles.tagsPillList}>
@@ -259,6 +273,7 @@ export default function TagPicker({ selectedTags = [], onChange }) {
                         isCategorySingleSelect: cat.isSingleSelect,
                       };
                       const restricted = isTagRestricted(fullTag);
+                      const displayTagName = translateTag(tag.id, tag.name);
 
                       return (
                         <button
@@ -270,7 +285,7 @@ export default function TagPicker({ selectedTags = [], onChange }) {
                           onClick={() => handleTagClick(fullTag)}
                         >
                           <span className={styles.pillBullet}>•</span>
-                          <span className={styles.pillText}>#{tag.name}</span>
+                          <span className={styles.pillText}>#{displayTagName}</span>
                           {active && <Check size={12} className={styles.checkIcon} />}
                         </button>
                       );

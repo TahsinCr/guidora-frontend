@@ -14,6 +14,9 @@ import {
   Sparkles,
   X,
   LayoutDashboard,
+  MessageSquare,
+  Star,
+  Trash2,
 } from 'lucide-react';
 import ProductCard from '@/components/home/ProductCard';
 import {
@@ -21,14 +24,17 @@ import {
   getCurrentUser,
   updateCurrentUser,
 } from '@/services/userService';
-import { getTools } from '@/services/toolsService';
+import { getTools, getUserReviews, deleteReview } from '@/services/toolsService';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from './UserProfilePage.module.scss';
 
 export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmin }) {
+  const { t, translateCategory } = useLanguage();
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('saved'); // 'saved' | 'submitted'
+  const [activeTab, setActiveTab] = useState('saved'); // 'saved' | 'submitted' | 'reviews'
   const [savedTools, setSavedTools] = useState([]);
   const [submittedTools, setSubmittedTools] = useState([]);
+  const [userReviews, setUserReviews] = useState([]);
   const [isLoadingTools, setIsLoadingTools] = useState(true);
   const [copyNotification, setCopyNotification] = useState(false);
 
@@ -43,6 +49,7 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
 
   const currentUser = getCurrentUser();
   const isOwner = user && (!userId || user.id === currentUser?.id);
+  const canDeleteAnyReview = currentUser && (currentUser.role === 'admin' || currentUser.role === 'moderator');
 
   useEffect(() => {
     const loadedUser = getUserById(userId);
@@ -54,6 +61,11 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
       setEditLocation(loadedUser.location || '');
       setEditWebsite(loadedUser.website || '');
       setEditAvatar(loadedUser.avatar || '');
+
+      // Fetch user reviews
+      getUserReviews(loadedUser.id).then((revs) => {
+        setUserReviews(revs || []);
+      });
     }
   }, [userId]);
 
@@ -109,11 +121,22 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
     setIsEditModalOpen(false);
   };
 
+  const handleDeleteUserReview = async (toolId, reviewId) => {
+    if (window.confirm(t('user.confirmDeleteReview', 'Are you sure you want to delete this review?'))) {
+      try {
+        await deleteReview(toolId, reviewId);
+        setUserReviews((prev) => prev.filter((r) => r.id !== reviewId));
+      } catch (err) {
+        console.error('Failed to delete review:', err);
+      }
+    }
+  };
+
   if (!user) {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.spinner} />
-        <p>Loading member profile...</p>
+        <p>{t('user.loadingProfile', 'Loading member profile...')}</p>
       </div>
     );
   }
@@ -124,7 +147,7 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
       <div className={styles.topBar}>
         <button type="button" className={styles.backBtn} onClick={onBack}>
           <ArrowLeft size={16} />
-          <span>Back to Directory</span>
+          <span>{t('header.backToDirectory', 'Back to Directory')}</span>
         </button>
 
         <div className={styles.topBarActions}>
@@ -140,7 +163,7 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
               }}
             >
               <LayoutDashboard size={15} />
-              <span>Admin Panel</span>
+              <span>{t('user.adminDashboard', 'Admin Panel')}</span>
             </button>
           )}
 
@@ -151,13 +174,13 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
               onClick={() => setIsEditModalOpen(true)}
             >
               <Edit3 size={15} />
-              <span>Edit Profile</span>
+              <span>{t('user.editProfile', 'Edit Profile')}</span>
             </button>
           )}
 
           <button type="button" className={styles.shareBtn} onClick={handleShare}>
             <Share2 size={15} />
-            <span>{copyNotification ? 'Copied link!' : 'Share Profile'}</span>
+            <span>{copyNotification ? t('user.copiedLink', 'Copied link!') : t('user.shareProfile', 'Share Profile')}</span>
           </button>
         </div>
       </div>
@@ -180,7 +203,13 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
             <div className={styles.nameRow}>
               <h1 className={styles.userName}>{user.name}</h1>
               <span className={`${styles.rolePill} ${styles[user.role] || ''}`}>
-                {user.role === 'admin' ? 'Platform Admin' : user.role === 'creator' ? 'Tool Creator' : 'Community Member'}
+                {user.role === 'admin'
+                  ? t('user.platformAdmin', 'Platform Admin')
+                  : user.role === 'moderator'
+                  ? t('user.moderatorRole', 'Community Moderator')
+                  : user.role === 'creator'
+                  ? t('user.toolCreator', 'Tool Creator')
+                  : t('user.communityMember', 'Community Member')}
               </span>
             </div>
 
@@ -208,11 +237,11 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
               )}
               <div className={styles.metaItem}>
                 <Calendar size={13} />
-                <span>Joined {user.joinedDate || 'Recently'}</span>
+                <span>{t('user.joined', 'Joined')} {user.joinedDate || 'Recently'}</span>
               </div>
               <div className={`${styles.metaItem} ${styles.reputationItem}`}>
                 <Award size={13} />
-                <span>{user.reputation || 100} Rep</span>
+                <span>{user.reputation || 100} {t('user.reputation', 'Rep')}</span>
               </div>
             </div>
           </div>
@@ -234,7 +263,7 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
           onClick={() => setActiveTab('saved')}
         >
           <Bookmark size={15} />
-          <span>Saved Tools</span>
+          <span>{t('user.savedTools', 'Saved Tools')}</span>
           <span className={styles.tabCounter}>{savedTools.length}</span>
         </button>
 
@@ -244,8 +273,18 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
           onClick={() => setActiveTab('submitted')}
         >
           <Sparkles size={15} />
-          <span>Submitted Tools</span>
+          <span>{t('user.submittedTools', 'Submitted Tools')}</span>
           <span className={styles.tabCounter}>{submittedTools.length}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`${styles.tabBtn} ${activeTab === 'reviews' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('reviews')}
+        >
+          <MessageSquare size={15} />
+          <span>{t('user.reviews', 'My Reviews')}</span>
+          <span className={styles.tabCounter}>{userReviews.length}</span>
         </button>
       </div>
 
@@ -254,7 +293,7 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
         {isLoadingTools ? (
           <div className={styles.loadingContainer}>
             <div className={styles.spinner} />
-            <p>Loading tools...</p>
+            <p>{t('user.loadingTools', 'Loading tools...')}</p>
           </div>
         ) : activeTab === 'saved' ? (
           savedTools.length > 0 ? (
@@ -271,30 +310,105 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
           ) : (
             <div className={styles.emptyState}>
               <Bookmark size={36} className={styles.emptyIcon} />
-              <h3>No saved tools yet</h3>
-              <p>Tools you bookmark while browsing will appear here for easy reference.</p>
+              <h3>{t('user.savedTools', 'Saved Tools')}</h3>
+              <p>{t('sorter.tryAdjusting', 'Tools you bookmark while browsing will appear here for easy reference.')}</p>
               <button type="button" className={styles.browseBtn} onClick={onBack}>
-                Explore AI Directory
+                {t('hero.allTools', 'Explore AI Directory')}
               </button>
             </div>
           )
-        ) : submittedTools.length > 0 ? (
-          <div className={styles.toolGrid}>
-            {submittedTools.map((tool) => (
-              <ProductCard
-                key={tool.id}
-                tool={tool}
-                viewMode="grid"
-                onOpenDetail={onOpenTool}
-              />
-            ))}
-          </div>
+        ) : activeTab === 'submitted' ? (
+          submittedTools.length > 0 ? (
+            <div className={styles.toolGrid}>
+              {submittedTools.map((tool) => (
+                <ProductCard
+                  key={tool.id}
+                  tool={tool}
+                  viewMode="grid"
+                  onOpenDetail={onOpenTool}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className={styles.emptyState}>
+              <Sparkles size={36} className={styles.emptyIcon} />
+              <h3>{t('user.submittedTools', 'Submitted Tools')}</h3>
+              <p>{t('user.submittedEmptyDesc', 'Tools created or verified by this user will be listed here.')}</p>
+            </div>
+          )
         ) : (
-          <div className={styles.emptyState}>
-            <Sparkles size={36} className={styles.emptyIcon} />
-            <h3>No tools submitted yet</h3>
-            <p>Tools created or verified by this user will be listed here.</p>
-          </div>
+          /* Reviews Tab */
+          userReviews.length > 0 ? (
+            <div className={styles.reviewsList}>
+              {userReviews.map((rev) => (
+                <div key={rev.id} className={styles.reviewCard}>
+                  <div className={styles.reviewHeader}>
+                    <div
+                      className={styles.toolMetaLeft}
+                      onClick={() => onOpenTool && onOpenTool(rev.toolId)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className={styles.toolThumb}>
+                        {(rev.toolName || 'AI').slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className={styles.toolMetaInfo}>
+                        <h4 className={styles.toolTitle}>{rev.toolName || 'Tool'}</h4>
+                        <span className={styles.reviewDate}>{rev.date}</span>
+                      </div>
+                    </div>
+
+                    <div className={styles.reviewHeaderRight}>
+                      <div className={styles.reviewStars}>
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            size={14}
+                            fill={s <= rev.rating ? '#EAB308' : 'none'}
+                            color={s <= rev.rating ? '#EAB308' : 'var(--text-muted)'}
+                          />
+                        ))}
+                      </div>
+
+                      {(isOwner || canDeleteAnyReview) && (
+                        <button
+                          type="button"
+                          className={styles.deleteReviewBtn}
+                          onClick={() => handleDeleteUserReview(rev.toolId, rev.id)}
+                          title={t('user.deleteReview', 'Delete Review')}
+                          aria-label="Delete Review"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className={styles.reviewContent}>{rev.content}</p>
+
+                  <div className={styles.reviewFooter}>
+                    <button
+                      type="button"
+                      className={styles.viewToolLink}
+                      onClick={() => onOpenTool && onOpenTool(rev.toolId)}
+                    >
+                      <span>{t('user.viewTool', 'View Tool')}</span>
+                      <ExternalLink size={12} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.emptyState}>
+              <MessageSquare size={36} className={styles.emptyIcon} />
+              <h3>{t('user.noReviews', 'No reviews posted yet')}</h3>
+              <p>{t('user.noReviewsDesc', 'When you review tools in the directory, your ratings and evaluations will appear here.')}</p>
+              <button type="button" className={styles.browseBtn} onClick={onBack}>
+                {t('hero.allTools', 'Explore AI Directory')}
+              </button>
+            </div>
+          )
         )}
       </div>
 
@@ -310,7 +424,7 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
             <div className={styles.modalHeader}>
               <div className={styles.modalTitleWrap}>
                 <Edit3 size={18} color="var(--primary-color)" />
-                <span className={styles.modalTitle}>Edit Profile</span>
+                <span className={styles.modalTitle}>{t('user.editProfileTitle', 'Edit Profile')}</span>
               </div>
               <button
                 type="button"
@@ -325,19 +439,19 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
             <form onSubmit={handleSaveProfile} className={styles.editForm}>
               <div className={styles.formGrid}>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Full Name</label>
+                  <label className={styles.label}>{t('user.fullName', 'Full Name')}</label>
                   <input
                     type="text"
                     className={styles.input}
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    placeholder="e.g. Tahsin Can"
+                    placeholder={t('user.fullNamePlaceholder', 'e.g. Tahsin Cr')}
                     required
                   />
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Avatar Initials</label>
+                  <label className={styles.label}>{t('user.avatarInitials', 'Avatar Initials')}</label>
                   <input
                     type="text"
                     maxLength={2}
@@ -350,41 +464,41 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.label}>Professional Title</label>
+                <label className={styles.label}>{t('user.professionalTitle', 'Professional Title')}</label>
                 <input
                   type="text"
                   className={styles.input}
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
-                  placeholder="e.g. Lead AI Engineer & Product Architect"
+                  placeholder={t('user.professionalTitlePlaceholder', 'e.g. Lead AI Engineer & Product Architect')}
                 />
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.label}>About / Bio</label>
+                <label className={styles.label}>{t('user.aboutBio', 'About / Bio')}</label>
                 <textarea
                   className={styles.textarea}
                   rows={3}
                   value={editBio}
                   onChange={(e) => setEditBio(e.target.value)}
-                  placeholder="Share a short bio about what you're building or exploring..."
+                  placeholder={t('user.aboutBioPlaceholder', "Share a short bio about what you're building or exploring...")}
                 />
               </div>
 
               <div className={styles.formGrid}>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Location</label>
+                  <label className={styles.label}>{t('user.location', 'Location')}</label>
                   <input
                     type="text"
                     className={styles.input}
                     value={editLocation}
                     onChange={(e) => setEditLocation(e.target.value)}
-                    placeholder="e.g. Istanbul, Turkey"
+                    placeholder={t('user.locationPlaceholder', 'e.g. Istanbul, Turkey')}
                   />
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Website / GitHub URL</label>
+                  <label className={styles.label}>{t('user.websiteUrl', 'Website / GitHub URL')}</label>
                   <input
                     type="url"
                     className={styles.input}
@@ -401,10 +515,10 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
                   className={styles.cancelBtn}
                   onClick={() => setIsEditModalOpen(false)}
                 >
-                  Cancel
+                  {t('user.cancel', 'Cancel')}
                 </button>
                 <button type="submit" className={styles.saveBtn}>
-                  Save Changes
+                  {t('user.saveChanges', 'Save Changes')}
                 </button>
               </div>
             </form>

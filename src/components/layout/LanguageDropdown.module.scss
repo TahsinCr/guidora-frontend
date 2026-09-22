@@ -1,0 +1,147 @@
+@use '@/styles/modules/layout' as layout;
+
+.wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  z-index: 100;
+}
+
+.langTrigger {
+  @include layout.flex(row, center, center, 6px);
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-input);
+  border: 1px solid var(--border-card);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover, &.active {
+    color: var(--text-primary);
+    background: var(--bg-input-hover);
+    border-color: var(--border-card-hover);
+  }
+
+  .globeIcon {
+    color: var(--primary-color);
+  }
+
+  .langCode {
+    letter-spacing: 0.5px;
+  }
+
+  .chevron {
+    transition: transform var(--transition-fast);
+    opacity: 0.7;
+
+    &.rotated {
+      transform: rotate(180deg);
+    }
+  }
+
+  @media (max-width: 480px) {
+    height: 32px;
+    padding: 0 8px;
+    font-size: 12px;
+
+    .chevron {
+      display: none;
+    }
+  }
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 175px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(16px);
+  padding: 6px;
+  animation: fadeInDown 0.15s ease-out;
+  z-index: 110;
+}
+
+.menuHeader {
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary);
+}
+
+.optionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.optionItem {
+  @include layout.flex(row, start, center, 8px);
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  text-align: left;
+
+  &:hover {
+    background: var(--bg-input-hover);
+  }
+
+  &.selected {
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--primary-color);
+    font-weight: 600;
+  }
+
+  .flag {
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .langLabels {
+    flex: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .langName {
+    font-size: 13px;
+  }
+
+  .langSub {
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  .checkIcon {
+    color: var(--primary-color);
+    margin-left: auto;
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

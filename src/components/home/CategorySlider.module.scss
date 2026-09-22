@@ -1,6 +1,8 @@
 .sliderWrapper {
   width: 100%;
   max-width: 1080px;
+  min-width: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -8,6 +10,12 @@
   padding: 6px 0;
   position: relative;
   z-index: 2;
+  transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease;
+
+  &.compactSlider {
+    max-width: 100%;
+    padding: 3px 0;
+  }
 }
 
 .navBtn {
@@ -49,7 +57,8 @@
   scroll-behavior: smooth;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  flex: 1;
+  flex: 1 1 0%;
+  min-width: 0;
   padding: 6px 4px;
   -webkit-overflow-scrolling: touch;
 
@@ -99,4 +108,46 @@
 
 .catName {
   line-height: 1;
+}
+
+@media (max-width: 850px) {
+  .sliderWrapper {
+    gap: 8px;
+    padding: 2px 0;
+    max-width: 100%;
+  }
+
+  .navBtn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+  }
+
+  .scrollTrack {
+    padding: 4px 0;
+    gap: 8px;
+  }
+
+  .catPill {
+    padding: 7px 14px;
+    font-size: 12.5px;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sliderWrapper {
+    gap: 6px;
+  }
+
+  .navBtn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .catPill {
+    padding: 6px 12px;
+    font-size: 12px;
+    gap: 5px;
+  }
 }

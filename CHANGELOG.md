@@ -8,6 +8,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Fixed Navbar Offset Compensation & Smooth Scroll Animation**:
+  - Implemented dynamic `--header-height` (`72px` desktop / `64px` mobile) and `--catalog-offset` (`calc(var(--header-height) + 16px)` / `12px`) CSS variables in `src/styles/base/_theme.scss`.
+  - Added global `scroll-padding-top: var(--catalog-offset)` on `html` and `scroll-margin-top: var(--catalog-offset)` on `.contentLayout` (`#catalog-section`).
+  - Added `scrollToCatalog(smooth)` dynamic scroll calculator in `src/components/home/InformationCard.jsx`, ensuring scrolling down brings the page to the exact catalog docking point right below the sticky navbar without clipping the "Filters" title, active badges, or search bar.
+  - Implemented downward wheel & touch swipe gesture detection to smoothly animate from the hero to the catalog section.
+  - Added category pill click auto-scroll to `#catalog-section` and an animated "Explore Directory & Filters" indicator button with bilingual localization (EN, TR, RU).
+- **Floating "Scroll to Top" Button**:
+  - Created `src/components/common/ScrollToTop.jsx` and `ScrollToTop.module.scss`.
+  - Circular floating action button with glassmorphism, ArrowUp icon, and smooth scroll animation (`window.scrollTo({ top: 0, behavior: 'smooth' })`).
+  - Automatically appears after 250px vertical scroll; fully responsive across mobile, tablet, and desktop viewports.
+- **Admin User Creation Password Field**:
+  - Added initial password input with interactive show/hide toggle in `AdminDashboardPage.jsx` Add User modal.
+  - Connected with `userService.adminCreateUser` and `authService` credential storage (`guidora_user_passwords`), enabling instant sign-in for newly registered admin users.
+- **Immediate Home Redirection on Logout**:
+  - Configured global `guidora_auth_change` and `UserMenu.handleLogout` to reset active views (`view=admin`, `view=profile`, `view=submit`), dismiss dialogs, and route back to the home directory catalog (`/`).
+- **Authentic OAuth Logos & Auth Modal Refinements**:
+  - Upgraded Google OAuth button with official 4-color Google "G" logo SVG (`#4285F4`, `#34A853`, `#FBBC05`, `#EA4335`) and theme-adaptive button surface.
+  - Implemented crisp GitHub Octocat SVG logo and elegant separator divider (`OR / VEYA`).
+  - Extended Guidora brand emblem logo across Welcome, Login, and Registration headers.
+
+### Changed & Fixed
+
+- **Compact Category Bar Below 850px (Mobile & Tablet Mockup Match)**:
+  - Re-architected category presentation on screens `<= 850px` to match mockup `media_1790038563890.png`.
+  - Hides the large hero title, subtitle slogan, and scroll down button on mobile/tablet viewports, placing the category slider immediately beneath the navbar to eliminate wasted vertical space.
+  - Re-enabled responsive left `<` and right `>` navigation arrow buttons on mobile/tablet, allowing intuitive one-tap horizontal category track navigation alongside fluid touch gestures.
+  - Preserved all existing card, search, and filter structures as requested without regression.
+- **Mobile Dropdown Overflow & Input Viewport Fix**:
+  - Resolved issue in `ProductSorterBar` where the `Top` time-filter dropdown menu overflowed 95px off the left edge of mobile screens due to a static `right: 0` positioning on a wrapped trigger.
+  - Implemented dynamic trigger bounding client rect detection (`rect.left < 190`) with `.alignLeft` (`left: 0; right: auto;`) and `.alignRight` (`right: 0; left: auto;`), ensuring dropdowns always expand inwards and remain 100% within the mobile viewport.
+  - Re-architected mobile `actionsRow` with `.actionControlsGroup` (`Filters` + `Grid/List` toggle on row 1) and `.actionDropdownsGroup` (`Relevance` + `Top` side-by-side 50/50 on row 2), eliminating awkward wrapping.
+  - Added mobile `font-size: 16px` on `searchInput` and `filterSearchInput` to prevent unwanted iOS Safari auto-zoom which shifts the viewport out of bounds.
+- **Natural Scroll Layout Restoration**:
+  - Reverted `FilterBar` sidebar to natural in-flow document positioning, eliminating nested internal scrollbars.
+  - Reverted `ProductSorterBar` from fixed/sticky positioning to normal layout flow, eliminating viewport clipping and overlay friction.
+  - Streamlined `InformationCard` hero container to eliminate layout height jump on scroll.
+- **Admin Category Edit Modal Crash**:
+  - Resolved `ReferenceError: catShowSlider is not defined` in `AdminDashboardPage.jsx` by connecting state to `catPopular`.
+  - Category Edit modal now renders and saves modifications cleanly without crashing.
+- **Tabbed Tag & Tag Category Creation in Admin**:
+  - Enhanced tag creation in `AdminDashboardPage.jsx` with a dual-tab modal: `Add Tag` (`Etiket Ekle`) and `Add Tag Group` (`Etiket Kategorisi Ekle`).
+  - Added `adminAddTagCategory` and `adminDeleteTagCategory` in `adminService.js` to manage custom tag taxonomies and multi-language translations.
+
 - **Markdown Rendering Engine**:
   - Integrated `marked` with GitHub-flavored markdown and soft breaks in `src/components/common/MarkdownRenderer.jsx`.
   - Added comprehensive styling for code blocks, tables, blockquotes, and lists in both dark and light modes.

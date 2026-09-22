@@ -47,6 +47,10 @@
     outline: none;
     min-width: 0;
 
+    @media (max-width: 768px) {
+      font-size: 16px;
+    }
+
     &::placeholder {
       color: var(--text-muted);
     }
@@ -85,16 +89,50 @@
 
   @media (max-width: 640px) {
     display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 6px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
     width: 100%;
-    overflow-x: auto;
-    padding-bottom: 2px;
-    scrollbar-width: none;
+    overflow: visible;
+  }
+}
 
-    &::-webkit-scrollbar {
-      display: none;
+.actionControlsGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  @media (max-width: 640px) {
+    width: 100%;
+    justify-content: space-between;
+
+    .filterMobileBtn {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+
+    .viewTogglePill {
+      flex-shrink: 0;
+    }
+  }
+}
+
+.actionDropdownsGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  @media (max-width: 640px) {
+    width: 100%;
+
+    .customDropdown {
+      flex: 1 1 50%;
+      min-width: 0;
+
+      .dropdownTrigger {
+        width: 100%;
+        justify-content: space-between;
+      }
     }
   }
 }
@@ -203,6 +241,7 @@
   right: 0;
   z-index: 150;
   width: 180px;
+  max-width: calc(100vw - 24px);
   @include layout.box(
     $padding: 6px,
     $border: 1px solid var(--border-card),
@@ -215,6 +254,18 @@
   @include layout.flex(column, start, start, 2px);
   transform-origin: top right;
   animation: popoverIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  &.alignLeft {
+    left: 0;
+    right: auto;
+    transform-origin: top left;
+  }
+
+  &.alignRight {
+    right: 0;
+    left: auto;
+    transform-origin: top right;
+  }
 
   .menuItem {
     @include layout.width(fill);

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { ExternalLink, Bookmark, Plus, Star, CheckCircle2, ChevronRight, Flag } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 import ReportModal from './ReportModal';
 import styles from './ToolSidebar.module.scss';
 
 export default function ToolSidebar({ tool, onSelectTool }) {
+  const { t } = useLanguage();
   const [isSaved, setIsSaved] = useState(false);
   const [isCompared, setIsCompared] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -39,7 +41,7 @@ export default function ToolSidebar({ tool, onSelectTool }) {
           </div>
 
           <div className={styles.rankBox}>
-            <span className={styles.rankLabel}>RANK</span>
+            <span className={styles.rankLabel}>{t('tool.rank', 'RANK')}</span>
             <span className={styles.rankValue}>{rankValue}</span>
           </div>
         </div>
@@ -51,12 +53,12 @@ export default function ToolSidebar({ tool, onSelectTool }) {
             rel="noopener noreferrer"
             className={styles.visitWebsiteBtn}
           >
-            <span>Visit Website</span>
+            <span>{t('tool.visitWebsite', 'Visit Website')}</span>
             <ExternalLink size={16} />
           </a>
         ) : (
           <button className={styles.visitWebsiteBtn}>
-            <span>Visit Website</span>
+            <span>{t('tool.visitWebsite', 'Visit Website')}</span>
             <ExternalLink size={16} />
           </button>
         )}
@@ -67,7 +69,7 @@ export default function ToolSidebar({ tool, onSelectTool }) {
             onClick={() => setIsSaved(!isSaved)}
           >
             <Bookmark size={15} fill={isSaved ? 'currentColor' : 'none'} />
-            <span>{isSaved ? 'Saved' : 'Save'}</span>
+            <span>{isSaved ? t('tool.saved', 'Saved') : t('tool.save', 'Save')}</span>
           </button>
 
           <button
@@ -75,7 +77,7 @@ export default function ToolSidebar({ tool, onSelectTool }) {
             onClick={() => setIsCompared(!isCompared)}
           >
             <Plus size={15} />
-            <span>Compare</span>
+            <span>{t('tool.compare', 'Compare')}</span>
           </button>
         </div>
 
@@ -83,11 +85,11 @@ export default function ToolSidebar({ tool, onSelectTool }) {
 
         <div className={styles.metadataList}>
           <div className={styles.metaRow}>
-            <span className={styles.metaKey}>Monthly Visits</span>
+            <span className={styles.metaKey}>{t('tool.monthlyVisits', 'Monthly Visits')}</span>
             <span className={styles.metaVal}>{monthlyVisits}</span>
           </div>
           <div className={styles.metaRow}>
-            <span className={styles.metaKey}>License</span>
+            <span className={styles.metaKey}>{t('tool.license', 'License')}</span>
             <span className={styles.metaVal}>{license}</span>
           </div>
         </div>
@@ -97,7 +99,7 @@ export default function ToolSidebar({ tool, onSelectTool }) {
       <div className={styles.creatorCard}>
         <div className={styles.creatorAvatar}>{creator.initials || 'NL'}</div>
         <div className={styles.creatorInfo}>
-          <span className={styles.creatorLabel}>CREATED BY</span>
+          <span className={styles.creatorLabel}>{t('tool.createdBy', 'CREATED BY')}</span>
           <div className={styles.creatorNameRow}>
             <span className={styles.creatorName}>{creator.name}</span>
             {creator.verified && (
@@ -110,7 +112,7 @@ export default function ToolSidebar({ tool, onSelectTool }) {
 
       {/* 3. Similar Tools Card */}
       <div className={styles.card}>
-        <span className={styles.similarTitle}>SIMILAR TOOLS</span>
+        <span className={styles.similarTitle}>{t('tool.similarTools', 'SIMILAR TOOLS')}</span>
         <div className={styles.similarList}>
           {similarTools.map((sim, idx) => (
             <div
@@ -135,10 +137,10 @@ export default function ToolSidebar({ tool, onSelectTool }) {
         <button
           className={styles.reportBtn}
           onClick={() => setIsReportOpen(true)}
-          title="Report inaccurate information or issues"
+          title={t('tool.reportListing', 'Report this tool listing')}
         >
           <Flag size={13} />
-          <span>Report this tool</span>
+          <span>{t('tool.reportListing', 'Report this tool listing')}</span>
         </button>
       </div>
 

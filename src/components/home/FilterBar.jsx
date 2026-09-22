@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 import {
   Check,
   ChevronDown,
@@ -36,6 +37,7 @@ export default function FilterBar({
   onCloseMobile,
   isInline = false,
 }) {
+  const { t, translateCategory, translateTagCategory, translateTag } = useLanguage();
   const [filterQuery, setFilterQuery] = useState('');
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(true);
   const [isVerificationOpen, setIsVerificationOpen] = useState(true);
@@ -60,13 +62,16 @@ export default function FilterBar({
     }));
   };
 
-  // Filtered categories
+  // Filtered categories (matches both default name and translated name)
   const filteredCategories = useMemo(() => {
     const list = categories.filter((c) => c.id !== 'all');
     if (!filterQuery.trim()) return list;
     const q = filterQuery.toLowerCase();
-    return list.filter((c) => c.name.toLowerCase().includes(q));
-  }, [categories, filterQuery]);
+    return list.filter((c) => {
+      const translated = translateCategory(c.id, c.name).toLowerCase();
+      return c.name.toLowerCase().includes(q) || translated.includes(q);
+    });
+  }, [categories, filterQuery, translateCategory]);
 
   // If a category is selected, hide the others and keep only that one visible.
   // Otherwise, cap to 6 by default, expandable to all via arrow/button.
@@ -89,16 +94,23 @@ export default function FilterBar({
   const filteredTagCategories = useMemo(() => {
     const q = filterQuery.toLowerCase().trim().replace(/^#/, '');
     return TAG_CATEGORIES.map((cat) => {
+      const transCat = translateTagCategory(cat.id, cat.name).toLowerCase();
       const matchingTags = cat.tags.filter((t) => {
         if (!q) return true;
-        return t.name.toLowerCase().includes(q) || cat.name.toLowerCase().includes(q);
+        const transTag = translateTag(t.id, t.name).toLowerCase();
+        return (
+          t.name.toLowerCase().includes(q) ||
+          transTag.includes(q) ||
+          cat.name.toLowerCase().includes(q) ||
+          transCat.includes(q)
+        );
       });
       return {
         ...cat,
         tags: matchingTags,
       };
     }).filter((cat) => cat.tags.length > 0);
-  }, [filterQuery]);
+  }, [filterQuery, translateTagCategory, translateTag]);
 
   const handleToggleCategory = (catId) => {
     if (onSelectedCategoriesChange) {
@@ -178,7 +190,7 @@ export default function FilterBar({
     >
       <div className={styles.topBar}>
         <div className={styles.topBarLeft}>
-          <span className={styles.title}>Filters</span>
+          <span className={styles.title}>{t('filter.filters', 'Filters')}</span>
           {hasAnyActiveFilters && (
             <span className={styles.activeCountBadge}>
               {selectedCategories.length + selectedTags.length + (verification.admin ? 1 : 0) + (verification.community ? 1 : 0) + (verification.bot ? 1 : 0)}
@@ -188,7 +200,7 @@ export default function FilterBar({
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {hasAnyActiveFilters && (
             <button className={styles.resetBtn} onClick={onResetFilters}>
-              Reset All
+              {t('filter.clearFilters', 'Reset All')}
             </button>
           )}
           {!isInline && (
@@ -205,7 +217,7 @@ export default function FilterBar({
         <input
           type="text"
           className={styles.filterSearchInput}
-          placeholder="Filter categories & #tags..."
+          placeholder={t('filter.searchFilters', 'Filter categories & #tags...')}
           value={filterQuery}
           onChange={(e) => setFilterQuery(e.target.value)}
         />
@@ -225,7 +237,7 @@ export default function FilterBar({
         <div className={styles.sectionHeader} onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}>
           <span className={styles.headerLabel}>
             <Folder size={13} />
-            Categories {selectedCategories.length > 0 && `(${selectedCategories.length})`}
+            {t('filter.categories', 'Categories')} {selectedCategories.length > 0 && `(${selectedCategories.length})`}
           </span>
           {isCategoriesOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </div>
@@ -248,7 +260,7 @@ export default function FilterBar({
                     className={styles.catDot}
                     style={{ backgroundColor: cat.color || 'var(--primary-color)' }}
                   />
-                  <span className={styles.label}>{cat.name}</span>
+                  <span className={styles.label}>{translateCategory(cat.id, cat.name)}</span>
                   {cat.count && <span className={styles.badgeCount}>{cat.count}</span>}
                 </div>
               );
@@ -260,7 +272,7 @@ export default function FilterBar({
                 className={styles.showMoreBtn}
                 onClick={() => handleToggleCategory(selectedCategory)}
               >
-                Show all categories
+                {t('filter.showAllCategories', 'Show all categories')}
               </button>
             ) : (
               canExpandCategories && (
@@ -271,11 +283,11 @@ export default function FilterBar({
                 >
                   {showAllCategories ? (
                     <>
-                      Show less <ChevronUp size={12} />
+                      {t('filter.showLess', 'Show less')} <ChevronUp size={12} />
                     </>
                   ) : (
                     <>
-                      Show {filteredCategories.length - 6} more <ChevronDown size={12} />
+                      {t('filter.showMore', 'Show more')} ({filteredCategories.length - 6}) <ChevronDown size={12} />
                     </>
                   )}
                 </button>
@@ -291,7 +303,7 @@ export default function FilterBar({
         <div className={styles.sectionHeader} onClick={() => setIsVerificationOpen(!isVerificationOpen)}>
           <span className={styles.headerLabel}>
             <ShieldCheck size={13} />
-            Verification
+            {t('filter.verification', 'Verification')}
           </span>
           {isVerificationOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </div>
@@ -308,7 +320,7 @@ export default function FilterBar({
                 {verification.admin && <Check size={11} strokeWidth={3} />}
               </div>
               <ShieldCheck size={14} color="#EAB308" />
-              <span className={styles.label}>Admin Verified</span>
+              <span className={styles.label}>{t('filter.adminVerified', 'Admin Verified')}</span>
             </div>
 
             <div
@@ -322,7 +334,7 @@ export default function FilterBar({
                 {verification.community && <Check size={11} strokeWidth={3} />}
               </div>
               <Sparkles size={14} color="#10B981" />
-              <span className={styles.label}>Community Choice</span>
+              <span className={styles.label}>{t('filter.communityChoice', 'Community Choice')}</span>
             </div>
 
             <div
@@ -336,7 +348,7 @@ export default function FilterBar({
                 {verification.bot && <Check size={11} strokeWidth={3} />}
               </div>
               <Bot size={14} color="#A855F7" />
-              <span className={styles.label}>Bot Verified</span>
+              <span className={styles.label}>{t('filter.botAudited', 'Bot Verified')}</span>
             </div>
           </div>
         )}
@@ -351,7 +363,7 @@ export default function FilterBar({
         >
           <span className={styles.headerLabel}>
             <Building2 size={13} />
-            Organizations {selectedOrganizations.length > 0 && `(${selectedOrganizations.length})`}
+            {t('filter.organizations', 'Organizations')} {selectedOrganizations.length > 0 && `(${selectedOrganizations.length})`}
           </span>
           {isOrganizationsOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </div>
@@ -384,7 +396,7 @@ export default function FilterBar({
                 className={styles.showMoreBtn}
                 onClick={() => onSelectedOrganizationsChange && onSelectedOrganizationsChange([])}
               >
-                Show all organizations
+                {t('filter.showAllOrgs', 'Show all organizations')}
               </button>
             ) : (
               canExpandOrgs && (
@@ -395,11 +407,11 @@ export default function FilterBar({
                 >
                   {showAllOrgs ? (
                     <>
-                      Show less <ChevronUp size={12} />
+                      {t('filter.showLess', 'Show less')} <ChevronUp size={12} />
                     </>
                   ) : (
                     <>
-                      Show {filteredOrganizations.length - 6} more <ChevronDown size={12} />
+                      {t('filter.showMore', 'Show more')} ({filteredOrganizations.length - 6}) <ChevronDown size={12} />
                     </>
                   )}
                 </button>
@@ -417,6 +429,8 @@ export default function FilterBar({
           selectedTags.includes(t.name)
         ).length;
 
+        const groupTranslatedTitle = translateTagCategory(catGroup.id, catGroup.name);
+
         return (
           <div key={catGroup.id} className={styles.section}>
             <div
@@ -425,7 +439,7 @@ export default function FilterBar({
             >
               <span className={styles.headerLabel}>
                 <Hash size={13} />
-                {catGroup.name}
+                {groupTranslatedTitle}
                 {selectedInGroupCount > 0 && (
                   <span className={styles.groupCountPill}>({selectedInGroupCount})</span>
                 )}
@@ -435,18 +449,19 @@ export default function FilterBar({
 
             {isGroupOpen && (
               <div className={styles.tagsPillContainer}>
-                {catGroup.tags.map((t) => {
-                  const isChecked = selectedTags.includes(t.name);
+                {catGroup.tags.map((tagItem) => {
+                  const isChecked = selectedTags.includes(tagItem.name);
+                  const translatedTagName = translateTag(tagItem.id, tagItem.name);
 
                   return (
                     <button
                       type="button"
-                      key={t.id || t.name}
+                      key={tagItem.id || tagItem.name}
                       className={`${styles.filterTagPill} ${isChecked ? styles.tagChecked : ''}`}
-                      onClick={() => handleToggleTag(t.name, catGroup)}
-                      title={catGroup.isSingleSelect ? `${t.name} (Single choice)` : t.name}
+                      onClick={() => handleToggleTag(tagItem.name, catGroup)}
+                      title={catGroup.isSingleSelect ? `${translatedTagName} (${t('filter.selectOnlyOne', 'Single choice')})` : translatedTagName}
                     >
-                      #{t.name}
+                      #{translatedTagName}
                     </button>
                   );
                 })}

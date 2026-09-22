@@ -1,6 +1,55 @@
 @use '@/styles/modules/layout' as layout;
 
-.submitPageContainer {
+// Modal wrapper when rendered as a popup dialog
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 10, 15, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modalDialogCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(138, 56, 245, 0.2);
+  width: 100%;
+  max-width: 1280px;
+  height: 90vh;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.studioForm {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// Standalone full-page wrapper
+.standaloneContainer {
   width: 100%;
   max-width: 100%;
   margin: 0;
@@ -22,7 +71,6 @@
   }
 }
 
-// Top Breadcrumb Navigation Bar
 .breadcrumbBar {
   display: flex;
   flex-direction: row;
@@ -64,7 +112,6 @@
   font-weight: 600;
 }
 
-// Main Studio Card
 .studioCard {
   width: 100%;
   box-sizing: border-box;
@@ -78,11 +125,15 @@
   overflow: hidden;
 }
 
-// Studio Header
+// Header
 .studioHeader {
-  padding: 24px 28px;
+  padding: 20px 28px;
   border-bottom: 1px solid var(--border-card);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .headerLeft {
@@ -93,8 +144,8 @@
 }
 
 .headerIconBox {
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-md);
   background: linear-gradient(135deg, #818cf8, #a855f7);
   color: #ffffff;
@@ -108,32 +159,66 @@
 .headerTitles {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .mainTitle {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.02em;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modeBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(138, 56, 245, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(138, 56, 245, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .subTitle {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--text-muted);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.4;
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+  }
 }
 
 // GitHub Import Strip
 .githubStrip {
-  padding: 18px 28px;
+  padding: 14px 28px;
   border-bottom: 1px solid var(--border-card);
   background: rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .githubBar {
@@ -225,10 +310,11 @@
   }
 }
 
-// 2-Column Studio Form
-.studioForm {
-  display: flex;
-  flex-direction: column;
+// Scrollable Body for form contents
+.studioScrollArea {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .studioGrid {
@@ -236,7 +322,7 @@
   flex-direction: row;
   align-items: stretch;
   gap: 28px;
-  padding: 28px;
+  padding: 24px 28px;
 
   @media (max-width: 1024px) {
     flex-direction: column;
@@ -245,7 +331,7 @@
   }
 }
 
-// Left Column (Specifications & Taxonomy)
+// Left Column (Specifications & Taxonomy & Admin Controls)
 .leftColumn {
   width: 480px;
   flex-shrink: 0;
@@ -326,6 +412,59 @@
 
 .selectInput {
   cursor: pointer;
+}
+
+// Admin Controls Card
+.adminControlsCard {
+  padding: 16px;
+  background: rgba(138, 56, 245, 0.04);
+  border: 1px solid rgba(138, 56, 245, 0.25);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.adminCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.adminCardTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #a78bfa;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badgeGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+
+  @media (max-width: 500px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+
+  input[type="checkbox"] {
+    accent-color: #8a38f5;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
 }
 
 // Bot Sync Card
@@ -575,7 +714,7 @@
 }
 
 .errorBanner {
-  margin: 0 28px 16px 28px;
+  margin: 12px 28px;
   padding: 10px 16px;
   border-radius: var(--radius-md);
   background: rgba(239, 68, 68, 0.12);
@@ -590,7 +729,7 @@
 
 // Studio Footer
 .studioFooter {
-  padding: 18px 28px;
+  padding: 16px 28px;
   border-top: 1px solid var(--border-card);
   background: var(--bg-card);
   display: flex;
@@ -598,6 +737,11 @@
   justify-content: flex-end;
   align-items: center;
   gap: 14px;
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.25);
 }
 
 .cancelBtn {
@@ -606,7 +750,7 @@
   color: var(--text-secondary);
   font-size: 13.5px;
   font-weight: 600;
-  padding: 10px 20px;
+  padding: 9px 20px;
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -624,9 +768,9 @@
   background: var(--accent-purple);
   border: none;
   color: #ffffff;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
-  padding: 10px 24px;
+  padding: 9px 24px;
   border-radius: var(--radius-md);
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(129, 140, 248, 0.35);

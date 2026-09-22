@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 import { Search, X, ChevronDown, LayoutGrid, List, SlidersHorizontal, Check } from 'lucide-react';
 import styles from './ProductSorterBar.module.scss';
 
@@ -12,24 +13,45 @@ export default function ProductSorterBar({
   isMobileFilterOpen,
   onToggleMobileFilter,
 }) {
+  const { t } = useLanguage();
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isTimeOpen, setIsTimeOpen] = useState(false);
   const [timeFilter, setTimeFilter] = useState('all');
 
   const sortRef = useRef(null);
   const timeRef = useRef(null);
+  const [sortAlign, setSortAlign] = useState('right');
+  const [timeAlign, setTimeAlign] = useState('left');
+
+  const handleToggleSort = () => {
+    if (!isSortOpen && sortRef.current) {
+      const rect = sortRef.current.getBoundingClientRect();
+      setSortAlign(rect.left < 190 ? 'left' : 'right');
+    }
+    setIsSortOpen(!isSortOpen);
+    setIsTimeOpen(false);
+  };
+
+  const handleToggleTime = () => {
+    if (!isTimeOpen && timeRef.current) {
+      const rect = timeRef.current.getBoundingClientRect();
+      setTimeAlign(rect.left < 190 ? 'left' : 'right');
+    }
+    setIsTimeOpen(!isTimeOpen);
+    setIsSortOpen(false);
+  };
 
   const sortOptions = [
-    { id: 'relevance', label: 'Relevance' },
-    { id: 'highest-rated', label: 'Highest Rated' },
-    { id: 'most-viewed', label: 'Most Viewed' },
-    { id: 'newest', label: 'Newest First' },
+    { id: 'relevance', label: t('sorter.relevance', 'Relevance') },
+    { id: 'highest-rated', label: t('sorter.highestRated', 'Highest Rated') },
+    { id: 'most-viewed', label: t('sorter.mostViewed', 'Most Viewed') },
+    { id: 'newest', label: t('sorter.newest', 'Newest First') },
   ];
 
   const timeOptions = [
-    { id: 'all', label: 'Top' },
-    { id: 'month', label: 'This Month' },
-    { id: 'week', label: 'This Week' },
+    { id: 'all', label: t('sorter.timeAll', 'Top') },
+    { id: 'month', label: t('sorter.timeMonth', 'This Month') },
+    { id: 'week', label: t('sorter.timeWeek', 'This Week') },
   ];
 
   // Close dropdowns on outside click
@@ -56,7 +78,7 @@ export default function ProductSorterBar({
         <input
           type="text"
           className={styles.searchInput}
-          placeholder="Search 12,000+ tools, prompts..."
+          placeholder={t('sorter.searchPlaceholder', 'Search 12,000+ tools, prompts...')}
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
         />
@@ -64,7 +86,7 @@ export default function ProductSorterBar({
           <button
             className={styles.clearBtn}
             onClick={() => onSearchChange('')}
-            title="Clear"
+            title={t('common.clear', 'Clear')}
           >
             <X size={14} />
           </button>
@@ -72,94 +94,92 @@ export default function ProductSorterBar({
       </div>
 
       <div className={styles.actionsRow}>
-        <button
-          className={`${styles.filterMobileBtn} ${isMobileFilterOpen ? styles.active : ''}`}
-          onClick={onToggleMobileFilter}
-        >
-          <SlidersHorizontal size={15} />
-          <span>Filters</span>
-        </button>
+        <div className={styles.actionControlsGroup}>
+          <button
+            className={`${styles.filterMobileBtn} ${isMobileFilterOpen ? styles.active : ''}`}
+            onClick={onToggleMobileFilter}
+          >
+            <SlidersHorizontal size={15} />
+            <span>{t('sorter.filters', 'Filters')}</span>
+          </button>
 
-        {/* View Toggle */}
-        <div className={styles.viewTogglePill}>
-          <button
-            className={`${styles.toggleBtn} ${viewMode === 'grid' ? styles.active : ''}`}
-            onClick={() => onViewModeChange('grid')}
-            title="Grid View"
-          >
-            <LayoutGrid size={16} />
-          </button>
-          <button
-            className={`${styles.toggleBtn} ${viewMode === 'list' ? styles.active : ''}`}
-            onClick={() => onViewModeChange('list')}
-            title="List View"
-          >
-            <List size={16} />
-          </button>
+          {/* View Toggle */}
+          <div className={styles.viewTogglePill}>
+            <button
+              className={`${styles.toggleBtn} ${viewMode === 'grid' ? styles.active : ''}`}
+              onClick={() => onViewModeChange('grid')}
+              title={t('sorter.gridView', 'Grid View')}
+            >
+              <LayoutGrid size={16} />
+            </button>
+            <button
+              className={`${styles.toggleBtn} ${viewMode === 'list' ? styles.active : ''}`}
+              onClick={() => onViewModeChange('list')}
+              title={t('sorter.listView', 'List View')}
+            >
+              <List size={16} />
+            </button>
+          </div>
         </div>
 
-        {/* Sort Dropdown */}
-        <div className={styles.customDropdown} ref={sortRef}>
-          <button
-            className={`${styles.dropdownTrigger} ${isSortOpen ? styles.open : ''}`}
-            onClick={() => {
-              setIsSortOpen(!isSortOpen);
-              setIsTimeOpen(false);
-            }}
-          >
-            <span>{currentSortLabel}</span>
-            <ChevronDown size={14} className={`${styles.chevron} ${isSortOpen ? styles.rotated : ''}`} />
-          </button>
+        <div className={styles.actionDropdownsGroup}>
+          {/* Sort Dropdown */}
+          <div className={styles.customDropdown} ref={sortRef}>
+            <button
+              className={`${styles.dropdownTrigger} ${isSortOpen ? styles.open : ''}`}
+              onClick={handleToggleSort}
+            >
+              <span>{currentSortLabel}</span>
+              <ChevronDown size={14} className={`${styles.chevron} ${isSortOpen ? styles.rotated : ''}`} />
+            </button>
 
-          {isSortOpen && (
-            <div className={styles.dropdownMenu}>
-              {sortOptions.map((opt) => (
-                <div
-                  key={opt.id}
-                  className={`${styles.menuItem} ${sort === opt.id ? styles.selected : ''}`}
-                  onClick={() => {
-                    onSortChange(opt.id);
-                    setIsSortOpen(false);
-                  }}
-                >
-                  <span>{opt.label}</span>
-                  {sort === opt.id && <Check size={14} />}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+            {isSortOpen && (
+              <div className={`${styles.dropdownMenu} ${sortAlign === 'left' ? styles.alignLeft : styles.alignRight}`}>
+                {sortOptions.map((opt) => (
+                  <div
+                    key={opt.id}
+                    className={`${styles.menuItem} ${sort === opt.id ? styles.selected : ''}`}
+                    onClick={() => {
+                      onSortChange(opt.id);
+                      setIsSortOpen(false);
+                    }}
+                  >
+                    <span>{opt.label}</span>
+                    {sort === opt.id && <Check size={14} />}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-        {/* Time Dropdown */}
-        <div className={styles.customDropdown} ref={timeRef}>
-          <button
-            className={`${styles.dropdownTrigger} ${isTimeOpen ? styles.open : ''}`}
-            onClick={() => {
-              setIsTimeOpen(!isTimeOpen);
-              setIsSortOpen(false);
-            }}
-          >
-            <span>{currentTimeLabel}</span>
-            <ChevronDown size={14} className={`${styles.chevron} ${isTimeOpen ? styles.rotated : ''}`} />
-          </button>
+          {/* Time Dropdown */}
+          <div className={styles.customDropdown} ref={timeRef}>
+            <button
+              className={`${styles.dropdownTrigger} ${isTimeOpen ? styles.open : ''}`}
+              onClick={handleToggleTime}
+            >
+              <span>{currentTimeLabel}</span>
+              <ChevronDown size={14} className={`${styles.chevron} ${isTimeOpen ? styles.rotated : ''}`} />
+            </button>
 
-          {isTimeOpen && (
-            <div className={styles.dropdownMenu}>
-              {timeOptions.map((opt) => (
-                <div
-                  key={opt.id}
-                  className={`${styles.menuItem} ${timeFilter === opt.id ? styles.selected : ''}`}
-                  onClick={() => {
-                    setTimeFilter(opt.id);
-                    setIsTimeOpen(false);
-                  }}
-                >
-                  <span>{opt.label}</span>
-                  {timeFilter === opt.id && <Check size={14} />}
-                </div>
-              ))}
-            </div>
-          )}
+            {isTimeOpen && (
+              <div className={`${styles.dropdownMenu} ${timeAlign === 'left' ? styles.alignLeft : styles.alignRight}`}>
+                {timeOptions.map((opt) => (
+                  <div
+                    key={opt.id}
+                    className={`${styles.menuItem} ${timeFilter === opt.id ? styles.selected : ''}`}
+                    onClick={() => {
+                      setTimeFilter(opt.id);
+                      setIsTimeOpen(false);
+                    }}
+                  >
+                    <span>{opt.label}</span>
+                    {timeFilter === opt.id && <Check size={14} />}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

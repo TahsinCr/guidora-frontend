@@ -51,4 +51,14 @@
     background: var(--bg-input);
     color: var(--text-secondary);
   }
+
+  @media (max-width: 640px) {
+    padding: 10px 12px;
+    font-size: 13px;
+    gap: 6px;
+  }
+}
+
+.tabsContainer {
+  -webkit-overflow-scrolling: touch;
 }
