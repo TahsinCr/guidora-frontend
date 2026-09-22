@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Removed the outer circular spinner progress ring completely from `src/components/common/PageLoader.jsx` and `PageLoader.module.scss`.
   - Scaled up the Guidora compass emblem (`58px` / `56px` SVG) with soft vertical bobbing (`compassBob`) and a continuously rotating precision needle (`needleSpin`).
   - Added a 5-dot purple Newton's cradle (`.newtonCradle`) directly beneath the compass, animating high-speed (~0.95s) elastic momentum transfer across left and right ends with shockwave propagation across the inner dots.
+  - Eliminated initial unstyled oversized SVG flash by assigning explicit SVG `width="56"` / `height="56"` attributes, strict CSS dimensional constraints (`!important`), and deferring visibility (`isReady` via `requestAnimationFrame`) until the browser finishes calculating layout and styles.
 
 - **Enterprise Security Hardening & Client Protection Layers**:
   - Integrated `DOMPurify` sanitizer inside `src/components/common/MarkdownRenderer.jsx` to prevent Cross-Site Scripting (XSS) in Markdown release changelogs, descriptions, and user reviews.

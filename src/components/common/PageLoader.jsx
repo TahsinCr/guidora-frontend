@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './PageLoader.module.scss';
 
 /**
@@ -13,7 +13,17 @@ export default function PageLoader({
   subtext,
   className = '',
 }) {
-  const containerClass = `${styles.loaderContainer} ${styles[variant] || ''} ${className}`;
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    // Ensure all styles, layout and DOM measurements are calculated before making visible
+    const timer = requestAnimationFrame(() => {
+      setIsReady(true);
+    });
+    return () => cancelAnimationFrame(timer);
+  }, []);
+
+  const containerClass = `${styles.loaderContainer} ${styles[variant] || ''} ${isReady ? styles.ready : styles.hidden} ${className}`;
 
   return (
     <div className={containerClass} role="status" aria-live="polite">
@@ -25,6 +35,8 @@ export default function PageLoader({
         <div className={styles.compassFloatWrapper}>
           <svg
             className={styles.compassSvg}
+            width="56"
+            height="56"
             viewBox="0 0 42 42"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
