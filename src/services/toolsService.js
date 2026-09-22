@@ -1,9 +1,12 @@
 import { TOOLS_DATA, CATEGORIES, TAG_CATEGORIES, ALL_TAGS } from './mockData';
 import { adminGetCategories, adminGetTagCategories, getDeletedToolIds, getToolOverrides } from './adminService';
 import { sanitizePlainText, sanitizeUrl } from '@/utils/security';
+import { waitDemoDelay } from '@/utils/demoDelay';
 
-// Simulated artificial network latency for realistic async behavior (80ms)
-const simulateDelay = (ms = 80) => new Promise((resolve) => setTimeout(resolve, ms));
+// Simulated artificial network latency for realistic async behavior (with demo delay support)
+const simulateDelay = async (ms = 80) => {
+  await waitDemoDelay(ms);
+};
 
 const CUSTOM_TOOLS_KEY = 'guidora_custom_tools';
 const REVIEWS_KEY_PREFIX = 'guidora_reviews_';
@@ -175,6 +178,61 @@ export async function getToolById(id) {
   }
 
   // Find 2 similar tools
+  const similar = all
+    .filter((t) => t.id !== id)
+    .slice(0, 2)
+    .map((t) => ({
+      id: t.id,
+      name: t.name.replace(/ (AI|Studio|Labs)$/i, ''),
+      category: (t.category || 'AI').split(' ')[0],
+      pricing: (t.pricing || 'Free').split(' ')[0],
+    }));
+
+  return {
+    ...tool,
+    rank: tool.rank || '#4',
+    rating: tool.rating || 4.8,
+    monthlyVisits: tool.monthlyVisits || '1.2M',
+    license: tool.license || 'Proprietary',
+    platformDisplay: tool.platforms ? tool.platforms.slice(0, 2).join(', ') : 'Web, API',
+    access: tool.access || 'Public',
+    updated: tool.updated || 'Recently',
+    creator: tool.creator || {
+      name: `${tool.name.split(' ')[0]} Labs`,
+      initials: tool.name.slice(0, 2).toUpperCase(),
+      verified: true,
+    },
+    similarTools: similar.length >= 2 ? similar : [
+      { id: 'codewizard-ai', name: 'CodeWizard', category: 'Coding', pricing: 'Free' },
+      { id: 'datamind-analytics', name: 'DataMind', category: 'Analytics', pricing: 'Paid' },
+    ],
+    overviewText: tool.overviewText || {
+      lead: `${tool.name} is a high-performance platform designed for modern AI and developer workflows.`,
+      detail: tool.description || `Integrates seamlessly with existing toolchains and pipelines.`,
+    },
+    keyFeatures: tool.keyFeatures || [
+      'High-throughput real-time processing',
+      'Context-aware developer workspace',
+      'Open API and webhook integrations',
+    ],
+    capabilities: tool.capabilities || tool.topics || [
+      'Automation',
+      'API Integration',
+      'Developer Tool',
+    ],
+  };
+}
+
+/**
+ * Fetch a single tool synchronously from active catalog memory.
+ * Eliminates skeleton flashes and layout shift on instant card clicks.
+ */
+export function getToolByIdSync(id) {
+  if (!id) return null;
+  const all = getAllTools();
+  const tool = all.find((t) => t.id === id);
+  if (!tool) return null;
+
   const similar = all
     .filter((t) => t.id !== id)
     .slice(0, 2)

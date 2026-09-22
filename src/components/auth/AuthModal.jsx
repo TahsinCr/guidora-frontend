@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { login, register } from '@/services/authService';
 import { useLanguage } from '@/context/LanguageContext';
+import { getDemoDelayDuration } from '@/utils/demoDelay';
 import PageLoader from '@/components/common/PageLoader';
 import styles from './AuthModal.module.scss';
 
@@ -71,7 +72,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode
         setIsLoading(false);
         setError(err.message || t('auth.loginFailed', 'Login failed. Please check your credentials.'));
       }
-    }, 450);
+    }, getDemoDelayDuration(450));
   };
 
   const handleProceedToProfile = (e) => {
@@ -133,7 +134,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode
         setIsLoading(false);
         setError(err.message || t('auth.registerFailed', 'Registration could not be completed.'));
       }
-    }, 450);
+    }, getDemoDelayDuration(450));
   };
 
   return (
@@ -153,6 +154,21 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode
         >
           <X size={18} />
         </button>
+
+        {/* Modal-scoped loader covering the entire dialog frame */}
+        {isLoading && (
+          <div className={styles.loadingOverlay}>
+            <PageLoader
+              variant="popup"
+              text={
+                mode === 'register'
+                  ? t('auth.creatingAccount', 'Hesap oluşturuluyor...')
+                  : t('auth.signingIn', 'Giriş yapılıyor...')
+              }
+              subtext={t('auth.verifyingCredentials', 'Kimlik bilgileri doğrulanıyor')}
+            />
+          </div>
+        )}
 
         {/* Left Side: Organic Blue-Purple Waves Graphic Art */}
         <div className={styles.artSide}>
@@ -206,20 +222,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode
 
         {/* Right Side: Form Content based on Mode */}
         <div className={styles.formSide}>
-          {isLoading && (
-            <div className={styles.loadingOverlay}>
-              <PageLoader
-                variant="popup"
-                text={
-                  mode === 'register'
-                    ? t('auth.creatingAccount', 'Hesap oluşturuluyor...')
-                    : t('auth.signingIn', 'Giriş yapılıyor...')
-                }
-                subtext={t('auth.verifyingCredentials', 'Kimlik bilgileri doğrulanıyor')}
-              />
-            </div>
-          )}
-
           {error && (
             <div className={styles.errorBanner}>
               <AlertCircle size={16} />

@@ -29,10 +29,13 @@
 
   &.popup {
     width: 100%;
-    min-height: 420px;
-    padding: 40px 20px;
-    background: var(--bg-card, rgba(13, 21, 39, 0.6));
-    border-radius: var(--radius-xl, 20px);
+    height: 100%;
+    flex: 1 1 auto;
+    min-height: 360px;
+    padding: 32px 20px;
+    background: transparent;
+    border-radius: inherit;
+    box-sizing: border-box;
   }
 
   &.inline {

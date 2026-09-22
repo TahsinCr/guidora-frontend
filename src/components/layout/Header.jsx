@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { Plus, Bell, Sun, Moon, ChevronRight, Search } from 'lucide-react';
+import { Plus, Bell, Sun, Moon, ChevronRight, Search, Hourglass } from 'lucide-react';
+import { isDemoDelayActive, toggleDemoDelay } from '@/utils/demoDelay';
 import UserMenu from './UserMenu';
 import LanguageDropdown from './LanguageDropdown';
 import styles from './Header.module.scss';
@@ -22,6 +23,21 @@ export default function Header({
 }) {
   const { theme, toggleTheme } = useTheme();
   const { t, translateCategory } = useLanguage();
+
+  const [demoDelayOn, setDemoDelayOn] = useState(() => isDemoDelayActive());
+
+  useEffect(() => {
+    const handleDelayChange = (e) => {
+      setDemoDelayOn(e.detail);
+    };
+    window.addEventListener('guidora_demo_delay_change', handleDelayChange);
+    return () => window.removeEventListener('guidora_demo_delay_change', handleDelayChange);
+  }, []);
+
+  const handleToggleDemoDelay = () => {
+    const next = toggleDemoDelay();
+    setDemoDelayOn(next);
+  };
 
   return (
     <header className={styles.headerWrapper}>
@@ -71,6 +87,16 @@ export default function Header({
               <LanguageDropdown />
 
               <button
+                type="button"
+                className={`${styles.demoDelayBtn} ${demoDelayOn ? styles.active : ''}`}
+                onClick={handleToggleDemoDelay}
+                title={demoDelayOn ? 'Demo Delay: 10s Active (Click to disable)' : 'Demo Delay: OFF (Click for 10s loader inspection)'}
+              >
+                <Hourglass size={13} className={demoDelayOn ? styles.rotatingIcon : ''} />
+                <span className={styles.demoDelayText}>{demoDelayOn ? '10s Test: ON' : '10s Test: OFF'}</span>
+              </button>
+
+              <button
                 className={styles.iconBtn}
                 onClick={toggleTheme}
                 title={theme === 'dark' ? t('header.switchToLight', 'Switch to Light Mode') : t('header.switchToDark', 'Switch to Dark Mode')}
@@ -109,6 +135,16 @@ export default function Header({
               </button>
 
               <LanguageDropdown />
+
+              <button
+                type="button"
+                className={`${styles.demoDelayBtn} ${demoDelayOn ? styles.active : ''}`}
+                onClick={handleToggleDemoDelay}
+                title={demoDelayOn ? 'Demo Delay: 10s Active (Click to disable)' : 'Demo Delay: OFF (Click for 10s loader inspection)'}
+              >
+                <Hourglass size={13} className={demoDelayOn ? styles.rotatingIcon : ''} />
+                <span className={styles.demoDelayText}>{demoDelayOn ? '10s Test: ON' : '10s Test: OFF'}</span>
+              </button>
 
               <button
                 className={styles.iconBtn}

@@ -81,6 +81,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import ToolStudioForm from '@/components/common/ToolStudioForm';
 import UnifiedTranslationModal from '@/components/common/UnifiedTranslationModal';
 import { sanitizeUrl, sanitizePlainText } from '@/utils/security';
+import { waitDemoDelay } from '@/utils/demoDelay';
 import styles from './AdminDashboardPage.module.scss';
 
 export default function AdminDashboardPage({ onBack, onOpenTool }) {
@@ -212,6 +213,7 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
 
   // Tool Edit Studio Dialog (Modal Dialect via ToolStudioForm)
   const [editingTool, setEditingTool] = useState(null);
+  const [isSavingToolStudio, setIsSavingToolStudio] = useState(false);
 
   // Add User Modal
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
@@ -441,7 +443,9 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
 
   const handleSaveToolStudio = async (payload) => {
     if (!editingTool) return;
+    setIsSavingToolStudio(true);
     try {
+      await waitDemoDelay(300);
       adminUpdateTool(editingTool.id, {
         ...payload,
         website: payload.websiteUrl,
@@ -458,6 +462,8 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
       refreshData();
     } catch (err) {
       alert(err.message || 'Failed to update tool');
+    } finally {
+      setIsSavingToolStudio(false);
     }
   };
 
@@ -3004,6 +3010,7 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
           isModal={true}
           onSave={handleSaveToolStudio}
           onCancel={() => setEditingTool(null)}
+          isSubmitting={isSavingToolStudio}
         />
       )}
 

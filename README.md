@@ -112,24 +112,33 @@ The feed loads tools incrementally via `IntersectionObserver`:
 
 To ensure rapid First Contentful Paint (FCP), smooth scrolling (60 FPS), and low network overhead, the architecture implements several performance layers:
 
-1. **Route-Level Code Splitting & Lazy Modals (`React.lazy` + `Suspense`)**:
-   - Secondary full-page views (`AdminDashboardPage`, `SubmitToolPage`, `UserProfilePage`) and modal overlays (`ToolDialog`, `AuthModal`, `NotificationDrawer`, `AccountSettingsModal`) are split into independent on-demand chunks.
-   - Initial JavaScript payload dropped from ~378 kB to **195 kB** (a **~48% reduction** in initial bundle size).
+1. **Strategic Code Splitting & Synchronous Core Views**:
+   - Secondary full-page views (`AdminDashboardPage`, `SubmitToolPage`, `UserProfilePage`) and tertiary drawers (`NotificationDrawer`, `AccountSettingsModal`) are split into independent on-demand chunks via `React.lazy()`.
+   - Core interactive dialogs (`ToolDialog`, `AuthModal`) are imported directly to eliminate chunk download latency, layout flashes, and suspense flickering.
+   - Synchronous catalog lookup (`getToolByIdSync`) resolves tool detail views in 0ms on click.
 
-2. **Debounced Search & Async Query Processing (`useDebounce`)**:
+2. **React 18 Concurrent Transitions & Top Progress Bar**:
+   - Navigation between views is wrapped in `useTransition` / `startTransition`.
+   - The current view remains rendered and responsive until the target view finishes preparing in the background, accompanied by a sleek top indeterminate gradient indicator (`.navTransitionProgress`).
+
+3. **Flexbox Sticky Footer & Anti-Flash Engine**:
+   - The root `.app-container` and `.main-content` enforce flex column layout with `min-height: calc(100vh - var(--header-height))`.
+   - Permanently locks the footer to the bottom of the viewport across all route transitions, eliminating mid-screen collapsing.
+   - `isInitialLoading` state prevents premature footer rendering during cold starts.
+
+4. **Debounced Search & Async Query Processing (`useDebounce`)**:
    - Text inputs in the search and sorter bars utilize a 250ms debounce buffer (`useDebounce.js`).
    - Prevents UI micro-stutters and redundant filter queries while users type continuously.
 
-3. **Media & Asset Loading Pipeline**:
-   - Images, avatars, and logo assets are delivered with native `loading="lazy"` and `decoding="async"`.
-   - Off-screen media elements do not block main-thread DOM parsing or layout passes.
-
-4. **DOM Containment & Virtualization (`content-visibility: auto`)**:
+5. **DOM Containment & Virtualization (`content-visibility: auto`)**:
    - Product catalog cards (`.card`) declare `content-visibility: auto` paired with `contain-intrinsic-size: auto 240px`.
    - The browser skips layout, styling, and paint calculations for cards outside the viewport, maintaining consistent 60 FPS scrolling even with deep infinite feeds.
 
-5. **Vendor Chunk Isolation**:
+6. **Vendor Chunk Isolation**:
    - Heavy 3rd-party libraries (`react`, `react-dom`, `lucide-react`, `marked`, `dompurify`) are partitioned into dedicated vendor chunks in `vite.config.js`, maximizing long-term browser cache retention.
+
+7. **Temporary QA Demo Delay Tool (`Header.jsx`, `demoDelay.js`)**:
+   - A dedicated navbar toggle (`10s Test: ON/OFF`) allows testing and observing the branded animated loader and modal dialog loaders by injecting an artificial 10-second sleep into async services.
 
 ### Security Architecture & Hardening
 

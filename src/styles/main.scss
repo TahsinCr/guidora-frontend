@@ -12,13 +12,16 @@ html {
   @include layout.position(relative, left, top);
   @include layout.width(fill);
   min-height: 100vh;
-  @include layout.flex(column, stretch, top, 0px);
+  display: flex;
+  flex-direction: column;
 }
 
 .main-content {
   @include layout.width(fill);
   @include layout.flex(column, stretch, top, 20px);
   padding: 16px 48px 80px 48px;
+  flex: 1 0 auto;
+  min-height: calc(100vh - var(--header-height, 72px));
 
   @media (max-width: 1200px) {
     padding: 16px 32px 60px 32px;
@@ -55,3 +58,32 @@ html {
     background: var(--text-muted);
   }
 }
+
+// Top Transition Progress Line for React 18 Concurrent Transitions
+.navTransitionProgress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #8a38f5 0%, #4c82fb 50%, #ec4899 100%);
+  z-index: 999999;
+  background-size: 200% 100%;
+  animation: navProgressGlow 1.2s ease-in-out infinite;
+}
+
+@keyframes navProgressGlow {
+  0% {
+    background-position: 0% 50%;
+    opacity: 0.8;
+  }
+  50% {
+    background-position: 100% 50%;
+    opacity: 1;
+  }
+  100% {
+    background-position: 0% 50%;
+    opacity: 0.8;
+  }
+}
+

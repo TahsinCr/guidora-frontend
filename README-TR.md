@@ -112,24 +112,33 @@ Akış, `IntersectionObserver` ile parça parça yüklenir:
 
 Hızlı İlk İçerikli Boyama (FCP), akıcı kaydırma (60 FPS) ve düşük ağ tüketimi sağlamak amacıyla mimari seviyesinde şu optimizasyonlar uygulanmıştır:
 
-1. **Sayfa ve Modal Seviyesinde Kod Bölümleme (`React.lazy` + `Suspense`)**:
-   - İkincil tam sayfa görünümleri (`AdminDashboardPage`, `SubmitToolPage`, `UserProfilePage`) ve modal bileşenleri (`ToolDialog`, `AuthModal`, `NotificationDrawer`, `AccountSettingsModal`) talep anında yüklenen dinamik parçalara ayrılmıştır.
-   - İlk sayfa JavaScript bundle boyutu ~378 kB'tan **195 kB** seviyesine indirilerek **~%48 hafifleme** elde edilmiştir.
+1. **Stratejik Kod Bölümleme & Senkron Çekirdek Bileşenler**:
+   - İkincil tam sayfa görünümleri (`AdminDashboardPage`, `SubmitToolPage`, `UserProfilePage`) ve çekmeceler (`NotificationDrawer`, `AccountSettingsModal`) `React.lazy()` ile dinamik parçalara ayrılmıştır.
+   - Sık kullanılan temel diyaloglar (`ToolDialog`, `AuthModal`) ise bekleme süresini ve görsel sıçramaları sıfıra indirmek adına doğrudan senkron import edilmiştir.
+   - Senkron katalog çözümleme (`getToolByIdSync`) sayesinde kart tıklandığı anda 0ms içinde detay açılır.
 
-2. **Gecikmeli Arama & Asenkron Sorgu Yönetimi (`useDebounce`)**:
+2. **React 18 Eşzamanlı Geçişler (Concurrent Transitions) & Üst İlerleme Çubuğu**:
+   - Görünüm geçişleri `useTransition` / `startTransition` ile yürütülür.
+   - Sonraki ekran arka planda hazırlanırken mevcut sayfa ekranda kalır; üstte parıldayan bir gradyan çubuğu (`.navTransitionProgress`) kullanıcıya geçiş hissi sunar.
+
+3. **Flexbox Kalıcı Tabanlı Footer & Anti-Flash Motoru**:
+   - `.app-container` ve `.main-content` üzerinde esnek dikey düzen (`min-height: calc(100vh - var(--header-height))`) uygulanmıştır.
+   - Sayfa geçişlerinde veya boş ekranlarda footer'ın ekran ortasına zıplaması tamamen engellenmiştir; footer kalıcı olarak tabana sabitlenir.
+   - `isInitialLoading` durumu ile ilk açılışta footer parlaması önlenir.
+
+4. **Gecikmeli Arama & Asenkron Sorgu Yönetimi (`useDebounce`)**:
    - Arama ve sıralama çubuğundaki metin girdileri için 250ms gecikmeli tampon (`useDebounce.js`) uygulanmıştır.
-   - Kullanıcı klavyede yazarken gereksiz arka arkaya filtreleme tetiklenmez, ana işlem parçacığı (main thread) kilitlenmez.
+   - Kullanıcı klavyede yazarken gereksiz arka arkaya filtreleme tetiklenmez, ana işlem parçacığı kilitlenmez.
 
-3. **Medya ve Görsel Yükleme Hattı**:
-   - Kartlardaki ikonlar, avatarlar ve logolar tarayıcı düzeyinde `loading="lazy"` ve `decoding="async"` özellikleri ile çağrılır.
-   - Ekran dışındaki medya öğeleri DOM ayrıştırmasını ve sayfa yerleşimini geciktirmez.
-
-4. **DOM Kapsama & Sanallaştırma (`content-visibility: auto`)**:
+5. **DOM Kapsama & Sanallaştırma (`content-visibility: auto`)**:
    - Ürün kataloğu kartları (`.card`) CSS `content-visibility: auto` ve `contain-intrinsic-size: auto 240px` kuralları ile donatılmıştır.
    - Görünür alanın dışındaki kartlar için tarayıcı boyama ve düzen hesaplamalarını atlar; yüzlerce kart yüklense bile akıcı 60 FPS kaydırma korunur.
 
-5. **Satıcı (Vendor) Parça Ayrıştırması**:
+6. **Satıcı (Vendor) Parça Ayrıştırması**:
    - Ağır harici kütüphaneler (`react`, `react-dom`, `lucide-react`, `marked`, `dompurify`) `vite.config.js` içinde bağımsız vendor chunk'larına ayrılmış, uzun süreli tarayıcı önbelleklemesi (HTTP cache) maksimize edilmiştir.
+
+7. **Geçici QA & Demo Gecikme Aracı (`Header.jsx`, `demoDelay.js`)**:
+   - Header çubuğuna eklenen `10s Test: ON/OFF` butonu ile asenkron servislere yapay 10 saniyelik gecikme eklenerek animasyonlu loader'ların ve diyalog içi yükleyicilerin rahatça test edilmesi sağlanır.
 
 ### Güvenlik Mimarisi ve Koruma Katmanları
 

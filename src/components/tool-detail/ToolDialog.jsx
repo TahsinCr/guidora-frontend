@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { getToolById } from '@/services/toolsService';
+import { getToolById, getToolByIdSync } from '@/services/toolsService';
+import PageLoader from '@/components/common/PageLoader';
+import { isDemoDelayActive } from '@/utils/demoDelay';
 import ProductPreviewHeader from './ProductPreviewHeader';
 import StatusCardGroup from './StatusCardGroup';
 import Tabs from './Tabs';
@@ -11,17 +13,20 @@ import styles from './ToolDialog.module.scss';
 
 export default function ToolDialog({ toolId, onClose, onSelectTool, onToolLoaded }) {
   const { t } = useLanguage();
-  const [tool, setTool] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const initialTool = getToolByIdSync(toolId);
+  const [tool, setTool] = useState(initialTool);
+  const [isLoading, setIsLoading] = useState(() => isDemoDelayActive() || !initialTool);
   const [activeTab, setActiveTab] = useState('about');
   const [reviewCount, setReviewCount] = useState(null);
 
-  // Fetch tool details asynchronously
+  // Fetch or refresh tool details asynchronously (honors demo delay)
   useEffect(() => {
     if (!toolId) return;
 
     let isMounted = true;
-    setIsLoading(true);
+    if (isDemoDelayActive() || !tool) {
+      setIsLoading(true);
+    }
 
     getToolById(toolId)
       .then((data) => {
@@ -69,9 +74,12 @@ export default function ToolDialog({ toolId, onClose, onSelectTool, onToolLoaded
       </div>
 
       {isLoading || !tool ? (
-        <div className={styles.loadingSkeleton}>
-          <div className={styles.skeletonHead} />
-          <div className={styles.skeletonRow} />
+        <div style={{ minHeight: '65vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <PageLoader
+            variant="page"
+            text={t('tool.loadingDetails', 'Araç detayları hazırlanıyor...')}
+            subtext={t('tool.loadingSubtext', 'Metrikler ve dokümantasyon getiriliyor')}
+          />
         </div>
       ) : (
         <div className={styles.contentBody}>

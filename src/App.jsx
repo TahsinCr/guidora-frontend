@@ -1,24 +1,25 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useTransition, lazy, Suspense } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import InformationCard from '@/components/home/InformationCard';
 import ProductGrid from '@/components/home/ProductGrid';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import PageLoader from '@/components/common/PageLoader';
+import ToolDialog from '@/components/tool-detail/ToolDialog';
+import AuthModal from '@/components/auth/AuthModal';
 import { useDebounce } from '@/hooks/useDebounce';
 import { getTools, getCategories } from '@/services/toolsService';
 import { getCurrentUser } from '@/services/userService';
 
-// Lazy-loaded heavy views and secondary modals (Code Splitting)
-const ToolDialog = lazy(() => import('@/components/tool-detail/ToolDialog'));
+// Lazy-loaded heavy views and secondary drawers (Code Splitting)
 const SubmitToolPage = lazy(() => import('@/components/submit/SubmitToolPage'));
 const UserProfilePage = lazy(() => import('@/components/profile/UserProfilePage'));
 const AdminDashboardPage = lazy(() => import('@/components/admin/AdminDashboardPage'));
-const AuthModal = lazy(() => import('@/components/auth/AuthModal'));
 const NotificationDrawer = lazy(() => import('@/components/notifications/NotificationDrawer'));
 const AccountSettingsModal = lazy(() => import('@/components/settings/AccountSettingsModal'));
 
 export default function App() {
+  const [isNavigating, startTransition] = useTransition();
   const [categories, setCategories] = useState([]);
   
   // Read initial filter values from URL params
@@ -261,50 +262,58 @@ export default function App() {
       const tool = params.get('tool');
       const view = params.get('view');
       const user = params.get('user');
-      setActiveToolId(tool || null);
-      setIsSubmitView(view === 'submit');
-      setIsProfileView(view === 'profile' || Boolean(user));
-      setIsAdminView(view === 'admin');
-      setProfileUserId(user || null);
-      if (!tool) setActiveToolData(null);
+      startTransition(() => {
+        setActiveToolId(tool || null);
+        setIsSubmitView(view === 'submit');
+        setIsProfileView(view === 'profile' || Boolean(user));
+        setIsAdminView(view === 'admin');
+        setProfileUserId(user || null);
+        if (!tool) setActiveToolData(null);
+      });
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [startTransition]);
 
   const handleOpenTool = useCallback((toolId) => {
-    setIsSubmitView(false);
-    setIsProfileView(false);
-    setIsAdminView(false);
-    setActiveToolId(toolId);
+    startTransition(() => {
+      setIsSubmitView(false);
+      setIsProfileView(false);
+      setIsAdminView(false);
+      setActiveToolId(toolId);
+    });
     const url = new URL(window.location.href);
     url.searchParams.delete('view');
     url.searchParams.delete('user');
     url.searchParams.set('tool', toolId);
     window.history.pushState({ toolId }, '', url.toString());
-  }, []);
+  }, [startTransition]);
 
   const handleOpenSubmit = useCallback(() => {
-    setActiveToolId(null);
-    setActiveToolData(null);
-    setIsProfileView(false);
-    setIsAdminView(false);
-    setIsSubmitView(true);
+    startTransition(() => {
+      setActiveToolId(null);
+      setActiveToolData(null);
+      setIsProfileView(false);
+      setIsAdminView(false);
+      setIsSubmitView(true);
+    });
     const url = new URL(window.location.href);
     url.searchParams.delete('tool');
     url.searchParams.delete('user');
     url.searchParams.set('view', 'submit');
     window.history.pushState({ view: 'submit' }, '', url.toString());
-  }, []);
+  }, [startTransition]);
 
   const handleOpenProfile = useCallback((userId) => {
-    setActiveToolId(null);
-    setActiveToolData(null);
-    setIsSubmitView(false);
-    setIsAdminView(false);
-    setIsProfileView(true);
-    setProfileUserId(userId || null);
+    startTransition(() => {
+      setActiveToolId(null);
+      setActiveToolData(null);
+      setIsSubmitView(false);
+      setIsAdminView(false);
+      setIsProfileView(true);
+      setProfileUserId(userId || null);
+    });
     const url = new URL(window.location.href);
     url.searchParams.delete('tool');
     if (userId) {
@@ -315,39 +324,45 @@ export default function App() {
       url.searchParams.delete('user');
     }
     window.history.pushState({ view: 'profile', user: userId }, '', url.toString());
-  }, []);
+  }, [startTransition]);
 
   const handleOpenAdmin = useCallback(() => {
-    setActiveToolId(null);
-    setActiveToolData(null);
-    setIsSubmitView(false);
-    setIsProfileView(false);
-    setIsAdminView(true);
+    startTransition(() => {
+      setActiveToolId(null);
+      setActiveToolData(null);
+      setIsSubmitView(false);
+      setIsProfileView(false);
+      setIsAdminView(true);
+    });
     const url = new URL(window.location.href);
     url.searchParams.delete('tool');
     url.searchParams.delete('user');
     url.searchParams.set('view', 'admin');
     window.history.pushState({ view: 'admin' }, '', url.toString());
-  }, []);
+  }, [startTransition]);
 
   const handleCloseTool = useCallback(() => {
-    setActiveToolId(null);
-    setActiveToolData(null);
-    setIsSubmitView(false);
-    setIsProfileView(false);
-    setIsAdminView(false);
+    startTransition(() => {
+      setActiveToolId(null);
+      setActiveToolData(null);
+      setIsSubmitView(false);
+      setIsProfileView(false);
+      setIsAdminView(false);
+    });
     const url = new URL(window.location.href);
     url.searchParams.delete('tool');
     url.searchParams.delete('view');
     url.searchParams.delete('user');
     window.history.pushState({}, '', url.toString());
-  }, []);
+  }, [startTransition]);
 
   const handleResetFilters = useCallback(() => {
-    setActiveToolId(null);
-    setActiveToolData(null);
-    setIsSubmitView(false);
-    setIsProfileView(false);
+    startTransition(() => {
+      setActiveToolId(null);
+      setActiveToolData(null);
+      setIsSubmitView(false);
+      setIsProfileView(false);
+    });
     const url = new URL(window.location.href);
     url.searchParams.delete('tool');
     url.searchParams.delete('view');
@@ -420,6 +435,9 @@ export default function App() {
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onUserChange={(updatedUser) => setCurrentUser(updatedUser)}
       />
+
+      {/* Top indeterminate transition indicator for React concurrent route updates */}
+      {isNavigating && <div className="navTransitionProgress" />}
 
       <main className="main-content">
         <Suspense fallback={<PageLoader />}>
@@ -501,36 +519,16 @@ export default function App() {
       {!isInitialLoading && <Footer />}
 
       {/* Auth Modal (Login / Register / Welcome) */}
-      <Suspense
-        fallback={
-          isAuthModalOpen ? (
-            <div style={{
-              position: 'fixed',
-              inset: 0,
-              background: 'rgba(3, 7, 18, 0.82)',
-              backdropFilter: 'blur(12px)',
-              zIndex: 1050,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '20px'
-            }}>
-              <PageLoader variant="popup" text="Giriş modülü hazırlanıyor..." />
-            </div>
-          ) : null
-        }
-      >
-        {isAuthModalOpen && (
-          <AuthModal
-            isOpen={isAuthModalOpen}
-            onClose={() => setIsAuthModalOpen(false)}
-            initialMode={authModalMode}
-            onLoginSuccess={(user) => {
-              setCurrentUser(user);
-            }}
-          />
-        )}
-      </Suspense>
+      {isAuthModalOpen && (
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onLoginSuccess={(user) => {
+            setCurrentUser(user);
+          }}
+        />
+      )}
 
       {/* Notifications Drawer */}
       <Suspense fallback={null}>
