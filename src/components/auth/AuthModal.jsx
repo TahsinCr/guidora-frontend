@@ -13,7 +13,6 @@ import {
 import { login, register } from '@/services/authService';
 import { useLanguage } from '@/context/LanguageContext';
 import { getDemoDelayDuration } from '@/utils/demoDelay';
-import PageLoader from '@/components/common/PageLoader';
 import styles from './AuthModal.module.scss';
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = 'welcome' }) {
@@ -154,21 +153,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode
         >
           <X size={18} />
         </button>
-
-        {/* Modal-scoped loader covering the entire dialog frame */}
-        {isLoading && (
-          <div className={styles.loadingOverlay}>
-            <PageLoader
-              variant="popup"
-              text={
-                mode === 'register'
-                  ? t('auth.creatingAccount', 'Hesap oluşturuluyor...')
-                  : t('auth.signingIn', 'Giriş yapılıyor...')
-              }
-              subtext={t('auth.verifyingCredentials', 'Kimlik bilgileri doğrulanıyor')}
-            />
-          </div>
-        )}
 
         {/* Left Side: Organic Blue-Purple Waves Graphic Art */}
         <div className={styles.artSide}>

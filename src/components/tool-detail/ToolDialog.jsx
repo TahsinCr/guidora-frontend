@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { getToolById, getToolByIdSync } from '@/services/toolsService';
-import PageLoader from '@/components/common/PageLoader';
-import { isDemoDelayActive } from '@/utils/demoDelay';
 import ProductPreviewHeader from './ProductPreviewHeader';
 import StatusCardGroup from './StatusCardGroup';
 import Tabs from './Tabs';
@@ -15,30 +13,23 @@ export default function ToolDialog({ toolId, onClose, onSelectTool, onToolLoaded
   const { t } = useLanguage();
   const initialTool = getToolByIdSync(toolId);
   const [tool, setTool] = useState(initialTool);
-  const [isLoading, setIsLoading] = useState(() => isDemoDelayActive() || !initialTool);
   const [activeTab, setActiveTab] = useState('about');
   const [reviewCount, setReviewCount] = useState(null);
 
-  // Fetch or refresh tool details asynchronously (honors demo delay)
+  // Fetch or refresh tool details asynchronously
   useEffect(() => {
     if (!toolId) return;
 
     let isMounted = true;
-    if (isDemoDelayActive() || !tool) {
-      setIsLoading(true);
-    }
-
     getToolById(toolId)
       .then((data) => {
         if (isMounted) {
           setTool(data);
           if (onToolLoaded) onToolLoaded(data);
-          setIsLoading(false);
         }
       })
       .catch((err) => {
         console.error('Failed to load tool detail:', err);
-        if (isMounted) setIsLoading(false);
       });
 
     return () => {
@@ -62,7 +53,7 @@ export default function ToolDialog({ toolId, onClose, onSelectTool, onToolLoaded
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [toolId]);
 
-  if (!toolId) return null;
+  if (!toolId || !tool) return null;
 
   return (
     <section className={styles.toolDetailSection} aria-label="Tool Detail">
@@ -73,16 +64,7 @@ export default function ToolDialog({ toolId, onClose, onSelectTool, onToolLoaded
         </button>
       </div>
 
-      {isLoading || !tool ? (
-        <div style={{ minHeight: '65vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <PageLoader
-            variant="page"
-            text={t('tool.loadingDetails', 'Araç detayları hazırlanıyor...')}
-            subtext={t('tool.loadingSubtext', 'Metrikler ve dokümantasyon getiriliyor')}
-          />
-        </div>
-      ) : (
-        <div className={styles.contentBody}>
+      <div className={styles.contentBody}>
           <div className={styles.leftColumn}>
             <ProductPreviewHeader tool={tool} />
             <Tabs
@@ -107,7 +89,6 @@ export default function ToolDialog({ toolId, onClose, onSelectTool, onToolLoaded
             />
           </div>
         </div>
-      )}
-    </section>
+      </section>
   );
 }

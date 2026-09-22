@@ -20,6 +20,7 @@ export default function Header({
   onOpenAuth,
   onOpenSettings,
   onUserChange,
+  isNavigating,
 }) {
   const { theme, toggleTheme } = useTheme();
   const { t, translateCategory } = useLanguage();
@@ -176,6 +177,9 @@ export default function Header({
           )}
         </div>
       </div>
+
+      {/* Dynamic Route & Dialog Loading Progress Bar right along the Navbar bottom edge */}
+      {isNavigating && <div className={styles.navProgressBar} />}
     </header>
   );
 }

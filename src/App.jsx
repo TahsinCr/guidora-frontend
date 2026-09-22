@@ -5,16 +5,16 @@ import InformationCard from '@/components/home/InformationCard';
 import ProductGrid from '@/components/home/ProductGrid';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import PageLoader from '@/components/common/PageLoader';
-import ToolDialog from '@/components/tool-detail/ToolDialog';
-import AuthModal from '@/components/auth/AuthModal';
 import { useDebounce } from '@/hooks/useDebounce';
 import { getTools, getCategories } from '@/services/toolsService';
 import { getCurrentUser } from '@/services/userService';
 
-// Lazy-loaded heavy views and secondary drawers (Code Splitting)
+// Lazy-loaded heavy views and secondary modals (Code Splitting)
+const ToolDialog = lazy(() => import('@/components/tool-detail/ToolDialog'));
 const SubmitToolPage = lazy(() => import('@/components/submit/SubmitToolPage'));
 const UserProfilePage = lazy(() => import('@/components/profile/UserProfilePage'));
 const AdminDashboardPage = lazy(() => import('@/components/admin/AdminDashboardPage'));
+const AuthModal = lazy(() => import('@/components/auth/AuthModal'));
 const NotificationDrawer = lazy(() => import('@/components/notifications/NotificationDrawer'));
 const AccountSettingsModal = lazy(() => import('@/components/settings/AccountSettingsModal'));
 
@@ -413,6 +413,25 @@ export default function App() {
     }
   }, [selectedCategory, selectedCategories, selectedTags, selectedOrganizations, search, sort, filterVerified, verification, handleOpenTool, handleCloseTool]);
 
+  const handleOpenAuth = useCallback((mode = 'welcome') => {
+    startTransition(() => {
+      setAuthModalMode(mode);
+      setIsAuthModalOpen(true);
+    });
+  }, [startTransition]);
+
+  const handleOpenNotifications = useCallback(() => {
+    startTransition(() => {
+      setIsNotifDrawerOpen(true);
+    });
+  }, [startTransition]);
+
+  const handleOpenSettings = useCallback(() => {
+    startTransition(() => {
+      setIsSettingsModalOpen(true);
+    });
+  }, [startTransition]);
+
   return (
     <div className="app-container">
       <Header
@@ -427,20 +446,18 @@ export default function App() {
         onSubmitTool={handleOpenSubmit}
         onOpenProfile={handleOpenProfile}
         onOpenAdmin={handleOpenAdmin}
-        onOpenNotifications={() => setIsNotifDrawerOpen(true)}
-        onOpenAuth={(mode = 'welcome') => {
-          setAuthModalMode(mode);
-          setIsAuthModalOpen(true);
-        }}
-        onOpenSettings={() => setIsSettingsModalOpen(true)}
+        onOpenNotifications={handleOpenNotifications}
+        onOpenAuth={handleOpenAuth}
+        onOpenSettings={handleOpenSettings}
         onUserChange={(updatedUser) => setCurrentUser(updatedUser)}
+        isNavigating={isNavigating}
       />
 
       {/* Top indeterminate transition indicator for React concurrent route updates */}
       {isNavigating && <div className="navTransitionProgress" />}
 
       <main className="main-content">
-        <Suspense fallback={<PageLoader />}>
+        <Suspense fallback={null}>
           {isAdminView ? (
             <AdminDashboardPage
               onBack={handleCloseTool}
@@ -519,16 +536,18 @@ export default function App() {
       {!isInitialLoading && <Footer />}
 
       {/* Auth Modal (Login / Register / Welcome) */}
-      {isAuthModalOpen && (
-        <AuthModal
-          isOpen={isAuthModalOpen}
-          onClose={() => setIsAuthModalOpen(false)}
-          initialMode={authModalMode}
-          onLoginSuccess={(user) => {
-            setCurrentUser(user);
-          }}
-        />
-      )}
+      <Suspense fallback={null}>
+        {isAuthModalOpen && (
+          <AuthModal
+            isOpen={isAuthModalOpen}
+            onClose={() => setIsAuthModalOpen(false)}
+            initialMode={authModalMode}
+            onLoginSuccess={(user) => {
+              setCurrentUser(user);
+            }}
+          />
+        )}
+      </Suspense>
 
       {/* Notifications Drawer */}
       <Suspense fallback={null}>

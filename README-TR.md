@@ -112,19 +112,21 @@ Akış, `IntersectionObserver` ile parça parça yüklenir:
 
 Hızlı İlk İçerikli Boyama (FCP), akıcı kaydırma (60 FPS) ve düşük ağ tüketimi sağlamak amacıyla mimari seviyesinde şu optimizasyonlar uygulanmıştır:
 
-1. **Stratejik Kod Bölümleme & Senkron Çekirdek Bileşenler**:
-   - İkincil tam sayfa görünümleri (`AdminDashboardPage`, `SubmitToolPage`, `UserProfilePage`) ve çekmeceler (`NotificationDrawer`, `AccountSettingsModal`) `React.lazy()` ile dinamik parçalara ayrılmıştır.
-   - Sık kullanılan temel diyaloglar (`ToolDialog`, `AuthModal`) ise bekleme süresini ve görsel sıçramaları sıfıra indirmek adına doğrudan senkron import edilmiştir.
-   - Senkron katalog çözümleme (`getToolByIdSync`) sayesinde kart tıklandığı anda 0ms içinde detay açılır.
+1. **Evrensel Rota ve Modal Kod Bölümleme (`React.lazy`)**:
+   - Tüm ikincil tam sayfa görünümleri (`AdminDashboardPage`, `SubmitToolPage`, `UserProfilePage`) ve modal bileşenleri (`ToolDialog`, `AuthModal`, `NotificationDrawer`, `AccountSettingsModal`) talep anında yüklenen dinamik parçalara ayrılmıştır.
+   - İlk sayfa JavaScript bundle boyutu **~201 kB** seviyesinde tutulmuş, açılış yükü en aza indirilmiştir.
 
-2. **React 18 Eşzamanlı Geçişler (Concurrent Transitions) & Üst İlerleme Çubuğu**:
-   - Görünüm geçişleri `useTransition` / `startTransition` ile yürütülür.
-   - Sonraki ekran arka planda hazırlanırken mevcut sayfa ekranda kalır; üstte parıldayan bir gradyan çubuğu (`.navTransitionProgress`) kullanıcıya geçiş hissi sunar.
+2. **React 18 Eşzamanlı Geçişler (Concurrent Transitions) & Navbar İlerleme Çubuğu**:
+   - Görünüm ve diyalog geçişleri `useTransition` / `startTransition` ile yürütülür.
+   - Arka planda lazy chunk indirilirken mevcut sayfa kullanıcı önünde tamamen görünür ve etkileşime açık kalır.
+   - Navbar'ın hemen alt kenarında parıldayan gradyan bir hat (`.navProgressBar`) geçiş süresince kullanıcıya bilgi verir.
+   - Yeni ekran hazır olduğu anda tak diye açılır; eski ekran bellek tasarrufu amacıyla kapatılır (unmount edilir).
 
-3. **Flexbox Kalıcı Tabanlı Footer & Anti-Flash Motoru**:
-   - `.app-container` ve `.main-content` üzerinde esnek dikey düzen (`min-height: calc(100vh - var(--header-height))`) uygulanmıştır.
-   - Sayfa geçişlerinde veya boş ekranlarda footer'ın ekran ortasına zıplaması tamamen engellenmiştir; footer kalıcı olarak tabana sabitlenir.
-   - `isInitialLoading` durumu ile ilk açılışta footer parlaması önlenir.
+3. **Tek Bir Kez PageLoader Kuralı & Anti-Flash Mimarisi**:
+   - İnovatif `PageLoader` ekranı **yalnızca tarayıcının ilk gerçek açılışında / hard reload esnasında** (`isInitialLoading`) bir defaya mahsus gösterilir.
+   - Dinamik sayfalardan ve modallardan `PageLoader` tamamen kaldırılmıştır.
+   - `<Suspense fallback={null}>` sayesinde dinamik geçişlerde hiçbir görsel sıçrama veya boş ekran oluşmaz.
+   - Flexbox kalıcı tabanlı footer mimarisi (`.main-content { flex: 1 0 auto; min-height: calc(100vh - var(--header-height)); }`) ile footer daima ekranın en altına kilitlenir.
 
 4. **Gecikmeli Arama & Asenkron Sorgu Yönetimi (`useDebounce`)**:
    - Arama ve sıralama çubuğundaki metin girdileri için 250ms gecikmeli tampon (`useDebounce.js`) uygulanmıştır.
@@ -138,7 +140,7 @@ Hızlı İlk İçerikli Boyama (FCP), akıcı kaydırma (60 FPS) ve düşük ağ
    - Ağır harici kütüphaneler (`react`, `react-dom`, `lucide-react`, `marked`, `dompurify`) `vite.config.js` içinde bağımsız vendor chunk'larına ayrılmış, uzun süreli tarayıcı önbelleklemesi (HTTP cache) maksimize edilmiştir.
 
 7. **Geçici QA & Demo Gecikme Aracı (`Header.jsx`, `demoDelay.js`)**:
-   - Header çubuğuna eklenen `10s Test: ON/OFF` butonu ile asenkron servislere yapay 10 saniyelik gecikme eklenerek animasyonlu loader'ların ve diyalog içi yükleyicilerin rahatça test edilmesi sağlanır.
+   - Header çubuğuna eklenen `10s Test: ON/OFF` butonu ile asenkron katalog çekme servisine yapay 10 saniyelik gecikme eklenerek ilk açılış yükleyicisinin rahatça incelenmesi sağlanır.
 
 ### Güvenlik Mimarisi ve Koruma Katmanları
 

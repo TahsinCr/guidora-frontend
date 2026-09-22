@@ -8,26 +8,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- **Temporary 10s Demo Delay Navbar Toggle Button (`src/utils/demoDelay.js`, `Header.jsx`)**:
-  - Added a dedicated QA / demo inspection button in the Header toolbar (`10s Test: ON/OFF`) with an animated hourglass icon and pulsing amber badge.
-  - Injects a 10-second artificial delay into all catalog loading, modal submission, and tool editing workflows so developers and users can easily evaluate the branded loading experience.
-  - Documented as temporary demo tooling in `MEMORY.md`.
-- **Concurrent View Transitions & Top Gradient Progress Bar (`App.jsx`, `main.scss`)**:
-  - Integrated React 18 `useTransition` / `startTransition` across all navigation handlers (`handleOpenTool`, `handleOpenSubmit`, `handleOpenProfile`, `handleOpenAdmin`, `handleCloseTool`, and browser history `popstate`).
-  - Added `.navTransitionProgress` top indeterminate gradient progress bar during background route changes, keeping previous view visible until the target screen is ready.
-- **Synchronous Tool Resolution (`toolsService.getToolByIdSync`)**:
-  - Added `getToolByIdSync(id)` for immediate 0ms in-memory catalog resolution on tool card clicks, eliminating skeleton flashes and layout shift.
+- **Universal Lazy Loading & Concurrent Background Transitions**:
+  - Restored `React.lazy()` code-splitting across all secondary views and dialogs (`ToolDialog`, `AuthModal`, `SubmitToolPage`, `UserProfilePage`, `AdminDashboardPage`, `NotificationDrawer`, `AccountSettingsModal`), keeping the main entry bundle at ~201 kB.
+  - Positioned `.navProgressBar` along the bottom boundary of the Header navbar, running a glowing gradient animation while lazy chunks load in the background.
+  - Wrapped modal openers (`handleOpenAuth`, `handleOpenNotifications`, `handleOpenSettings`) and route switches in React 18 `startTransition`, ensuring the active screen remains fully visible and responsive until the new screen is completely downloaded and ready to mount instantaneously.
 
 ### Changed & Fixed
 
-- **Direct ToolDialog & AuthModal Imports (Anti-Chunk Flash)**:
-  - Replaced `React.lazy()` with direct synchronous imports for `ToolDialog` and `AuthModal`, eliminating chunk download delay and unmounting flickers.
+- **Single Real Page Load PageLoader Policy**:
+  - Restricted `PageLoader` strictly to the real initial page load / hard reload (`isInitialLoading`), ensuring it renders only once on entry.
+  - Completely removed `PageLoader` from all dynamic sub-pages and dialogs (`ToolDialog.jsx`, `AuthModal.jsx`, `ToolStudioForm.jsx`), replacing them with instant transitions, button states, and seamless loading indicators.
+  - Configured `<Suspense fallback={null}>` across main content and modal containers to eliminate intermediate loading flashes.
 - **Permanent Footer Anchoring (Zero Center-Screen Collapse)**:
   - Applied flexbox sticky footer architecture in `src/styles/main.scss` (`.app-container { min-height: 100vh; display: flex; flex-direction: column; }` and `.main-content { flex: 1 0 auto; min-height: calc(100vh - var(--header-height, 72px)); }`).
   - Permanently anchors the footer to the bottom of the viewport across all page states, preventing the footer from collapsing to the screen center.
-- **Scoped Modal Loader Alignment (`AuthModal.jsx`, `AuthModal.module.scss`, `PageLoader.module.scss`)**:
-  - Positioned `.loadingOverlay` as a direct child of `.authContainer` with `z-index: 50` and `border-radius: inherit`, scaling and covering the modal dialog frame cleanly without looking like a floating card-within-a-card.
-  - Refactored `PageLoader`'s `popup` variant to fill its container transparently and inherit dialog borders.
 
 - **Branded Animated PageLoader & Scoped Popup Loading Engine**:
   - Designed and implemented a custom branded animated loader (`src/components/common/PageLoader.jsx` & `PageLoader.module.scss`) featuring Guidora's gradient compass emblem, an orbiting particle along a dashed orbit ring, a pulsing radial aura glow, a rotating compass needle, and animated shimmer dots.

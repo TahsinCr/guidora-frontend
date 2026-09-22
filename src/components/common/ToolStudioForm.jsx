@@ -25,7 +25,6 @@ import {
 } from 'lucide-react';
 import MarkdownRenderer from '@/components/common/MarkdownRenderer';
 import TagPicker from '@/components/submit/TagPicker';
-import PageLoader from '@/components/common/PageLoader';
 import { fetchGithubRepoData } from '@/services/toolsService';
 import { CATEGORIES, TAG_CATEGORIES } from '@/services/mockData';
 import { getOrganizations } from '@/services/userService';
@@ -984,13 +983,7 @@ export default function ToolStudioForm({
             )}
           </header>
 
-          {isSubmitting ? (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '380px' }}>
-              <PageLoader variant="popup" text={t('submit.saving', 'Katalog güncelleniyor ve veriler işleniyor...')} />
-            </div>
-          ) : (
-            formContent
-          )}
+          {formContent}
         </div>
       </div>
     );
@@ -1036,13 +1029,7 @@ export default function ToolStudioForm({
           </div>
         </header>
 
-        {isSubmitting ? (
-          <div style={{ padding: '60px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <PageLoader variant="page" text={t('submit.saving', 'Katalog güncelleniyor ve veriler işleniyor...')} />
-          </div>
-        ) : (
-          formContent
-        )}
+        {formContent}
       </div>
     </div>
   );

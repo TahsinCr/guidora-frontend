@@ -112,19 +112,21 @@ The feed loads tools incrementally via `IntersectionObserver`:
 
 To ensure rapid First Contentful Paint (FCP), smooth scrolling (60 FPS), and low network overhead, the architecture implements several performance layers:
 
-1. **Strategic Code Splitting & Synchronous Core Views**:
-   - Secondary full-page views (`AdminDashboardPage`, `SubmitToolPage`, `UserProfilePage`) and tertiary drawers (`NotificationDrawer`, `AccountSettingsModal`) are split into independent on-demand chunks via `React.lazy()`.
-   - Core interactive dialogs (`ToolDialog`, `AuthModal`) are imported directly to eliminate chunk download latency, layout flashes, and suspense flickering.
-   - Synchronous catalog lookup (`getToolByIdSync`) resolves tool detail views in 0ms on click.
+1. **Universal Route & Modal Code Splitting (`React.lazy`)**:
+   - All secondary full-page views (`AdminDashboardPage`, `SubmitToolPage`, `UserProfilePage`) and modal overlays (`ToolDialog`, `AuthModal`, `NotificationDrawer`, `AccountSettingsModal`) are code-split into independent on-demand chunks.
+   - The initial bundle size is kept at an ultra-light **~201 kB**, minimizing initial download overhead.
 
-2. **React 18 Concurrent Transitions & Top Progress Bar**:
-   - Navigation between views is wrapped in `useTransition` / `startTransition`.
-   - The current view remains rendered and responsive until the target view finishes preparing in the background, accompanied by a sleek top indeterminate gradient indicator (`.navTransitionProgress`).
+2. **React 18 Concurrent Background Transitions & Navbar Progress Bar**:
+   - Navigation between views and dialogs is wrapped in `useTransition` / `startTransition`.
+   - The current view remains interactive on screen while the background chunk downloads.
+   - An animated gradient progress line (`.navProgressBar`) runs directly along the bottom edge of the Header navbar during transitions.
+   - Once the new screen is fully ready, it mounts instantaneously, while the previous screen is cleanly unmounted for optimal garbage collection.
 
-3. **Flexbox Sticky Footer & Anti-Flash Engine**:
-   - The root `.app-container` and `.main-content` enforce flex column layout with `min-height: calc(100vh - var(--header-height))`.
-   - Permanently locks the footer to the bottom of the viewport across all route transitions, eliminating mid-screen collapsing.
-   - `isInitialLoading` state prevents premature footer rendering during cold starts.
+3. **Single Real Page Load Policy & Anti-Flash Engine**:
+   - The branded `PageLoader` displays **exclusively during the initial hard page load** (`isInitialLoading`).
+   - Dynamic routes and modals do not display `PageLoader`, relying instead on non-blocking background transitions and localized button states.
+   - `<Suspense fallback={null}>` ensures zero intermediate screen flashes.
+   - Flexbox sticky footer architecture (`.main-content { flex: 1 0 auto; min-height: calc(100vh - var(--header-height)); }`) permanently anchors the footer to the bottom of the viewport.
 
 4. **Debounced Search & Async Query Processing (`useDebounce`)**:
    - Text inputs in the search and sorter bars utilize a 250ms debounce buffer (`useDebounce.js`).
@@ -138,7 +140,7 @@ To ensure rapid First Contentful Paint (FCP), smooth scrolling (60 FPS), and low
    - Heavy 3rd-party libraries (`react`, `react-dom`, `lucide-react`, `marked`, `dompurify`) are partitioned into dedicated vendor chunks in `vite.config.js`, maximizing long-term browser cache retention.
 
 7. **Temporary QA Demo Delay Tool (`Header.jsx`, `demoDelay.js`)**:
-   - A dedicated navbar toggle (`10s Test: ON/OFF`) allows testing and observing the branded animated loader and modal dialog loaders by injecting an artificial 10-second sleep into async services.
+   - A dedicated navbar toggle (`10s Test: ON/OFF`) allows testing and observing initial loaders by injecting an artificial 10-second sleep into async catalog fetching.
 
 ### Security Architecture & Hardening
 
