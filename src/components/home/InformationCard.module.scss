@@ -83,10 +83,11 @@
 .sliderContainer {
   width: 100%;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   justify-content: center;
   margin-bottom: 8px;
+  padding: 4px 0;
 }
 
 // Compact layout below 850px: Slogan is hidden, only category slider is shown matching mockup

@@ -2,19 +2,18 @@
   width: 100%;
   max-width: 1080px;
   min-width: 0;
-  overflow: hidden;
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 12px;
-  padding: 6px 0;
+  padding: 8px 0;
   position: relative;
   z-index: 2;
   transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease;
 
   &.compactSlider {
     max-width: 100%;
-    padding: 3px 0;
+    padding: 6px 0;
   }
 }
 
@@ -59,7 +58,7 @@
   -ms-overflow-style: none;
   flex: 1 1 0%;
   min-width: 0;
-  padding: 6px 4px;
+  padding: 8px 4px;
   -webkit-overflow-scrolling: touch;
 
   &::-webkit-scrollbar {
@@ -113,7 +112,7 @@
 @media (max-width: 850px) {
   .sliderWrapper {
     gap: 8px;
-    padding: 0;
+    padding: 4px 0;
     max-width: 100%;
   }
 
@@ -124,7 +123,7 @@
   }
 
   .scrollTrack {
-    padding: 0;
+    padding: 4px 2px;
     gap: 8px;
   }
 
