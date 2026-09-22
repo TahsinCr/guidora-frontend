@@ -5,11 +5,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: 20px;
   position: relative;
   z-index: 10;
   user-select: none;
-  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: cleanFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
 
   // Variants
   &.fullscreen {
@@ -45,114 +45,182 @@
   }
 }
 
-.logoOrb {
+// Stage holding the spinner and the emblem
+.visualStage {
   position: relative;
-  width: 76px;
-  height: 76px;
+  width: 96px;
+  height: 96px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-// Glowing pulsing aura behind the emblem
-.auraGlow {
+// Subtle atmospheric glow
+.ambientGlow {
   position: absolute;
-  inset: -12px;
+  inset: -8px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, rgba(138, 56, 245, 0.15) 50%, transparent 70%);
-  filter: blur(8px);
-  animation: auraPulse 2.4s ease-in-out infinite alternate;
+  background: radial-gradient(circle, rgba(138, 56, 245, 0.25) 0%, rgba(76, 130, 251, 0.12) 50%, transparent 70%);
+  filter: blur(12px);
+  pointer-events: none;
 }
 
-// Orbit ring spinning around the core
-.orbitRing {
+// Precision Circular Spinner
+.spinnerRing {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
-  border: 1.5px dashed rgba(129, 140, 248, 0.3);
-  animation: rotateRing 8s linear infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: spinSmooth 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: -3px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #818cf8;
-    box-shadow: 0 0 10px #818cf8, 0 0 18px #6366f1;
+.spinnerSvg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.trackCircle {
+  color: rgba(255, 255, 255, 0.07);
+
+  [data-theme='light'] & {
+    color: rgba(0, 0, 0, 0.06);
   }
 }
 
-// Core Guidora Emblem
-.coreLogo {
-  width: 58px;
-  height: 58px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #4e5ce2 0%, #9f6af0 100%);
+.indicatorCircle {
+  stroke-dasharray: 251.2; // 2 * PI * 40
+  stroke-dashoffset: 180;
+  animation: dashCycle 1.6s ease-in-out infinite;
+}
+
+// Brand Emblem Card (Matching Guidora's Header Logo, sharp & polished)
+.brandCard {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #4e5ce2 0%, #7c4feb 50%, #9f6af0 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(78, 92, 226, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  box-shadow:
+    0 8px 20px rgba(78, 92, 226, 0.35),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.4),
+    inset 0 -1.5px 3px rgba(0, 0, 0, 0.2);
   position: relative;
   z-index: 2;
-  color: #ffffff;
-  animation: floatOrb 3s ease-in-out infinite alternate;
+  transition: transform var(--transition-normal);
 }
 
-.compassSvg {
+// Subtle Radar Wave emitting from the card
+.radarPulse {
+  position: absolute;
+  inset: -4px;
+  border-radius: 18px;
+  border: 1px solid rgba(138, 56, 245, 0.35);
+  animation: radarWave 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+// Logo SVG & Clean Compass
+.logoSvg {
   width: 32px;
   height: 32px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+  display: block;
+}
+
+.outerCompassRing {
+  opacity: 0.88;
 }
 
 .compassNeedle {
   transform-origin: 21px 21px;
-  animation: spinNeedle 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: needlePulse 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
-// Text details
-.textWrapper {
+// Content and Text Info
+.content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   text-align: center;
+  max-width: 440px;
 }
 
-.brandTitle {
-  font-size: 15px;
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-primary, #ffffff);
+
+  [data-theme='light'] & {
+    color: #0f172a;
+  }
 }
 
-.shimmerDots {
-  display: inline-block;
-  color: var(--brand-blue, #6366f1);
-  animation: dotsBlink 1.4s infinite;
+.loadingPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  background: rgba(138, 56, 245, 0.12);
+  border: 1px solid rgba(138, 56, 245, 0.28);
+  border-radius: 9999px;
 }
 
-.statusText {
-  font-size: 13px;
+.activeDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #8a38f5;
+  box-shadow: 0 0 6px #8a38f5;
+  animation: pulseDot 1.2s infinite alternate ease-in-out;
+}
+
+.pillText {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #a855f7;
+  text-transform: uppercase;
+}
+
+.statusMessage {
+  font-size: 14px;
   font-weight: 500;
-  color: var(--text-muted, #94a3b8);
+  color: var(--text-primary, #cbd5e1);
   margin: 0;
+  letter-spacing: -0.01em;
+
+  [data-theme='light'] & {
+    color: #334155;
+  }
 }
 
-.subText {
-  font-size: 11.5px;
-  color: var(--text-muted, #64748b);
-  opacity: 0.8;
+.subtextMessage {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--text-muted, #94a3b8);
+  opacity: 0.85;
+
+  [data-theme='light'] & {
+    color: #64748b;
+  }
 }
 
 // Keyframes
-@keyframes fadeIn {
+@keyframes cleanFadeIn {
   from {
     opacity: 0;
-    transform: scale(0.96);
+    transform: scale(0.97);
   }
   to {
     opacity: 1;
@@ -160,52 +228,60 @@
   }
 }
 
-@keyframes auraPulse {
-  0% {
-    transform: scale(0.92);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(1.15);
-    opacity: 0.85;
-  }
-}
-
-@keyframes rotateRing {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes floatOrb {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(-4px);
-  }
-}
-
-@keyframes spinNeedle {
+@keyframes spinSmooth {
   0% {
     transform: rotate(0deg);
-  }
-  40% {
-    transform: rotate(180deg);
-  }
-  60% {
-    transform: rotate(160deg);
   }
   100% {
     transform: rotate(360deg);
   }
 }
 
-@keyframes dotsBlink {
-  0%, 20% { opacity: 0.2; }
-  50% { opacity: 1; }
-  100% { opacity: 0.2; }
+@keyframes dashCycle {
+  0% {
+    stroke-dashoffset: 200;
+  }
+  50% {
+    stroke-dashoffset: 70;
+  }
+  100% {
+    stroke-dashoffset: 200;
+  }
+}
+
+@keyframes radarWave {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes needlePulse {
+  0% {
+    transform: rotate(0deg);
+  }
+  35% {
+    transform: rotate(45deg);
+  }
+  65% {
+    transform: rotate(-15deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes pulseDot {
+  0% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
 }
