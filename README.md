@@ -119,27 +119,33 @@ To ensure rapid First Contentful Paint (FCP), smooth scrolling (60 FPS), and low
 2. **React 18 Concurrent Background Transitions & Navbar Progress Bar**:
    - Navigation between views and dialogs is wrapped in `useTransition` / `startTransition`.
    - The current view remains interactive on screen while the background chunk downloads.
-   - An animated gradient progress line (`.navProgressBar`) runs directly along the bottom edge of the Header navbar during transitions.
+   - The duplicate top-of-screen progress bar has been eliminated; a single animated gradient progress line (`.navProgressBar`) runs strictly along the bottom edge of the Header navbar during transitions.
    - Once the new screen is fully ready, it mounts instantaneously, while the previous screen is cleanly unmounted for optimal garbage collection.
 
-3. **Single Real Page Load Policy & Anti-Flash Engine**:
+3. **Smart Prefetching & Zero-Latency Feel**:
+   - Tool cards trigger background prefetching on hover (`ProductCard.jsx`, `onMouseEnter`), ensuring detail modals open in 0ms without waiting for chunk download on click.
+   - Secondary modal chunks (`ToolDialog`, `AuthModal`) are proactively warmed up during browser idle time via `requestIdleCallback`.
+   - Artificial network simulation delays in `toolsService.js` are reduced to 0ms when demo mode is off.
+
+4. **Single Real Page Load Policy & Anti-Flash Engine**:
    - The branded `PageLoader` displays **exclusively during the initial hard page load** (`isInitialLoading`).
+   - The jarring static inline HTML preloader has been completely excised from `index.html` (`#root` is clean).
    - Dynamic routes and modals do not display `PageLoader`, relying instead on non-blocking background transitions and localized button states.
    - `<Suspense fallback={null}>` ensures zero intermediate screen flashes.
    - Flexbox sticky footer architecture (`.main-content { flex: 1 0 auto; min-height: calc(100vh - var(--header-height)); }`) permanently anchors the footer to the bottom of the viewport.
 
-4. **Debounced Search & Async Query Processing (`useDebounce`)**:
+5. **Debounced Search & Async Query Processing (`useDebounce`)**:
    - Text inputs in the search and sorter bars utilize a 250ms debounce buffer (`useDebounce.js`).
    - Prevents UI micro-stutters and redundant filter queries while users type continuously.
 
-5. **DOM Containment & Virtualization (`content-visibility: auto`)**:
+6. **DOM Containment & Virtualization (`content-visibility: auto`)**:
    - Product catalog cards (`.card`) declare `content-visibility: auto` paired with `contain-intrinsic-size: auto 240px`.
    - The browser skips layout, styling, and paint calculations for cards outside the viewport, maintaining consistent 60 FPS scrolling even with deep infinite feeds.
 
-6. **Vendor Chunk Isolation**:
+7. **Vendor Chunk Isolation**:
    - Heavy 3rd-party libraries (`react`, `react-dom`, `lucide-react`, `marked`, `dompurify`) are partitioned into dedicated vendor chunks in `vite.config.js`, maximizing long-term browser cache retention.
 
-7. **Temporary QA Demo Delay Tool (`Header.jsx`, `demoDelay.js`)**:
+8. **Temporary QA Demo Delay Tool (`Header.jsx`, `demoDelay.js`)**:
    - A dedicated navbar toggle (`10s Test: ON/OFF`) allows testing and observing initial loaders by injecting an artificial 10-second sleep into async catalog fetching.
 
 ### Security Architecture & Hardening

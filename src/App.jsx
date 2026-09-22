@@ -116,6 +116,20 @@ export default function App() {
   // Load categories
   useEffect(() => {
     getCategories().then(setCategories).catch(console.error);
+
+    // Warm up chunks during browser idle time for zero-latency interactions
+    const prefetchIdle = () => {
+      import('@/components/tool-detail/ToolDialog');
+      import('@/components/auth/AuthModal');
+    };
+
+    if (typeof window !== 'undefined') {
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(prefetchIdle, { timeout: 2500 });
+      } else {
+        setTimeout(prefetchIdle, 1200);
+      }
+    }
   }, []);
 
   // Category Synchronization: Top hero category selection updates selectedCategories
@@ -452,9 +466,6 @@ export default function App() {
         onUserChange={(updatedUser) => setCurrentUser(updatedUser)}
         isNavigating={isNavigating}
       />
-
-      {/* Top indeterminate transition indicator for React concurrent route updates */}
-      {isNavigating && <div className="navTransitionProgress" />}
 
       <main className="main-content">
         <Suspense fallback={null}>

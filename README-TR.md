@@ -119,27 +119,33 @@ Hızlı İlk İçerikli Boyama (FCP), akıcı kaydırma (60 FPS) ve düşük ağ
 2. **React 18 Eşzamanlı Geçişler (Concurrent Transitions) & Navbar İlerleme Çubuğu**:
    - Görünüm ve diyalog geçişleri `useTransition` / `startTransition` ile yürütülür.
    - Arka planda lazy chunk indirilirken mevcut sayfa kullanıcı önünde tamamen görünür ve etkileşime açık kalır.
-   - Navbar'ın hemen alt kenarında parıldayan gradyan bir hat (`.navProgressBar`) geçiş süresince kullanıcıya bilgi verir.
+   - Ekranın en tepesindeki mükerrer çubuk kaldırılmış; yalnızca Header navbar'ının alt sınırında parıldayan gradyan bir hat (`.navProgressBar`) geçiş süresince kullanıcıya bilgi verir.
    - Yeni ekran hazır olduğu anda tak diye açılır; eski ekran bellek tasarrufu amacıyla kapatılır (unmount edilir).
 
-3. **Tek Bir Kez PageLoader Kuralı & Anti-Flash Mimarisi**:
+3. **Akıllı Ön Yükleme (Prefetching) ve Sıfır Gecikme Hissi**:
+   - Kartların üzerine fare geldiğinde (`ProductCard.jsx`, `onMouseEnter`) ilgili detay chunk'ı arka planda önceden çekilir. Tıklandığı an indirme beklemeden anında (0ms) açılır.
+   - Tarayıcının işlem yapmadığı boş anlarda (`requestIdleCallback`) `ToolDialog` ve `AuthModal` chunk'ları belleğe alınır.
+   - `toolsService.js` üzerindeki demo dışı yapay gecikmeler 0ms'ye indirilmiştir.
+
+4. **Tek Bir Kez PageLoader Kuralı & Anti-Flash Mimarisi**:
    - İnovatif `PageLoader` ekranı **yalnızca tarayıcının ilk gerçek açılışında / hard reload esnasında** (`isInitialLoading`) bir defaya mahsus gösterilir.
+   - Açılışta ekrana flaş gibi gelip rahatsızlık veren `index.html` içerisindeki statik inline preloader tamamen kaldırılmıştır (`#root` temizdir).
    - Dinamik sayfalardan ve modallardan `PageLoader` tamamen kaldırılmıştır.
    - `<Suspense fallback={null}>` sayesinde dinamik geçişlerde hiçbir görsel sıçrama veya boş ekran oluşmaz.
    - Flexbox kalıcı tabanlı footer mimarisi (`.main-content { flex: 1 0 auto; min-height: calc(100vh - var(--header-height)); }`) ile footer daima ekranın en altına kilitlenir.
 
-4. **Gecikmeli Arama & Asenkron Sorgu Yönetimi (`useDebounce`)**:
+5. **Gecikmeli Arama & Asenkron Sorgu Yönetimi (`useDebounce`)**:
    - Arama ve sıralama çubuğundaki metin girdileri için 250ms gecikmeli tampon (`useDebounce.js`) uygulanmıştır.
    - Kullanıcı klavyede yazarken gereksiz arka arkaya filtreleme tetiklenmez, ana işlem parçacığı kilitlenmez.
 
-5. **DOM Kapsama & Sanallaştırma (`content-visibility: auto`)**:
+6. **DOM Kapsama & Sanallaştırma (`content-visibility: auto`)**:
    - Ürün kataloğu kartları (`.card`) CSS `content-visibility: auto` ve `contain-intrinsic-size: auto 240px` kuralları ile donatılmıştır.
    - Görünür alanın dışındaki kartlar için tarayıcı boyama ve düzen hesaplamalarını atlar; yüzlerce kart yüklense bile akıcı 60 FPS kaydırma korunur.
 
-6. **Satıcı (Vendor) Parça Ayrıştırması**:
+7. **Satıcı (Vendor) Parça Ayrıştırması**:
    - Ağır harici kütüphaneler (`react`, `react-dom`, `lucide-react`, `marked`, `dompurify`) `vite.config.js` içinde bağımsız vendor chunk'larına ayrılmış, uzun süreli tarayıcı önbelleklemesi (HTTP cache) maksimize edilmiştir.
 
-7. **Geçici QA & Demo Gecikme Aracı (`Header.jsx`, `demoDelay.js`)**:
+8. **Geçici QA & Demo Gecikme Aracı (`Header.jsx`, `demoDelay.js`)**:
    - Header çubuğuna eklenen `10s Test: ON/OFF` butonu ile asenkron katalog çekme servisine yapay 10 saniyelik gecikme eklenerek ilk açılış yükleyicisinin rahatça incelenmesi sağlanır.
 
 ### Güvenlik Mimarisi ve Koruma Katmanları

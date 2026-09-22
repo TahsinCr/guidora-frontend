@@ -1,11 +1,13 @@
 import { TOOLS_DATA, CATEGORIES, TAG_CATEGORIES, ALL_TAGS } from './mockData';
 import { adminGetCategories, adminGetTagCategories, getDeletedToolIds, getToolOverrides } from './adminService';
 import { sanitizePlainText, sanitizeUrl } from '@/utils/security';
-import { waitDemoDelay } from '@/utils/demoDelay';
+import { waitDemoDelay, isDemoDelayActive } from '@/utils/demoDelay';
 
-// Simulated artificial network latency for realistic async behavior (with demo delay support)
-const simulateDelay = async (ms = 80) => {
-  await waitDemoDelay(ms);
+// Simulated network latency only when 10s demo delay mode is enabled
+const simulateDelay = async (ms = 0) => {
+  if (isDemoDelayActive()) {
+    await waitDemoDelay(ms);
+  }
 };
 
 const CUSTOM_TOOLS_KEY = 'guidora_custom_tools';

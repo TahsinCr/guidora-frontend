@@ -59,31 +59,4 @@ html {
   }
 }
 
-// Top Transition Progress Line for React 18 Concurrent Transitions
-.navTransitionProgress {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #8a38f5 0%, #4c82fb 50%, #ec4899 100%);
-  z-index: 999999;
-  background-size: 200% 100%;
-  animation: navProgressGlow 1.2s ease-in-out infinite;
-}
-
-@keyframes navProgressGlow {
-  0% {
-    background-position: 0% 50%;
-    opacity: 0.8;
-  }
-  50% {
-    background-position: 100% 50%;
-    opacity: 1;
-  }
-  100% {
-    background-position: 0% 50%;
-    opacity: 0.8;
-  }
-}
 

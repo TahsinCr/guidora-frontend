@@ -37,6 +37,10 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
     <article
       className={`${styles.card} ${viewMode === 'list' ? styles.listView : ''}`}
       onClick={() => onOpenDetail(tool.id)}
+      onMouseEnter={() => {
+        // High-performance prefetch: load the ToolDialog chunk during hover before click
+        import('@/components/tool-detail/ToolDialog');
+      }}
     >
       <div className={styles.header}>
         <div className={styles.leftHead}>
