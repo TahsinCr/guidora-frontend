@@ -3,7 +3,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import CategorySlider from './CategorySlider';
 import styles from './InformationCard.module.scss';
 
-export function scrollToCatalog(smooth = true) {
+function scrollToCatalog(smooth = true) {
   const catalogEl = document.getElementById('catalog-section');
   if (!catalogEl) return;
   const headerHeight = window.innerWidth <= 768 ? 64 : 72;
