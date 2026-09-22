@@ -25,7 +25,7 @@ Bu proje şunları sağlar:
 - içerik moderasyonu ve sorun bildirimi için özel raporlama modalı;
 - kullanıcının kaydırma hareketini önceden algılayan (`IntersectionObserver`) sonsuz kaydırma akışı;
 - anlamsal CSS değişkenleri (custom properties) üzerine kurulu tam çift tema (Karanlık ve Açık) desteği;
-- Figma renk paletine sadık marka amblemi, dönen gradyan çember yayı ve mikro pusula animasyonuna sahip profesyonel ve sade yükleme ekranı (`PageLoader`) ve açılışta footer sıçramasını engelleyen anti-flash mimarisi;
+- Dönen gradyan çember yayı içinde havada süzülen, hafifçe oynayan ve iğnesi dönen saf Guidora pusulasına sahip sade ve profesyonel yükleme ekranı (`PageLoader`) ve açılışta footer sıçramasını engelleyen anti-flash mimarisi;
 - kapsamlı popuplar (`AuthModal`, `ToolStudioForm`) için tüm ekranı devralmayan, pencereye hapsolmuş yerel diyalog yükleyicileri;
 - yer imlerine eklenebilir ve tarayıcı geçmişiyle uyumlu URL sorgu senkronizasyonu (`?tool=<id>`);
 - Figma Auto-Layout özelliklerini (`fill`, `hug`, `fixed`) CSS kurallarına dönüştüren SCSS yerleşim motoru.

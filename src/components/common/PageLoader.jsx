@@ -51,14 +51,10 @@ export default function PageLoader({
           </svg>
         </div>
 
-        {/* Center Guidora Brand Emblem Card */}
-        <div className={styles.brandCard}>
-          {/* Subtle Dynamic Radar / Pulse Ring */}
-          <div className={styles.radarPulse} />
-
-          {/* Clean Figma Compass Vector */}
+        {/* Center Floating Guidora Compass (Clean, pure icon floating & spinning) */}
+        <div className={styles.compassFloatWrapper}>
           <svg
-            className={styles.logoSvg}
+            className={styles.compassSvg}
             viewBox="0 0 42 42"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -67,33 +63,36 @@ export default function PageLoader({
             <circle
               cx="21"
               cy="21"
-              r="12"
-              stroke="#ffffff"
+              r="14"
+              stroke="url(#compassRingGradient)"
               strokeWidth="2.5"
-              className={styles.outerCompassRing}
+              className={styles.compassTargetRing}
             />
-            {/* Dynamic Compass Needle Star */}
+            {/* Inner Precision Guidora Needle / Star */}
             <path
               fillRule="evenodd"
               clipRule="evenodd"
               d="M24.8566 16.4761L23.1424 23.1424L16.476 24.8566L18.1902 18.1903L24.8566 16.4761ZM20.6663 19.1426L22.19 20.6663L20.6663 22.1901L19.1426 20.6663L20.6663 19.1426Z"
-              fill="#ffffff"
+              fill="url(#compassNeedleGradient)"
               className={styles.compassNeedle}
             />
+            <defs>
+              <linearGradient id="compassRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#8a38f5" />
+                <stop offset="100%" stopColor="#4c82fb" />
+              </linearGradient>
+              <linearGradient id="compassNeedleGradient" x1="16" y1="16" x2="25" y2="25">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="100%" stopColor="#cbd5e1" />
+              </linearGradient>
+            </defs>
           </svg>
         </div>
       </div>
 
       {/* Typography & Status Feedback */}
       <div className={styles.content}>
-        <div className={styles.titleRow}>
-          <span className={styles.title}>Guidora</span>
-          <div className={styles.loadingPill}>
-            <span className={styles.activeDot} />
-            <span className={styles.pillText}>Loading</span>
-          </div>
-        </div>
-
+        <span className={styles.title}>Guidora</span>
         {text && <p className={styles.statusMessage}>{text}</p>}
         {subtext && <span className={styles.subtextMessage}>{subtext}</span>}
       </div>

@@ -28,11 +28,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Applied flexbox sticky footer architecture in `src/styles/main.scss` (`.app-container { min-height: 100vh; display: flex; flex-direction: column; }` and `.main-content { flex: 1 0 auto; min-height: calc(100vh - var(--header-height, 72px)); }`).
   - Permanently anchors the footer to the bottom of the viewport across all page states, preventing the footer from collapsing to the screen center.
 
-- **Professional & Sleek PageLoader Design**:
-  - Refactored `src/components/common/PageLoader.jsx` and `PageLoader.module.scss` to an enterprise-grade, clean, and modern loading experience matching Guidora's design identity.
-  - Replaced crowded cosmic satellites and excessive orbits with a sleek, high-precision SVG circular gradient progress ring (`#4e5ce2` -> `#8a38f5` -> `#06b6d4`).
-  - Centered the authentic Guidora Figma emblem with subtle ambient depth, subtle radar wave pulse, and refined compass orientation micro-motion.
-  - Formatted clean, balanced typography with modern `Loading` status indicator and crisp status messages.
+- **Pure Floating Compass PageLoader**:
+  - Removed the solid purple card background and the "LOADING" badge pill from `src/components/common/PageLoader.jsx` per user specification.
+  - Positioned the pure Guidora compass vector floating in the center with a gentle vertical bobbing animation (`compassBob`) and a continuously rotating precision needle (`needleSpin`).
+  - Preserved the clean, high-precision SVG circular gradient progress ring (`#4e5ce2` -> `#8a38f5` -> `#06b6d4`) and clean minimalist title and status text.
 
 - **Enterprise Security Hardening & Client Protection Layers**:
   - Integrated `DOMPurify` sanitizer inside `src/components/common/MarkdownRenderer.jsx` to prevent Cross-Site Scripting (XSS) in Markdown release changelogs, descriptions, and user reviews.

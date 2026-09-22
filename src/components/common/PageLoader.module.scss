@@ -45,7 +45,7 @@
   }
 }
 
-// Stage holding the spinner and the emblem
+// Stage holding the spinner and floating compass
 .visualStage {
   position: relative;
   width: 96px;
@@ -55,17 +55,17 @@
   justify-content: center;
 }
 
-// Subtle atmospheric glow
+// Atmospheric soft ambient glow behind the loader
 .ambientGlow {
   position: absolute;
-  inset: -8px;
+  inset: -6px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(138, 56, 245, 0.25) 0%, rgba(76, 130, 251, 0.12) 50%, transparent 70%);
-  filter: blur(12px);
+  background: radial-gradient(circle, rgba(138, 56, 245, 0.22) 0%, rgba(76, 130, 251, 0.1) 50%, transparent 70%);
+  filter: blur(14px);
   pointer-events: none;
 }
 
-// Precision Circular Spinner
+// Outer Precision Circular Progress Arc
 .spinnerRing {
   position: absolute;
   inset: 0;
@@ -95,48 +95,36 @@
   animation: dashCycle 1.6s ease-in-out infinite;
 }
 
-// Brand Emblem Card (Matching Guidora's Header Logo, sharp & polished)
-.brandCard {
-  width: 54px;
-  height: 54px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #4e5ce2 0%, #7c4feb 50%, #9f6af0 100%);
+// Floating Compass Icon Container (Float/Bob up and down smoothly)
+.compassFloatWrapper {
+  position: relative;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow:
-    0 8px 20px rgba(78, 92, 226, 0.35),
-    inset 0 1px 1.5px rgba(255, 255, 255, 0.4),
-    inset 0 -1.5px 3px rgba(0, 0, 0, 0.2);
-  position: relative;
-  z-index: 2;
-  transition: transform var(--transition-normal);
+  animation: compassBob 2.4s ease-in-out infinite;
 }
 
-// Subtle Radar Wave emitting from the card
-.radarPulse {
-  position: absolute;
-  inset: -4px;
-  border-radius: 18px;
-  border: 1px solid rgba(138, 56, 245, 0.35);
-  animation: radarWave 2.4s ease-out infinite;
-  pointer-events: none;
-}
-
-// Logo SVG & Clean Compass
-.logoSvg {
-  width: 32px;
-  height: 32px;
+.compassSvg {
+  width: 42px;
+  height: 42px;
   display: block;
+  filter: drop-shadow(0 4px 12px rgba(138, 56, 245, 0.35));
 }
 
-.outerCompassRing {
-  opacity: 0.88;
+// Outer Target Ring: subtle breathing scale
+.compassTargetRing {
+  transform-origin: 21px 21px;
+  animation: ringPulse 2.4s ease-in-out infinite alternate;
 }
 
+// Center Compass Needle / Star: smooth continuous rotation with slight ease
 .compassNeedle {
   transform-origin: 21px 21px;
-  animation: needlePulse 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: needleSpin 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4));
 }
 
 // Content and Text Info
@@ -149,14 +137,8 @@
   max-width: 440px;
 }
 
-.titleRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .title {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-primary, #ffffff);
@@ -164,33 +146,6 @@
   [data-theme='light'] & {
     color: #0f172a;
   }
-}
-
-.loadingPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 8px;
-  background: rgba(138, 56, 245, 0.12);
-  border: 1px solid rgba(138, 56, 245, 0.28);
-  border-radius: 9999px;
-}
-
-.activeDot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #8a38f5;
-  box-shadow: 0 0 6px #8a38f5;
-  animation: pulseDot 1.2s infinite alternate ease-in-out;
-}
-
-.pillText {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: #a855f7;
-  text-transform: uppercase;
 }
 
 .statusMessage {
@@ -249,39 +204,34 @@
   }
 }
 
-@keyframes radarWave {
-  0% {
-    transform: scale(0.96);
-    opacity: 0.8;
+// Soft vertical float / bobbing of the compass icon
+@keyframes compassBob {
+  0%, 100% {
+    transform: translateY(0);
   }
-  100% {
-    transform: scale(1.35);
-    opacity: 0;
-  }
-}
-
-@keyframes needlePulse {
-  0% {
-    transform: rotate(0deg);
-  }
-  35% {
-    transform: rotate(45deg);
-  }
-  65% {
-    transform: rotate(-15deg);
-  }
-  100% {
-    transform: rotate(0deg);
+  50% {
+    transform: translateY(-5px);
   }
 }
 
-@keyframes pulseDot {
+// Smooth spinning of the compass needle
+@keyframes needleSpin {
   0% {
-    opacity: 0.4;
-    transform: scale(0.8);
+    transform: rotate(0deg);
   }
   100% {
+    transform: rotate(360deg);
+  }
+}
+
+// Subtle pulse on the outer ring
+@keyframes ringPulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.04);
     opacity: 1;
-    transform: scale(1.2);
   }
 }
