@@ -25,7 +25,7 @@ The application provides:
 - a content moderation and issue reporting workflow;
 - an infinite scroll feed powered by native `IntersectionObserver` with advance prefetching;
 - a complete dual-theme engine (Dark and Light) built on semantic CSS custom properties;
-- a sleek, minimalist loading indicator (`PageLoader`) featuring a floating, bobbing Guidora compass with an animated rotating needle inside an SVG circular gradient progress arc;
+- an energetic, sleek loading indicator (`PageLoader`) featuring an enlarged floating Guidora compass with an animated rotating needle and a fast 5-dot purple Newton's cradle momentum transfer effect;
 - localized, non-intrusive popup dialog loaders for comprehensive modals (`AuthModal` and `ToolStudioForm`);
 - URL query parameter synchronization (`?tool=<id>`) for bookmarkable views and browser history navigation;
 - an SCSS layout module translating Figma Auto-Layout properties (`fill`, `hug`, `fixed`) to CSS.

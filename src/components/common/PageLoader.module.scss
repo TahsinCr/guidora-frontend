@@ -5,7 +5,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 18px;
   position: relative;
   z-index: 10;
   user-select: none;
@@ -45,62 +45,35 @@
   }
 }
 
-// Stage holding the spinner and floating compass
+// Stage holding the enlarged floating compass and the Newton dots
 .visualStage {
   position: relative;
-  width: 96px;
-  height: 96px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 16px;
+  min-height: 90px;
 }
 
-// Atmospheric soft ambient glow behind the loader
+// Atmospheric soft ambient glow behind the compass
 .ambientGlow {
   position: absolute;
-  inset: -6px;
+  top: 10px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(138, 56, 245, 0.22) 0%, rgba(76, 130, 251, 0.1) 50%, transparent 70%);
-  filter: blur(14px);
+  background: radial-gradient(circle, rgba(138, 56, 245, 0.3) 0%, rgba(99, 102, 241, 0.15) 50%, transparent 70%);
+  filter: blur(16px);
   pointer-events: none;
 }
 
-// Outer Precision Circular Progress Arc
-.spinnerRing {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: spinSmooth 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-.spinnerSvg {
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
-}
-
-.trackCircle {
-  color: rgba(255, 255, 255, 0.07);
-
-  [data-theme='light'] & {
-    color: rgba(0, 0, 0, 0.06);
-  }
-}
-
-.indicatorCircle {
-  stroke-dasharray: 251.2; // 2 * PI * 40
-  stroke-dashoffset: 180;
-  animation: dashCycle 1.6s ease-in-out infinite;
-}
-
-// Floating Compass Icon Container (Float/Bob up and down smoothly)
+// Floating Enlarged Compass Icon Container (Float/Bob up and down smoothly)
 .compassFloatWrapper {
   position: relative;
   z-index: 2;
-  width: 44px;
-  height: 44px;
+  width: 58px;
+  height: 58px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -108,23 +81,74 @@
 }
 
 .compassSvg {
-  width: 42px;
-  height: 42px;
+  width: 56px;
+  height: 56px;
   display: block;
-  filter: drop-shadow(0 4px 12px rgba(138, 56, 245, 0.35));
+  filter: drop-shadow(0 6px 16px rgba(138, 56, 245, 0.45));
 }
 
-// Outer Target Ring: subtle breathing scale
+// Outer Target Ring: subtle breathing pulse
 .compassTargetRing {
   transform-origin: 21px 21px;
   animation: ringPulse 2.4s ease-in-out infinite alternate;
 }
 
-// Center Compass Needle / Star: smooth continuous rotation with slight ease
+// Center Compass Needle / Star: smooth continuous rotation
 .compassNeedle {
   transform-origin: 21px 21px;
-  animation: needleSpin 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4));
+  animation: needleSpin 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+}
+
+// ============================================
+// Newton's Cradle 5 Purple Dots
+// ============================================
+.newtonCradle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5.5px;
+  height: 18px;
+  padding: 0 4px;
+}
+
+.cradleDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #8a38f5;
+  box-shadow: 0 0 8px rgba(138, 56, 245, 0.65);
+
+  [data-theme='light'] & {
+    background: #7c2deb;
+    box-shadow: 0 0 6px rgba(124, 45, 235, 0.45);
+  }
+}
+
+// Left Dot swing in Newton's cradle cycle (faster: 0.95s)
+.leftDot {
+  transform-origin: top center;
+  animation: newtonLeft 0.95s ease-in-out infinite;
+}
+
+// Intermediate middle dots (elastic impulse transmission)
+.midDot1 {
+  animation: newtonMidLeft 0.95s ease-in-out infinite;
+}
+
+.centerDot {
+  animation: newtonCenter 0.95s ease-in-out infinite;
+}
+
+.midDot2 {
+  animation: newtonMidRight 0.95s ease-in-out infinite;
+}
+
+// Right Dot swing in Newton's cradle cycle (faster: 0.95s)
+.rightDot {
+  transform-origin: top center;
+  animation: newtonRight 0.95s ease-in-out infinite;
 }
 
 // Content and Text Info
@@ -183,34 +207,13 @@
   }
 }
 
-@keyframes spinSmooth {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes dashCycle {
-  0% {
-    stroke-dashoffset: 200;
-  }
-  50% {
-    stroke-dashoffset: 70;
-  }
-  100% {
-    stroke-dashoffset: 200;
-  }
-}
-
 // Soft vertical float / bobbing of the compass icon
 @keyframes compassBob {
   0%, 100% {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-5px);
+    transform: translateY(-6px);
   }
 }
 
@@ -227,11 +230,99 @@
 // Subtle pulse on the outer ring
 @keyframes ringPulse {
   0% {
-    transform: scale(0.95);
+    transform: scale(0.96);
     opacity: 0.85;
   }
   100% {
-    transform: scale(1.04);
+    transform: scale(1.03);
     opacity: 1;
+  }
+}
+
+// ============================================
+// Newton's Cradle 5 Dots Keyframes
+// High-speed energetic cycle (~0.95s):
+// 0%: Left dot at outer peak
+// 22%: Left dot impacts center group
+// 23%-27%: Shockwave propagates through midDot1 -> centerDot -> midDot2
+// 28%: Right dot breaks away
+// 50%: Right dot at outer peak
+// 72%: Right dot impacts center group
+// 73%-77%: Shockwave returns through center group
+// 78%: Left dot breaks away towards peak (100%)
+// ============================================
+@keyframes newtonLeft {
+  0% {
+    transform: translateX(-12px) translateY(-3.5px);
+    animation-timing-function: ease-in;
+  }
+  22% {
+    transform: translateX(0) translateY(0);
+    animation-timing-function: ease-out;
+  }
+  50% {
+    transform: translateX(0) translateY(0);
+  }
+  78% {
+    transform: translateX(0) translateY(0);
+    animation-timing-function: ease-out;
+  }
+  100% {
+    transform: translateX(-12px) translateY(-3.5px);
+  }
+}
+
+@keyframes newtonMidLeft {
+  0%, 20%, 30%, 70%, 80%, 100% {
+    transform: scale(1) translateX(0);
+  }
+  23% {
+    transform: scale(0.9, 1.1) translateX(1px);
+  }
+  77% {
+    transform: scale(0.9, 1.1) translateX(-1px);
+  }
+}
+
+@keyframes newtonCenter {
+  0%, 22%, 32%, 68%, 78%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(0.88, 1.12);
+  }
+  75% {
+    transform: scale(0.88, 1.12);
+  }
+}
+
+@keyframes newtonMidRight {
+  0%, 20%, 30%, 70%, 80%, 100% {
+    transform: scale(1) translateX(0);
+  }
+  27% {
+    transform: scale(0.9, 1.1) translateX(1px);
+  }
+  73% {
+    transform: scale(0.9, 1.1) translateX(-1px);
+  }
+}
+
+@keyframes newtonRight {
+  0%, 25% {
+    transform: translateX(0) translateY(0);
+  }
+  28% {
+    animation-timing-function: ease-out;
+  }
+  50% {
+    transform: translateX(12px) translateY(-3.5px);
+    animation-timing-function: ease-in;
+  }
+  72% {
+    transform: translateX(0) translateY(0);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
   }
 }

@@ -28,10 +28,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Applied flexbox sticky footer architecture in `src/styles/main.scss` (`.app-container { min-height: 100vh; display: flex; flex-direction: column; }` and `.main-content { flex: 1 0 auto; min-height: calc(100vh - var(--header-height, 72px)); }`).
   - Permanently anchors the footer to the bottom of the viewport across all page states, preventing the footer from collapsing to the screen center.
 
-- **Pure Floating Compass PageLoader**:
-  - Removed the solid purple card background and the "LOADING" badge pill from `src/components/common/PageLoader.jsx` per user specification.
-  - Positioned the pure Guidora compass vector floating in the center with a gentle vertical bobbing animation (`compassBob`) and a continuously rotating precision needle (`needleSpin`).
-  - Preserved the clean, high-precision SVG circular gradient progress ring (`#4e5ce2` -> `#8a38f5` -> `#06b6d4`) and clean minimalist title and status text.
+- **Enlarged Compass & 5-Dot Fast Newton's Cradle PageLoader**:
+  - Removed the outer circular spinner progress ring completely from `src/components/common/PageLoader.jsx` and `PageLoader.module.scss`.
+  - Scaled up the Guidora compass emblem (`58px` / `56px` SVG) with soft vertical bobbing (`compassBob`) and a continuously rotating precision needle (`needleSpin`).
+  - Added a 5-dot purple Newton's cradle (`.newtonCradle`) directly beneath the compass, animating high-speed (~0.95s) elastic momentum transfer across left and right ends with shockwave propagation across the inner dots.
 
 - **Enterprise Security Hardening & Client Protection Layers**:
   - Integrated `DOMPurify` sanitizer inside `src/components/common/MarkdownRenderer.jsx` to prevent Cross-Site Scripting (XSS) in Markdown release changelogs, descriptions, and user reviews.

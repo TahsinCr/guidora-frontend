@@ -18,40 +18,10 @@ export default function PageLoader({
   return (
     <div className={containerClass} role="status" aria-live="polite">
       <div className={styles.visualStage}>
-        {/* Ambient Subtle Glow */}
+        {/* Atmospheric Ambient Glow behind compass */}
         <div className={styles.ambientGlow} />
 
-        {/* Clean Precision Spinner Track & Progress Arc */}
-        <div className={styles.spinnerRing}>
-          <svg className={styles.spinnerSvg} viewBox="0 0 88 88" fill="none">
-            <circle
-              cx="44"
-              cy="44"
-              r="40"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              className={styles.trackCircle}
-            />
-            <circle
-              cx="44"
-              cy="44"
-              r="40"
-              stroke="url(#spinnerGradient)"
-              strokeWidth="3"
-              strokeLinecap="round"
-              className={styles.indicatorCircle}
-            />
-            <defs>
-              <linearGradient id="spinnerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#4e5ce2" />
-                <stop offset="50%" stopColor="#8a38f5" />
-                <stop offset="100%" stopColor="#06b6d4" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-
-        {/* Center Floating Guidora Compass (Clean, pure icon floating & spinning) */}
+        {/* Center Floating Enlarged Guidora Compass */}
         <div className={styles.compassFloatWrapper}>
           <svg
             className={styles.compassSvg}
@@ -63,9 +33,9 @@ export default function PageLoader({
             <circle
               cx="21"
               cy="21"
-              r="14"
+              r="15"
               stroke="url(#compassRingGradient)"
-              strokeWidth="2.5"
+              strokeWidth="2.8"
               className={styles.compassTargetRing}
             />
             {/* Inner Precision Guidora Needle / Star */}
@@ -79,14 +49,24 @@ export default function PageLoader({
             <defs>
               <linearGradient id="compassRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#8a38f5" />
-                <stop offset="100%" stopColor="#4c82fb" />
+                <stop offset="50%" stopColor="#6366f1" />
+                <stop offset="100%" stopColor="#38bdf8" />
               </linearGradient>
               <linearGradient id="compassNeedleGradient" x1="16" y1="16" x2="25" y2="25">
                 <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="100%" stopColor="#cbd5e1" />
+                <stop offset="100%" stopColor="#e2e8f0" />
               </linearGradient>
             </defs>
           </svg>
+        </div>
+
+        {/* Newton's Cradle 5 Purple Dots */}
+        <div className={styles.newtonCradle} aria-hidden="true">
+          <span className={`${styles.cradleDot} ${styles.leftDot}`} />
+          <span className={`${styles.cradleDot} ${styles.midDot1}`} />
+          <span className={`${styles.cradleDot} ${styles.centerDot}`} />
+          <span className={`${styles.cradleDot} ${styles.midDot2}`} />
+          <span className={`${styles.cradleDot} ${styles.rightDot}`} />
         </div>
       </div>
 
