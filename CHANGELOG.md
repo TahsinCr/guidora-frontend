@@ -9,9 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - **Universal Lazy Loading & Concurrent Background Transitions**:
-  - Restored `React.lazy()` code-splitting across all secondary views and dialogs (`ToolDialog`, `AuthModal`, `SubmitToolPage`, `UserProfilePage`, `AdminDashboardPage`, `NotificationDrawer`, `AccountSettingsModal`), keeping the main entry bundle at ~201 kB.
-  - Positioned `.navProgressBar` strictly along the bottom boundary of the Header navbar, running a glowing gradient animation while lazy chunks load in the background.
-  - Removed duplicate top-of-screen progress bar (`.navTransitionProgress` at `top: 0`), leaving only the single clean bar right beneath the navbar.
+  - Maintained `React.lazy()` code-splitting across all secondary views and dialogs (`ToolDialog`, `AuthModal`, `SubmitToolPage`, `UserProfilePage`, `AdminDashboardPage`, `NotificationDrawer`, `AccountSettingsModal`), keeping the main entry bundle at ~201 kB.
+  - Removed all distracting navbar loading progress animations (`.navProgressBar`) on tool view and page transitions, ensuring completely clean, seamless, zero-distraction view switching.
+  - Removed redundant search icon button from Header toolbar when viewing tool detail (`activeTool`), keeping the navbar decluttered and focused.
   - Wrapped modal openers (`handleOpenAuth`, `handleOpenNotifications`, `handleOpenSettings`) and route switches in React 18 `startTransition`, ensuring the active screen remains fully visible and responsive until the new screen is completely downloaded and ready to mount instantaneously.
   - Added smart hover-triggered chunk prefetching (`ProductCard.jsx`, `onMouseEnter`) and idle browser preloading (`requestIdleCallback` in `App.jsx`) to eliminate perception of latency on clicks.
   - Removed artificial delays from `toolsService.js` when demo mode is off, providing 0ms data resolution.

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { Plus, Bell, Sun, Moon, ChevronRight, Search, Hourglass } from 'lucide-react';
+import { Plus, Bell, Sun, Moon, ChevronRight, Hourglass } from 'lucide-react';
 import { isDemoDelayActive, toggleDemoDelay } from '@/utils/demoDelay';
 import UserMenu from './UserMenu';
 import LanguageDropdown from './LanguageDropdown';
@@ -68,14 +68,6 @@ export default function Header({
         <div className={styles.toolBar}>
           {activeTool ? (
             <>
-              <button
-                className={styles.iconBtn}
-                onClick={onBackToDirectory}
-                title={t('header.backToDirectory', 'Back to Directory')}
-              >
-                <Search size={18} />
-              </button>
-
               <button
                 className={styles.submitBtn}
                 onClick={onSubmitTool}
@@ -177,9 +169,6 @@ export default function Header({
           )}
         </div>
       </div>
-
-      {/* Dynamic Route & Dialog Loading Progress Bar right along the Navbar bottom edge */}
-      {isNavigating && <div className={styles.navProgressBar} />}
     </header>
   );
 }

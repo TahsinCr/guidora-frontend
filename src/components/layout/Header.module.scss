@@ -246,33 +246,4 @@
   }
 }
 
-.navProgressBar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #8a38f5 0%, #4c82fb 40%, #06b6d4 70%, #ec4899 100%);
-  background-size: 200% 100%;
-  box-shadow: 0 1px 10px rgba(138, 56, 245, 0.6), 0 0 4px rgba(76, 130, 251, 0.8);
-  animation: navProgressGlow 1.1s ease-in-out infinite;
-  z-index: 101;
-  pointer-events: none;
-}
-
-@keyframes navProgressGlow {
-  0% {
-    background-position: 0% 50%;
-    opacity: 0.85;
-  }
-  50% {
-    background-position: 100% 50%;
-    opacity: 1;
-  }
-  100% {
-    background-position: 0% 50%;
-    opacity: 0.85;
-  }
-}
-
 

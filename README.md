@@ -116,10 +116,10 @@ To ensure rapid First Contentful Paint (FCP), smooth scrolling (60 FPS), and low
    - All secondary full-page views (`AdminDashboardPage`, `SubmitToolPage`, `UserProfilePage`) and modal overlays (`ToolDialog`, `AuthModal`, `NotificationDrawer`, `AccountSettingsModal`) are code-split into independent on-demand chunks.
    - The initial bundle size is kept at an ultra-light **~201 kB**, minimizing initial download overhead.
 
-2. **React 18 Concurrent Background Transitions & Navbar Progress Bar**:
+2. **React 18 Concurrent Background Transitions & Seamless Navigation**:
    - Navigation between views and dialogs is wrapped in `useTransition` / `startTransition`.
    - The current view remains interactive on screen while the background chunk downloads.
-   - The duplicate top-of-screen progress bar has been eliminated; a single animated gradient progress line (`.navProgressBar`) runs strictly along the bottom edge of the Header navbar during transitions.
+   - Distracting navbar progress bar animations have been eliminated; transitions occur instantaneously, silently, and cleanly without UI clutter.
    - Once the new screen is fully ready, it mounts instantaneously, while the previous screen is cleanly unmounted for optimal garbage collection.
 
 3. **Smart Prefetching & Zero-Latency Feel**:

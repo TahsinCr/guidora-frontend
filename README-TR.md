@@ -116,10 +116,10 @@ Hızlı İlk İçerikli Boyama (FCP), akıcı kaydırma (60 FPS) ve düşük ağ
    - Tüm ikincil tam sayfa görünümleri (`AdminDashboardPage`, `SubmitToolPage`, `UserProfilePage`) ve modal bileşenleri (`ToolDialog`, `AuthModal`, `NotificationDrawer`, `AccountSettingsModal`) talep anında yüklenen dinamik parçalara ayrılmıştır.
    - İlk sayfa JavaScript bundle boyutu **~201 kB** seviyesinde tutulmuş, açılış yükü en aza indirilmiştir.
 
-2. **React 18 Eşzamanlı Geçişler (Concurrent Transitions) & Navbar İlerleme Çubuğu**:
+2. **React 18 Eşzamanlı Geçişler (Concurrent Transitions) & Kesintisiz Gezinme**:
    - Görünüm ve diyalog geçişleri `useTransition` / `startTransition` ile yürütülür.
    - Arka planda lazy chunk indirilirken mevcut sayfa kullanıcı önünde tamamen görünür ve etkileşime açık kalır.
-   - Ekranın en tepesindeki mükerrer çubuk kaldırılmış; yalnızca Header navbar'ının alt sınırında parıldayan gradyan bir hat (`.navProgressBar`) geçiş süresince kullanıcıya bilgi verir.
+   - Sayfa geçişlerindeki dikkat dağıtan navbar altı yükleme çubukları ve animasyonları tamamen kaldırılmış; geçişler anında ve temiz şekilde gerçekleşir.
    - Yeni ekran hazır olduğu anda tak diye açılır; eski ekran bellek tasarrufu amacıyla kapatılır (unmount edilir).
 
 3. **Akıllı Ön Yükleme (Prefetching) ve Sıfır Gecikme Hissi**:
