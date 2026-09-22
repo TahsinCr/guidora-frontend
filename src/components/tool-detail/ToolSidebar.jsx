@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ExternalLink, Bookmark, Plus, Star, CheckCircle2, ChevronRight, Flag } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import ReportModal from './ReportModal';
+import { sanitizeUrl } from '@/utils/security';
 import styles from './ToolSidebar.module.scss';
 
 export default function ToolSidebar({ tool, onSelectTool }) {
@@ -46,9 +47,9 @@ export default function ToolSidebar({ tool, onSelectTool }) {
           </div>
         </div>
 
-        {tool.websiteUrl ? (
+        {tool.websiteUrl && sanitizeUrl(tool.websiteUrl) ? (
           <a
-            href={tool.websiteUrl}
+            href={sanitizeUrl(tool.websiteUrl)}
             target="_blank"
             rel="noopener noreferrer"
             className={styles.visitWebsiteBtn}

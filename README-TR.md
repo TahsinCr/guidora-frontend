@@ -127,7 +127,30 @@ Hızlı İlk İçerikli Boyama (FCP), akıcı kaydırma (60 FPS) ve düşük ağ
    - Görünür alanın dışındaki kartlar için tarayıcı boyama ve düzen hesaplamalarını atlar; yüzlerce kart yüklense bile akıcı 60 FPS kaydırma korunur.
 
 5. **Satıcı (Vendor) Parça Ayrıştırması**:
-   - Ağır harici kütüphaneler (`react`, `react-dom`, `lucide-react`, `marked`) `vite.config.js` içinde bağımsız vendor chunk'larına ayrılmış, uzun süreli tarayıcı önbelleklemesi (HTTP cache) maksimize edilmiştir.
+   - Ağır harici kütüphaneler (`react`, `react-dom`, `lucide-react`, `marked`, `dompurify`) `vite.config.js` içinde bağımsız vendor chunk'larına ayrılmış, uzun süreli tarayıcı önbelleklemesi (HTTP cache) maksimize edilmiştir.
+
+### Güvenlik Mimarisi ve Koruma Katmanları
+
+İstemci tarafı kod enjeksiyonları, yetkisiz erişimler ve oltalama açıklarına karşı şu güvenlik mekanizmaları devreye alınmıştır:
+
+1. **XSS Dezenfeksiyon Motoru (`DOMPurify`)**:
+   - Kullanıcıların ve araçların sağladığı tüm Markdown içerikleri (sürüm notları, belgeler, incelemeler) `marked` tarafından derlendikten sonra `DOMPurify` tabanlı `sanitizeHtml()` süzgecinden geçirilir.
+   - `<script>`, `<iframe>`, `onerror`, `onload` gibi zararlı etiket ve nitelikler tamamen ayıklanır.
+
+2. **Harici Bağlantı Güvenliği & Tabnabbing Savunması**:
+   - Araç bağlantıları, üretici web siteleri ve şikayet bağlantıları `sanitizeUrl()` denetiminden geçer.
+   - `javascript:`, `data:`, `vbscript:`, `file:` gibi tehlikeli URL şemaları engellenir; yalnızca `http:` ve `https:` protokollerine izin verilir.
+   - Harici bağlantı pencereleri `safeOpenExternal()` ile `noopener,noreferrer` ve izole `opener` bağlamıyla açılır.
+
+3. **İstemci Taraflı Yetkilendirme Kalkanı (`AdminRouteGuard`)**:
+   - Komuta merkezine (`?view=admin`) yönelik doğrudan URL aramalarında oturum ve rol denetimi yapılır.
+   - `admin` veya `moderator` rolü taşımayan kullanıcılar için yönetim verileri gizlenir ve 403 Yetkisiz Erişim kalkanı sunulur.
+
+4. **Girdi Temizleme ve Şema Dezenfeksiyonu**:
+   - Araç gönderme formu ve kullanıcı profili güncellemelerinde `sanitizePlainText()` yardımıyla HTML etiketleri kırpılır, bellek şişirme girişimleri sınırlandırılır.
+
+5. **İçerik Güvenlik Politikası (Content Security Policy - CSP)**:
+   - `index.html` içerisindeki `<meta http-equiv="Content-Security-Policy">` başlığı ile yalnızca yetkilendirilmiş kaynaklardan stil, font, görsel ve WebSocket bağlantısına izin verilir (`frame-ancestors 'none'`).
 
 ### Çift Tema Mimarisi
 

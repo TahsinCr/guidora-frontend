@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Star, Eye, Bookmark, ArrowUpRight, ShieldCheck, Sparkles, Bot } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { safeOpenExternal } from '@/utils/security';
 import styles from './ProductCard.module.scss';
 
 function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
@@ -15,7 +16,7 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
   const handleExternal = (e) => {
     e.stopPropagation();
     if (tool.websiteUrl) {
-      window.open(tool.websiteUrl, '_blank', 'noopener,noreferrer');
+      safeOpenExternal(tool.websiteUrl);
     }
   };
 

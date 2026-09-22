@@ -1,31 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import {
+  User,
   ArrowLeft,
-  Share2,
-  Edit3,
+  Settings,
+  ShieldCheck,
+  Bookmark,
+  Send,
+  Star,
   Globe,
   MapPin,
   Calendar,
-  ShieldCheck,
   Award,
-  Bookmark,
-  PlusCircle,
   ExternalLink,
-  Sparkles,
-  X,
-  LayoutDashboard,
-  MessageSquare,
-  Star,
+  Edit2,
   Trash2,
+  CheckCircle2,
+  Share2,
+  Check,
+  Wrench,
+  X,
+  Lock,
 } from 'lucide-react';
-import ProductCard from '@/components/home/ProductCard';
-import {
-  getUserById,
-  getCurrentUser,
-  updateCurrentUser,
-} from '@/services/userService';
-import { getTools, getUserReviews, deleteReview } from '@/services/toolsService';
+import { getUserById, getCurrentUser, adminUpdateUserDetails } from '@/services/userService';
+import { getToolById, getAllReviews, deleteReview } from '@/services/toolsService';
 import { useLanguage } from '@/context/LanguageContext';
+import { sanitizeUrl, sanitizePlainText } from '@/utils/security';
 import styles from './UserProfilePage.module.scss';
 
 export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmin }) {
@@ -223,9 +222,9 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
                   <span>{user.location}</span>
                 </div>
               )}
-              {user.website && (
+              {user.website && sanitizeUrl(user.website) && (
                 <a
-                  href={user.website}
+                  href={sanitizeUrl(user.website)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`${styles.metaItem} ${styles.metaLink}`}

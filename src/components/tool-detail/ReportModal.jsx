@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { submitReport } from '@/services/toolsService';
 import { useLanguage } from '@/context/LanguageContext';
+import { sanitizeUrl } from '@/utils/security';
 import styles from './ReportModal.module.scss';
 
 const REPORT_REASONS = [
@@ -142,9 +143,9 @@ export default function ReportModal({ tool, isOpen, onClose }) {
                 <span className={styles.targetName}>{tool.name}</span>
                 <span className={styles.targetCategory}>{tool.category || 'AI Tool'} • {tool.pricing || 'Free'}</span>
               </div>
-              {tool.websiteUrl && (
+              {tool.websiteUrl && sanitizeUrl(tool.websiteUrl) && (
                 <a
-                  href={tool.websiteUrl}
+                  href={sanitizeUrl(tool.websiteUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.targetLink}

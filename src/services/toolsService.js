@@ -1,5 +1,6 @@
 import { TOOLS_DATA, CATEGORIES, TAG_CATEGORIES, ALL_TAGS } from './mockData';
 import { adminGetCategories, adminGetTagCategories, getDeletedToolIds, getToolOverrides } from './adminService';
+import { sanitizePlainText, sanitizeUrl } from '@/utils/security';
 
 // Simulated artificial network latency for realistic async behavior (80ms)
 const simulateDelay = (ms = 80) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -225,23 +226,24 @@ export async function getToolById(id) {
 export async function addTool(toolData) {
   await simulateDelay(100);
 
-  const id = toolData.id || toolData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const cleanName = sanitizePlainText(toolData.name || '');
+  const id = toolData.id || cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   const categoryObj = CATEGORIES.find((c) => c.id === toolData.categoryId) || CATEGORIES[1];
 
   const newTool = {
     id,
-    name: toolData.name,
+    name: cleanName,
     category: categoryObj.name || categoryObj.label || 'Generative Art',
     categoryId: categoryObj.id,
-    tag: toolData.tag || (toolData.tags?.[0]?.name || 'Developer Tool'),
+    tag: sanitizePlainText(toolData.tag || (toolData.tags?.[0]?.name || 'Developer Tool')),
     tags: toolData.tags || [],
     pricing: toolData.pricing || 'Freemium',
-    description: toolData.description,
-    websiteUrl: toolData.websiteUrl || '',
-    repoUrl: toolData.repoUrl || '',
+    description: sanitizePlainText(toolData.description || ''),
+    websiteUrl: sanitizeUrl(toolData.websiteUrl) || '',
+    repoUrl: sanitizeUrl(toolData.repoUrl) || '',
     readme: toolData.readme || '',
     changelog: toolData.changelog || '',
-    webhookUrl: toolData.webhookUrl || '',
+    webhookUrl: sanitizeUrl(toolData.webhookUrl) || '',
     syncFrequency: toolData.syncFrequency || 'Daily',
     rating: 5.0,
     views: '1.0k',

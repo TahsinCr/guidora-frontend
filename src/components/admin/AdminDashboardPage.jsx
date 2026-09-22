@@ -80,12 +80,73 @@ import {
 import { useLanguage } from '@/context/LanguageContext';
 import ToolStudioForm from '@/components/common/ToolStudioForm';
 import UnifiedTranslationModal from '@/components/common/UnifiedTranslationModal';
+import { sanitizeUrl, sanitizePlainText } from '@/utils/security';
 import styles from './AdminDashboardPage.module.scss';
 
 export default function AdminDashboardPage({ onBack, onOpenTool }) {
   const { t, translateCategory, translateTag, translateTagCategory } = useLanguage();
   const currentUser = getCurrentUser();
+  const isAdmin = currentUser?.role === 'admin';
   const isModerator = currentUser?.role === 'moderator';
+  const hasAccess = isAdmin || isModerator;
+
+  // Authorization Guard: Prevent unauthorized direct access via ?view=admin
+  if (!hasAccess) {
+    return (
+      <div className={styles.adminContainer} style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{
+          textAlign: 'center',
+          maxWidth: '480px',
+          padding: '48px 32px',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-card)',
+          borderRadius: 'var(--radius-xl)',
+          boxShadow: 'var(--shadow-card)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '16px'
+        }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            background: 'rgba(239, 68, 68, 0.12)',
+            border: '1px solid rgba(239, 68, 68, 0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#ef4444'
+          }}>
+            <Lock size={28} />
+          </div>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
+            {t('admin.accessDenied', '403 — Yetkisiz Erişim')}
+          </h2>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+            {t('admin.accessDeniedDesc', 'Bu alana yalnızca yetkili platform yöneticileri ve topluluk moderatörleri erişebilir.')}
+          </p>
+          <button
+            type="button"
+            onClick={onBack}
+            style={{
+              marginTop: '8px',
+              padding: '10px 24px',
+              borderRadius: 'var(--radius-full)',
+              background: 'var(--brand-blue, #6366f1)',
+              color: '#ffffff',
+              border: 'none',
+              fontWeight: '600',
+              fontSize: '13.5px',
+              cursor: 'pointer'
+            }}
+          >
+            {t('header.backToDirectory', 'Dizine Geri Dön')}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'tools' | 'categories' | 'tags' | 'organizations' | 'users' | 'reviews' | 'reports' | 'logs' | 'system'
 
@@ -1607,15 +1668,19 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
                       </div>
                     </td>
                     <td>
-                      <a
-                        href={o.website}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ color: 'var(--brand-blue)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                      >
-                        {o.website.replace('https://', '')}
-                        <ExternalLink size={12} />
-                      </a>
+                      {o.website && sanitizeUrl(o.website) ? (
+                        <a
+                          href={sanitizeUrl(o.website)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: 'var(--brand-blue)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        >
+                          {o.website.replace('https://', '')}
+                          <ExternalLink size={12} />
+                        </a>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)' }}>—</span>
+                      )}
                     </td>
                     <td>
                       <button

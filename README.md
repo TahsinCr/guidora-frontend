@@ -127,7 +127,30 @@ To ensure rapid First Contentful Paint (FCP), smooth scrolling (60 FPS), and low
    - The browser skips layout, styling, and paint calculations for cards outside the viewport, maintaining consistent 60 FPS scrolling even with deep infinite feeds.
 
 5. **Vendor Chunk Isolation**:
-   - Heavy 3rd-party libraries (`react`, `react-dom`, `lucide-react`, `marked`) are partitioned into dedicated vendor chunks in `vite.config.js`, maximizing long-term browser cache retention.
+   - Heavy 3rd-party libraries (`react`, `react-dom`, `lucide-react`, `marked`, `dompurify`) are partitioned into dedicated vendor chunks in `vite.config.js`, maximizing long-term browser cache retention.
+
+### Security Architecture & Hardening
+
+To safeguard against client-side exploitation, user impersonation, and injection vectors:
+
+1. **XSS Sanitization Engine (`DOMPurify`)**:
+   - All user-supplied Markdown content (release notes, tool documentation, community reviews) parsed by `marked` passes through `sanitizeHtml()` powered by `DOMPurify` before entering `dangerouslySetInnerHTML`.
+   - Script tags, iframes, inline event listeners (`onerror`, `onload`), and execution attributes are stripped automatically.
+
+2. **External Link Sanitization & Tabnabbing Defense**:
+   - Outbound tool website links, creator links, and report targets pass through `sanitizeUrl()`.
+   - Malicious link protocols (`javascript:`, `data:`, `vbscript:`, `file:`) are blocked, permitting only validated `http:` and `https:` schemes.
+   - Programmatic `window.open` calls invoke `safeOpenExternal()` with `noopener,noreferrer` and nullified `opener` contexts.
+
+3. **Client-Side Authorization Guard (`AdminRouteGuard`)**:
+   - Access to the command center (`?view=admin`) is guarded against unauthenticated and non-privileged roles.
+   - Unauthorized attempts render a structured 403 Access Denied interface rather than exposing administrative UI state.
+
+4. **Input Cleansing & Schema Sanitization**:
+   - Tool submission forms and profile inputs utilize `sanitizePlainText()` to strip HTML markup and enforce clean metadata bounds before state persistence.
+
+5. **Content Security Policy (CSP)**:
+   - Configured via `<meta http-equiv="Content-Security-Policy">` in `index.html` with explicit origins for styles, fonts, images, and WebSocket connections (`frame-ancestors 'none'`).
 
 ### Dual-Theme Architecture
 

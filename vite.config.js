@@ -24,7 +24,7 @@ export default defineConfig({
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
           'icons-vendor': ['lucide-react'],
-          'markdown-vendor': ['marked'],
+          'markdown-vendor': ['marked', 'dompurify'],
         },
       },
     },

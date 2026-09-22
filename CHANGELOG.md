@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Enterprise Security Hardening & Client Protection Layers**:
+  - Integrated `DOMPurify` sanitizer inside `src/components/common/MarkdownRenderer.jsx` to prevent Cross-Site Scripting (XSS) in Markdown release changelogs, descriptions, and user reviews.
+  - Implemented centralized URL security helper (`sanitizeUrl` and `safeOpenExternal` in `src/utils/security.js`) blocking malicious protocol schemes (`javascript:`, `data:`, `vbscript:`, `file:`) and enforcing `noopener,noreferrer` tabnabbing defense across `ProductCard`, `ToolSidebar`, `ReportModal`, `UserProfilePage`, and `AdminDashboardPage`.
+  - Added route-level client-side authorization guard in `AdminDashboardPage.jsx` displaying a structured 403 Access Denied interface whenever unauthorized users attempt to access `?view=admin`.
+  - Added input cleansing (`sanitizePlainText`) in `toolsService.addTool` to strip HTML markup and enforce clean metadata bounds before persistence.
+  - Configured Content Security Policy (CSP) meta header in `index.html` restricting script, style, font, image, and WebSocket origins with `frame-ancestors 'none'`.
+  - Created `MEMORY.md` to track architectural guidelines, protected UI invariants, completed features, and pending backend tasks.
+
 - **Fixed Navbar Offset Compensation & Smooth Scroll Animation**:
   - Implemented dynamic `--header-height` (`72px` desktop / `64px` mobile) and `--catalog-offset` (`calc(var(--header-height) + 16px)` / `12px`) CSS variables in `src/styles/base/_theme.scss`.
   - Added global `scroll-padding-top: var(--catalog-offset)` on `html` and `scroll-margin-top: var(--catalog-offset)` on `.contentLayout` (`#catalog-section`).

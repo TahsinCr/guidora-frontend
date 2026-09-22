@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { marked } from 'marked';
+import { sanitizeHtml } from '@/utils/security';
 import styles from './MarkdownRenderer.module.scss';
 
 // Configure marked with GitHub-flavored markdown and line breaks
@@ -12,10 +13,11 @@ export default function MarkdownRenderer({ content, className = '' }) {
   const htmlContent = useMemo(() => {
     if (!content) return '';
     try {
-      return marked.parse(content);
+      const rawParsed = marked.parse(content);
+      return sanitizeHtml(rawParsed);
     } catch (err) {
       console.error('Markdown parsing error:', err);
-      return `<p>${content}</p>`;
+      return sanitizeHtml(`<p>${content}</p>`);
     }
   }, [content]);
 

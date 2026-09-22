@@ -9,3 +9,4 @@ export default function PageLoader({ text = 'Yükleniyor...' }) {
     </div>
   );
 }
+
