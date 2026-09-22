@@ -84,3 +84,4 @@ export function sanitizePlainText(text) {
     .replace(/[<>]/g, '')
     .trim();
 }
+

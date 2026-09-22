@@ -25,6 +25,8 @@ The application provides:
 - a content moderation and issue reporting workflow;
 - an infinite scroll feed powered by native `IntersectionObserver` with advance prefetching;
 - a complete dual-theme engine (Dark and Light) built on semantic CSS custom properties;
+- a branded innovative loading engine (`PageLoader`) with compass emblems, orbiting particles, and radial glow auras, paired with initial anti-flash footer protection;
+- localized, non-intrusive popup dialog loaders for comprehensive modals (`AuthModal` and `ToolStudioForm`);
 - URL query parameter synchronization (`?tool=<id>`) for bookmarkable views and browser history navigation;
 - an SCSS layout module translating Figma Auto-Layout properties (`fill`, `hug`, `fixed`) to CSS.
 

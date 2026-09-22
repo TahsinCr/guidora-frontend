@@ -167,6 +167,19 @@
   }
 }
 
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  background: var(--modal-bg, rgba(11, 17, 32, 0.94));
+  backdrop-filter: blur(8px);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
 .formHeader {
   text-align: center;
   margin-bottom: 28px;

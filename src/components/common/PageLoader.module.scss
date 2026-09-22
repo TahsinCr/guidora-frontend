@@ -1,33 +1,208 @@
+@use '@/styles/modules/layout' as layout;
+
 .loaderContainer {
-  width: 100%;
-  min-height: 280px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  padding: 40px 20px;
+  gap: 18px;
+  position: relative;
+  z-index: 10;
+  user-select: none;
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  // Variants
+  &.fullscreen {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg-primary, #070c18);
+    z-index: 99999;
+  }
+
+  &.page {
+    width: 100%;
+    min-height: 55vh;
+    padding: 60px 20px;
+  }
+
+  &.popup {
+    width: 100%;
+    min-height: 420px;
+    padding: 40px 20px;
+    background: var(--bg-card, rgba(13, 21, 39, 0.6));
+    border-radius: var(--radius-xl, 20px);
+  }
+
+  &.inline {
+    width: 100%;
+    min-height: 180px;
+    padding: 20px 10px;
+  }
 }
 
-.spinner {
-  width: 38px;
-  height: 38px;
+.logoOrb {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Glowing pulsing aura behind the emblem
+.auraGlow {
+  position: absolute;
+  inset: -12px;
   border-radius: 50%;
-  border: 3px solid rgba(129, 140, 248, 0.16);
-  border-top-color: var(--primary-color, #6366f1);
-  animation: spin 0.8s linear infinite;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, rgba(138, 56, 245, 0.15) 50%, transparent 70%);
+  filter: blur(8px);
+  animation: auraPulse 2.4s ease-in-out infinite alternate;
 }
 
-.loaderText {
-  font-size: 13.5px;
+// Orbit ring spinning around the core
+.orbitRing {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(129, 140, 248, 0.3);
+  animation: rotateRing 8s linear infinite;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #818cf8;
+    box-shadow: 0 0 10px #818cf8, 0 0 18px #6366f1;
+  }
+}
+
+// Core Guidora Emblem
+.coreLogo {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #4e5ce2 0%, #9f6af0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(78, 92, 226, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  position: relative;
+  z-index: 2;
+  color: #ffffff;
+  animation: floatOrb 3s ease-in-out infinite alternate;
+}
+
+.compassSvg {
+  width: 32px;
+  height: 32px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+}
+
+.compassNeedle {
+  transform-origin: 21px 21px;
+  animation: spinNeedle 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+// Text details
+.textWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.brandTitle {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary, #ffffff);
+}
+
+.shimmerDots {
+  display: inline-block;
+  color: var(--brand-blue, #6366f1);
+  animation: dotsBlink 1.4s infinite;
+}
+
+.statusText {
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-muted, #94a3b8);
-  letter-spacing: 0.02em;
+  margin: 0;
 }
 
-@keyframes spin {
+.subText {
+  font-size: 11.5px;
+  color: var(--text-muted, #64748b);
+  opacity: 0.8;
+}
+
+// Keyframes
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes auraPulse {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 0.85;
+  }
+}
+
+@keyframes rotateRing {
+  from {
+    transform: rotate(0deg);
+  }
   to {
     transform: rotate(360deg);
   }
 }
 
+@keyframes floatOrb {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes spinNeedle {
+  0% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(180deg);
+  }
+  60% {
+    transform: rotate(160deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dotsBlink {
+  0%, 20% { opacity: 0.2; }
+  50% { opacity: 1; }
+  100% { opacity: 0.2; }
+}

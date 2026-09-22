@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { login, register } from '@/services/authService';
 import { useLanguage } from '@/context/LanguageContext';
+import PageLoader from '@/components/common/PageLoader';
 import styles from './AuthModal.module.scss';
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode = 'welcome' }) {
@@ -57,18 +58,20 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode
     setError('');
     setIsLoading(true);
 
-    try {
-      const user = login({
-        usernameOrEmail: loginInput,
-        password: loginPassword,
-      });
-      setIsLoading(false);
-      onLoginSuccess(user);
-      onClose();
-    } catch (err) {
-      setIsLoading(false);
-      setError(err.message || t('auth.loginFailed', 'Login failed. Please check your credentials.'));
-    }
+    setTimeout(() => {
+      try {
+        const user = login({
+          usernameOrEmail: loginInput,
+          password: loginPassword,
+        });
+        setIsLoading(false);
+        onLoginSuccess(user);
+        onClose();
+      } catch (err) {
+        setIsLoading(false);
+        setError(err.message || t('auth.loginFailed', 'Login failed. Please check your credentials.'));
+      }
+    }, 450);
   };
 
   const handleProceedToProfile = (e) => {
@@ -112,23 +115,25 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode
     }
 
     setIsLoading(true);
-    try {
-      const user = register({
-        username: regUsername.trim(),
-        email: regEmail.trim(),
-        password: regPassword,
-        name: regFullName.trim() || regUsername.trim(),
-        title: regTitle.trim(),
-        bio: regBio.trim(),
-        avatar: regAvatar.trim(),
-      });
-      setIsLoading(false);
-      onLoginSuccess(user);
-      onClose();
-    } catch (err) {
-      setIsLoading(false);
-      setError(err.message || t('auth.registerFailed', 'Registration could not be completed.'));
-    }
+    setTimeout(() => {
+      try {
+        const user = register({
+          username: regUsername.trim(),
+          email: regEmail.trim(),
+          password: regPassword,
+          name: regFullName.trim() || regUsername.trim(),
+          title: regTitle.trim(),
+          bio: regBio.trim(),
+          avatar: regAvatar.trim(),
+        });
+        setIsLoading(false);
+        onLoginSuccess(user);
+        onClose();
+      } catch (err) {
+        setIsLoading(false);
+        setError(err.message || t('auth.registerFailed', 'Registration could not be completed.'));
+      }
+    }, 450);
   };
 
   return (
@@ -201,6 +206,20 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode
 
         {/* Right Side: Form Content based on Mode */}
         <div className={styles.formSide}>
+          {isLoading && (
+            <div className={styles.loadingOverlay}>
+              <PageLoader
+                variant="popup"
+                text={
+                  mode === 'register'
+                    ? t('auth.creatingAccount', 'Hesap oluşturuluyor...')
+                    : t('auth.signingIn', 'Giriş yapılıyor...')
+                }
+                subtext={t('auth.verifyingCredentials', 'Kimlik bilgileri doğrulanıyor')}
+              />
+            </div>
+          )}
+
           {error && (
             <div className={styles.errorBanner}>
               <AlertCircle size={16} />

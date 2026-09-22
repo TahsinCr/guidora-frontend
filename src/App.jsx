@@ -50,6 +50,7 @@ export default function App() {
 
   const [tools, setTools] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -214,10 +215,12 @@ export default function App() {
         setTools(data.items || []);
         setHasMore(data.hasMore || false);
         setIsLoading(false);
+        setIsInitialLoading(false);
       })
       .catch((err) => {
         console.error('Error fetching tools:', err);
         setIsLoading(false);
+        setIsInitialLoading(false);
       });
   }, [selectedCategory, selectedCategories, selectedTags, selectedOrganizations, debouncedSearch, sort, filterVerified, verification]);
 
@@ -444,6 +447,12 @@ export default function App() {
               onSelectTool={handleOpenTool}
               onToolLoaded={setActiveToolData}
             />
+          ) : isInitialLoading ? (
+            <PageLoader
+              variant="page"
+              text="Guidora kataloğu hazırlanıyor..."
+              subtext="En iyi geliştirici ve tasarım araçları listeleniyor"
+            />
           ) : (
             <>
               <InformationCard
@@ -489,10 +498,28 @@ export default function App() {
 
       <ScrollToTop />
 
-      <Footer />
+      {!isInitialLoading && <Footer />}
 
       {/* Auth Modal (Login / Register / Welcome) */}
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={
+          isAuthModalOpen ? (
+            <div style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(3, 7, 18, 0.82)',
+              backdropFilter: 'blur(12px)',
+              zIndex: 1050,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px'
+            }}>
+              <PageLoader variant="popup" text="Giriş modülü hazırlanıyor..." />
+            </div>
+          ) : null
+        }
+      >
         {isAuthModalOpen && (
           <AuthModal
             isOpen={isAuthModalOpen}

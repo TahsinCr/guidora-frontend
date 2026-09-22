@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Branded Animated PageLoader & Scoped Popup Loading Engine**:
+  - Designed and implemented a custom branded animated loader (`src/components/common/PageLoader.jsx` & `PageLoader.module.scss`) featuring Guidora's gradient compass emblem, an orbiting particle along a dashed orbit ring, a pulsing radial aura glow, a rotating compass needle, and animated shimmer dots.
+  - Provided 4 specialized variants: `fullscreen`, `page` (for dynamic views and initial load with `min-height: 55vh`), `popup` (scoped strictly within dialog cards without viewport takeover), and `inline`.
+  - Scoped popup loader integrated into `AuthModal.jsx` during login and registration submission, as well as `ToolStudioForm.jsx` during admin tool edit and submission.
+  - Eliminated initial footer layout shift & flash ("anti-flash") by introducing `isInitialLoading` state in `src/App.jsx`, ensuring the footer never renders prematurely or above main catalog content.
+  - Embedded an ultra-lightweight inline pre-loader in `index.html` to guarantee zero white flash before the React bundle mounts.
+
 - **Enterprise Security Hardening & Client Protection Layers**:
   - Integrated `DOMPurify` sanitizer inside `src/components/common/MarkdownRenderer.jsx` to prevent Cross-Site Scripting (XSS) in Markdown release changelogs, descriptions, and user reviews.
   - Implemented centralized URL security helper (`sanitizeUrl` and `safeOpenExternal` in `src/utils/security.js`) blocking malicious protocol schemes (`javascript:`, `data:`, `vbscript:`, `file:`) and enforcing `noopener,noreferrer` tabnabbing defense across `ProductCard`, `ToolSidebar`, `ReportModal`, `UserProfilePage`, and `AdminDashboardPage`.
