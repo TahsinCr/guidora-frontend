@@ -30,6 +30,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed & Fixed
 
+- **Softer Progressive Category Scroll Transition**:
+  - Replaced the hard binary threshold (`isScrolledPast` boolean switch) with continuous `requestAnimationFrame` scroll progress interpolation (`0px` to `150px`).
+  - Hero and category slider now smoothly and proportionally fade (`1.0` down to `0.20`) and translate (`0px` to `-8px`) in direct sync with scroll distance, eliminating abrupt snaps.
+  - Upgraded programmatic `scrollToCatalog` to standard 460ms ease-out cubic animation (`1 - (1 - progress)^3`), replacing the abrupt native browser scroll jump.
+  - Tuned wheel gesture sensitivity to require an intentional scroll swipe (`deltaY > 35`) rather than accidental micro-twitches.
 - **Compact Category Bar Below 850px (Mobile & Tablet Mockup Match)**:
   - Re-architected category presentation on screens `<= 850px` to match mockup `media_1790038563890.png`.
   - Hides the large hero title, subtitle slogan, and scroll down button on mobile/tablet viewports, placing the category slider immediately beneath the navbar to eliminate wasted vertical space.

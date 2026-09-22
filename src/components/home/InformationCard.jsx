@@ -11,31 +11,59 @@ export function scrollToCatalog(smooth = true) {
   const rect = catalogEl.getBoundingClientRect();
   const targetY = Math.max(0, rect.top + window.scrollY - headerHeight - offset);
 
-  window.scrollTo({
-    top: targetY,
-    behavior: smooth ? 'smooth' : 'auto',
-  });
+  if (!smooth) {
+    window.scrollTo({ top: targetY, behavior: 'auto' });
+    return;
+  }
+
+  const startY = window.scrollY;
+  const distance = targetY - startY;
+  if (Math.abs(distance) < 2) return;
+
+  const duration = 460;
+  const startTime = performance.now();
+
+  function step(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    // Standard ease-out cubic: smooth start, natural deceleration without abrupt stops
+    const ease = 1 - Math.pow(1 - progress, 3);
+    window.scrollTo(0, startY + distance * ease);
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  requestAnimationFrame(step);
 }
 
 export default function InformationCard({ categories = [], selectedCategory, onSelectCategory }) {
   const { t } = useLanguage();
-  const [isScrolledPast, setIsScrolledPast] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const touchStartY = useRef(null);
   const isNavigating = useRef(false);
 
-  // Monitor scroll position for graceful fade animation
+  // Progressive scroll interpolation: eliminates harsh threshold snapping
   useEffect(() => {
+    let rAF = null;
     const handleScroll = () => {
-      const catalogEl = document.getElementById('catalog-section');
-      if (!catalogEl) return;
-      const headerHeight = window.innerWidth <= 768 ? 64 : 72;
-      const rect = catalogEl.getBoundingClientRect();
-      setIsScrolledPast(rect.top <= headerHeight + 50);
+      if (rAF) return;
+      rAF = requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        // Soft, continuous transition over 150px of natural scroll
+        const progress = Math.min(1, Math.max(0, scrollY / 150));
+        setScrollProgress(progress);
+        rAF = null;
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rAF) cancelAnimationFrame(rAF);
+    };
   }, []);
 
   // Wheel gesture listener: Scrolling down from the hero smoothly glides to catalog
@@ -46,14 +74,14 @@ export default function InformationCard({ categories = [], selectedCategory, onS
       if (isNavigating.current) return;
 
       const currentScrollY = window.scrollY;
-      // If at the very top of the desktop hero (> 850px) and scrolling downwards
-      if (window.innerWidth > 850 && currentScrollY < 40 && e.deltaY > 15) {
+      // Require an intentional downward gesture rather than micro-twitches
+      if (window.innerWidth > 850 && currentScrollY < 25 && e.deltaY > 35) {
         isNavigating.current = true;
         scrollToCatalog(true);
         clearTimeout(timer);
         timer = setTimeout(() => {
           isNavigating.current = false;
-        }, 800);
+        }, 700);
       }
     };
 
@@ -68,14 +96,14 @@ export default function InformationCard({ categories = [], selectedCategory, onS
       const currentScrollY = window.scrollY;
       const delta = touchStartY.current - e.touches[0].clientY;
 
-      if (currentScrollY < 30 && delta > 25) {
+      if (currentScrollY < 25 && delta > 40) {
         touchStartY.current = null;
         isNavigating.current = true;
         scrollToCatalog(true);
         clearTimeout(timer);
         timer = setTimeout(() => {
           isNavigating.current = false;
-        }, 800);
+        }, 700);
       }
     };
 
@@ -109,7 +137,14 @@ export default function InformationCard({ categories = [], selectedCategory, onS
   );
 
   return (
-    <section className={`${styles.heroContainer} ${isScrolledPast ? styles.isScrolledPast : ''}`}>
+    <section
+      className={styles.heroContainer}
+      style={{
+        opacity: Math.max(0.2, 1 - scrollProgress * 0.8),
+        transform: `translateY(-${(scrollProgress * 8).toFixed(1)}px)`,
+        pointerEvents: scrollProgress > 0.85 ? 'none' : 'auto',
+      }}
+    >
       <div className={styles.heroInner}>
         <div className={styles.headingSection}>
           <h1 className={styles.title}>

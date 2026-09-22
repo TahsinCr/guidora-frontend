@@ -6,8 +6,9 @@
   margin-bottom: 12px;
   overflow: hidden;
   text-align: center;
-  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+  transition: opacity 0.45s cubic-bezier(0.25, 1, 0.5, 1),
+              transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
 
   &::before {
     content: '';
@@ -20,17 +21,7 @@
     background: radial-gradient(ellipse at center, rgba(78, 92, 226, 0.16) 0%, rgba(159, 106, 240, 0.08) 50%, transparent 70%);
     pointer-events: none;
     z-index: 0;
-    transition: opacity 0.35s ease;
-  }
-
-  &.isScrolledPast {
-    opacity: 0.2;
-    transform: translateY(-8px) scale(0.99);
-    pointer-events: none;
-
-    &::before {
-      opacity: 0.1;
-    }
+    transition: opacity 0.45s ease;
   }
 }
 
