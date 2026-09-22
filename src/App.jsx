@@ -1,18 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import InformationCard from '@/components/home/InformationCard';
 import ProductGrid from '@/components/home/ProductGrid';
-import ToolDialog from '@/components/tool-detail/ToolDialog';
-import SubmitToolPage from '@/components/submit/SubmitToolPage';
-import UserProfilePage from '@/components/profile/UserProfilePage';
-import AdminDashboardPage from '@/components/admin/AdminDashboardPage';
-import AuthModal from '@/components/auth/AuthModal';
-import NotificationDrawer from '@/components/notifications/NotificationDrawer';
-import AccountSettingsModal from '@/components/settings/AccountSettingsModal';
 import ScrollToTop from '@/components/common/ScrollToTop';
+import PageLoader from '@/components/common/PageLoader';
+import { useDebounce } from '@/hooks/useDebounce';
 import { getTools, getCategories } from '@/services/toolsService';
 import { getCurrentUser } from '@/services/userService';
+
+// Lazy-loaded heavy views and secondary modals (Code Splitting)
+const ToolDialog = lazy(() => import('@/components/tool-detail/ToolDialog'));
+const SubmitToolPage = lazy(() => import('@/components/submit/SubmitToolPage'));
+const UserProfilePage = lazy(() => import('@/components/profile/UserProfilePage'));
+const AdminDashboardPage = lazy(() => import('@/components/admin/AdminDashboardPage'));
+const AuthModal = lazy(() => import('@/components/auth/AuthModal'));
+const NotificationDrawer = lazy(() => import('@/components/notifications/NotificationDrawer'));
+const AccountSettingsModal = lazy(() => import('@/components/settings/AccountSettingsModal'));
 
 export default function App() {
   const [categories, setCategories] = useState([]);
@@ -37,6 +41,7 @@ export default function App() {
   const [selectedTags, setSelectedTags] = useState(initialTags);
   const [selectedOrganizations, setSelectedOrganizations] = useState(initialOrgs);
   const [search, setSearch] = useState(initialSearch);
+  const debouncedSearch = useDebounce(search, 250);
   const [sort, setSort] = useState(initialSort);
   const [filterVerified, setFilterVerified] = useState(false);
   const [verification, setVerification] = useState(initialVer);
@@ -198,7 +203,7 @@ export default function App() {
       selectedCategories,
       selectedTags,
       selectedOrganizations,
-      search,
+      search: debouncedSearch,
       sort,
       filterVerified,
       verification,
@@ -214,7 +219,7 @@ export default function App() {
         console.error('Error fetching tools:', err);
         setIsLoading(false);
       });
-  }, [selectedCategory, selectedCategories, selectedTags, selectedOrganizations, search, sort, filterVerified, verification]);
+  }, [selectedCategory, selectedCategories, selectedTags, selectedOrganizations, debouncedSearch, sort, filterVerified, verification]);
 
   // Load more tools (infinite scroll pagination)
   const handleLoadMore = useCallback(() => {
@@ -227,7 +232,7 @@ export default function App() {
       selectedCategories,
       selectedTags,
       selectedOrganizations,
-      search,
+      search: debouncedSearch,
       sort,
       filterVerified,
       verification,
@@ -244,7 +249,7 @@ export default function App() {
         console.error('Error loading more tools:', err);
         setIsLoadingMore(false);
       });
-  }, [page, hasMore, isLoadingMore, selectedCategory, selectedCategories, selectedTags, selectedOrganizations, search, sort, filterVerified, verification]);
+  }, [page, hasMore, isLoadingMore, selectedCategory, selectedCategories, selectedTags, selectedOrganizations, debouncedSearch, sort, filterVerified, verification]);
 
   // Handle URL sync and browser back/forward buttons (no page reload)
   useEffect(() => {
@@ -414,70 +419,72 @@ export default function App() {
       />
 
       <main className="main-content">
-        {isAdminView ? (
-          <AdminDashboardPage
-            onBack={handleCloseTool}
-            onOpenTool={handleOpenTool}
-          />
-        ) : isProfileView ? (
-          <UserProfilePage
-            userId={profileUserId}
-            onBack={handleCloseTool}
-            onOpenTool={handleOpenTool}
-            onOpenAdmin={handleOpenAdmin}
-          />
-        ) : isSubmitView ? (
-          <SubmitToolPage
-            onBack={handleCloseTool}
-            onToolCreated={handleToolCreated}
-          />
-        ) : activeToolId ? (
-          <ToolDialog
-            toolId={activeToolId}
-            onClose={handleCloseTool}
-            onSelectTool={handleOpenTool}
-            onToolLoaded={setActiveToolData}
-          />
-        ) : (
-          <>
-            <InformationCard
-              categories={categories}
-              selectedCategory={selectedCategory}
-              onSelectCategory={handleSelectTopCategory}
+        <Suspense fallback={<PageLoader />}>
+          {isAdminView ? (
+            <AdminDashboardPage
+              onBack={handleCloseTool}
+              onOpenTool={handleOpenTool}
             />
+          ) : isProfileView ? (
+            <UserProfilePage
+              userId={profileUserId}
+              onBack={handleCloseTool}
+              onOpenTool={handleOpenTool}
+              onOpenAdmin={handleOpenAdmin}
+            />
+          ) : isSubmitView ? (
+            <SubmitToolPage
+              onBack={handleCloseTool}
+              onToolCreated={handleToolCreated}
+            />
+          ) : activeToolId ? (
+            <ToolDialog
+              toolId={activeToolId}
+              onClose={handleCloseTool}
+              onSelectTool={handleOpenTool}
+              onToolLoaded={setActiveToolData}
+            />
+          ) : (
+            <>
+              <InformationCard
+                categories={categories}
+                selectedCategory={selectedCategory}
+                onSelectCategory={handleSelectTopCategory}
+              />
 
-            <ProductGrid
-              tools={tools}
-              isLoading={isLoading}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              search={search}
-              onSearchChange={setSearch}
-              categories={categories}
-              selectedCategory={selectedCategory}
-              onSelectCategory={handleSelectTopCategory}
-              selectedCategories={selectedCategories}
-              onSelectedCategoriesChange={handleSelectedCategoriesChange}
-              selectedOrganizations={selectedOrganizations}
-              onSelectedOrganizationsChange={setSelectedOrganizations}
-              selectedTags={selectedTags}
-              onSelectedTagsChange={setSelectedTags}
-              sort={sort}
-              onSortChange={setSort}
-              filterVerified={filterVerified}
-              onFilterVerifiedChange={setFilterVerified}
-              verification={verification}
-              onVerificationChange={setVerification}
-              onResetFilters={handleResetFilters}
-              isMobileFilterOpen={isMobileFilterOpen}
-              onToggleMobileFilter={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-              onOpenDetail={handleOpenTool}
-              hasMore={hasMore}
-              isLoadingMore={isLoadingMore}
-              onLoadMore={handleLoadMore}
-            />
-          </>
-        )}
+              <ProductGrid
+                tools={tools}
+                isLoading={isLoading}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                search={search}
+                onSearchChange={setSearch}
+                categories={categories}
+                selectedCategory={selectedCategory}
+                onSelectCategory={handleSelectTopCategory}
+                selectedCategories={selectedCategories}
+                onSelectedCategoriesChange={handleSelectedCategoriesChange}
+                selectedOrganizations={selectedOrganizations}
+                onSelectedOrganizationsChange={setSelectedOrganizations}
+                selectedTags={selectedTags}
+                onSelectedTagsChange={setSelectedTags}
+                sort={sort}
+                onSortChange={setSort}
+                filterVerified={filterVerified}
+                onFilterVerifiedChange={setFilterVerified}
+                verification={verification}
+                onVerificationChange={setVerification}
+                onResetFilters={handleResetFilters}
+                isMobileFilterOpen={isMobileFilterOpen}
+                onToggleMobileFilter={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+                onOpenDetail={handleOpenTool}
+                hasMore={hasMore}
+                isLoadingMore={isLoadingMore}
+                onLoadMore={handleLoadMore}
+              />
+            </>
+          )}
+        </Suspense>
       </main>
 
       <ScrollToTop />
@@ -485,28 +492,40 @@ export default function App() {
       <Footer />
 
       {/* Auth Modal (Login / Register / Welcome) */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        initialMode={authModalMode}
-        onLoginSuccess={(user) => {
-          setCurrentUser(user);
-        }}
-      />
+      <Suspense fallback={null}>
+        {isAuthModalOpen && (
+          <AuthModal
+            isOpen={isAuthModalOpen}
+            onClose={() => setIsAuthModalOpen(false)}
+            initialMode={authModalMode}
+            onLoginSuccess={(user) => {
+              setCurrentUser(user);
+            }}
+          />
+        )}
+      </Suspense>
 
       {/* Notifications Drawer */}
-      <NotificationDrawer
-        isOpen={isNotifDrawerOpen}
-        onClose={() => setIsNotifDrawerOpen(false)}
-        onOpenTool={handleOpenTool}
-      />
+      <Suspense fallback={null}>
+        {isNotifDrawerOpen && (
+          <NotificationDrawer
+            isOpen={isNotifDrawerOpen}
+            onClose={() => setIsNotifDrawerOpen(false)}
+            onOpenTool={handleOpenTool}
+          />
+        )}
+      </Suspense>
 
       {/* Account Settings & Security Modal */}
-      <AccountSettingsModal
-        isOpen={isSettingsModalOpen}
-        onClose={() => setIsSettingsModalOpen(false)}
-        user={currentUser}
-      />
+      <Suspense fallback={null}>
+        {isSettingsModalOpen && (
+          <AccountSettingsModal
+            isOpen={isSettingsModalOpen}
+            onClose={() => setIsSettingsModalOpen(false)}
+            user={currentUser}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

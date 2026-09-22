@@ -89,7 +89,7 @@ export default function UserMenu({
         aria-label="User menu"
       >
         {typeof user?.avatar === 'string' && (user.avatar.startsWith('http') || user.avatar.startsWith('/') || user.avatar.startsWith('data:')) ? (
-          <img src={user.avatar} alt={user.name || 'User'} className={styles.avatarImg} />
+          <img src={user.avatar} alt={user.name || 'User'} className={styles.avatarImg} loading="lazy" decoding="async" />
         ) : (
           user?.avatar || 'TC'
         )}
@@ -112,7 +112,7 @@ export default function UserMenu({
           >
             <div className={styles.largeAvatar}>
               {typeof user?.avatar === 'string' && (user.avatar.startsWith('http') || user.avatar.startsWith('/') || user.avatar.startsWith('data:')) ? (
-                <img src={user.avatar} alt={user.name || 'User'} className={styles.avatarImg} />
+                <img src={user.avatar} alt={user.name || 'User'} className={styles.avatarImg} loading="lazy" decoding="async" />
               ) : (
                 user?.avatar || 'TC'
               )}

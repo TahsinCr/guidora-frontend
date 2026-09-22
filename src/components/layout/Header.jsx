@@ -29,7 +29,7 @@ export default function Header({
         <div className={styles.leftSection}>
           <div className={styles.logo} onClick={onBackToDirectory || onResetSearch}>
             <div className={styles.logoIcon}>
-              <img src="/logo.svg" alt="Guidora Logo" className={styles.figmaLogoImg} />
+              <img src="/logo.svg" alt="Guidora Logo" className={styles.figmaLogoImg} decoding="async" />
             </div>
             <span className={styles.logoText}>Guidora</span>
           </div>

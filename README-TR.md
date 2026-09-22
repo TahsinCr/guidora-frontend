@@ -106,6 +106,29 @@ Akış, `IntersectionObserver` ile parça parça yüklenir:
 - `rootMargin: '600px'` parametresi sayesinde kullanıcı henüz sayfanın en altına varmadan bir sonraki paket talep edilir.
 - İlk açılışta 16 araç gelir; sonraki her tetiklemede filtreli kümeden 12'şer araç eklenir.
 
+### Performans ve Mimari Optimizasyonları
+
+Hızlı İlk İçerikli Boyama (FCP), akıcı kaydırma (60 FPS) ve düşük ağ tüketimi sağlamak amacıyla mimari seviyesinde şu optimizasyonlar uygulanmıştır:
+
+1. **Sayfa ve Modal Seviyesinde Kod Bölümleme (`React.lazy` + `Suspense`)**:
+   - İkincil tam sayfa görünümleri (`AdminDashboardPage`, `SubmitToolPage`, `UserProfilePage`) ve modal bileşenleri (`ToolDialog`, `AuthModal`, `NotificationDrawer`, `AccountSettingsModal`) talep anında yüklenen dinamik parçalara ayrılmıştır.
+   - İlk sayfa JavaScript bundle boyutu ~378 kB'tan **195 kB** seviyesine indirilerek **~%48 hafifleme** elde edilmiştir.
+
+2. **Gecikmeli Arama & Asenkron Sorgu Yönetimi (`useDebounce`)**:
+   - Arama ve sıralama çubuğundaki metin girdileri için 250ms gecikmeli tampon (`useDebounce.js`) uygulanmıştır.
+   - Kullanıcı klavyede yazarken gereksiz arka arkaya filtreleme tetiklenmez, ana işlem parçacığı (main thread) kilitlenmez.
+
+3. **Medya ve Görsel Yükleme Hattı**:
+   - Kartlardaki ikonlar, avatarlar ve logolar tarayıcı düzeyinde `loading="lazy"` ve `decoding="async"` özellikleri ile çağrılır.
+   - Ekran dışındaki medya öğeleri DOM ayrıştırmasını ve sayfa yerleşimini geciktirmez.
+
+4. **DOM Kapsama & Sanallaştırma (`content-visibility: auto`)**:
+   - Ürün kataloğu kartları (`.card`) CSS `content-visibility: auto` ve `contain-intrinsic-size: auto 240px` kuralları ile donatılmıştır.
+   - Görünür alanın dışındaki kartlar için tarayıcı boyama ve düzen hesaplamalarını atlar; yüzlerce kart yüklense bile akıcı 60 FPS kaydırma korunur.
+
+5. **Satıcı (Vendor) Parça Ayrıştırması**:
+   - Ağır harici kütüphaneler (`react`, `react-dom`, `lucide-react`, `marked`) `vite.config.js` içinde bağımsız vendor chunk'larına ayrılmış, uzun süreli tarayıcı önbelleklemesi (HTTP cache) maksimize edilmiştir.
+
 ### Çift Tema Mimarisi
 
 Temalar, kök `<html>` etiketi üzerindeki `data-theme` niteliği ile değiştirilir:

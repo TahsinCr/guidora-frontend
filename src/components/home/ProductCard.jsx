@@ -40,7 +40,17 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
       <div className={styles.header}>
         <div className={styles.leftHead}>
           <div className={styles.thumbnail}>
-            <span className={styles.thumbInitials}>{initials}</span>
+            {tool.icon ? (
+              <img
+                src={tool.icon}
+                alt={tool.name}
+                loading="lazy"
+                decoding="async"
+                className={styles.thumbImg}
+              />
+            ) : (
+              <span className={styles.thumbInitials}>{initials}</span>
+            )}
           </div>
 
           <div className={styles.info}>
