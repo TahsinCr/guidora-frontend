@@ -165,8 +165,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Documentation
 
-- **Project Architectural Memory (MEMORY.md)**:
-  - Created and maintained `MEMORY.md` to track protected UI invariants, architectural rules, loading invariants, completed features, and pending backend tasks.
 - **Bilingual Documentation (README.md & README-TR.md)**:
   - Maintained comprehensive developer documentation in both English and Turkish with accurate architecture diagrams, responsive layout rules, performance metrics, and build instructions.
 - **MIT License**:
