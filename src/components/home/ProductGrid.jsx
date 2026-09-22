@@ -98,7 +98,7 @@ export default function ProductGrid({
           className={`${styles.inlineFilterWrapper} ${
             isMobileFilterOpen ? styles.inlineFilterOpen : ''
           }`}
-          aria-hidden={!isMobileFilterOpen}
+          inert={!isMobileFilterOpen ? '' : undefined}
         >
           <div className={styles.inlineFilterInner}>
             <FilterBar

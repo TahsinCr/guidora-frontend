@@ -44,12 +44,18 @@ export default function InformationCard({ categories = [], selectedCategory, onS
   const touchStartY = useRef(null);
   const isNavigating = useRef(false);
 
-  // Progressive scroll interpolation: eliminates harsh threshold snapping
+  // Progressive scroll interpolation: eliminates harsh threshold snapping (desktop only)
   useEffect(() => {
     let rAF = null;
     const handleScroll = () => {
       if (rAF) return;
       rAF = requestAnimationFrame(() => {
+        // Below 850px, hero is already compact (only category slider), no scroll fading
+        if (window.innerWidth <= 850) {
+          setScrollProgress(0);
+          rAF = null;
+          return;
+        }
         const scrollY = window.scrollY;
         // Soft, continuous transition over 150px of natural scroll
         const progress = Math.min(1, Math.max(0, scrollY / 150));
@@ -128,10 +134,13 @@ export default function InformationCard({ categories = [], selectedCategory, onS
   const handleCategorySelect = useCallback(
     (catId) => {
       onSelectCategory(catId);
-      // Smoothly animate down to the catalog section below the fixed navbar
-      setTimeout(() => {
-        scrollToCatalog(true);
-      }, 50);
+      // Only auto-scroll down to catalog on desktop where large hero banner exists.
+      // On screens <= 850px, hero is already compact (just categories visible), so don't scroll down!
+      if (window.innerWidth > 850) {
+        setTimeout(() => {
+          scrollToCatalog(true);
+        }, 50);
+      }
     },
     [onSelectCategory]
   );

@@ -182,10 +182,13 @@ export default function FilterBar({
     verification.community ||
     verification.bot;
 
-  const handleClearOrClose = () => {
+  const handleClearOrClose = (e) => {
     if (hasAnyActiveFilters) {
       onResetFilters?.();
     } else {
+      if (e?.currentTarget && typeof e.currentTarget.blur === 'function') {
+        e.currentTarget.blur();
+      }
       onCloseMobile?.();
     }
   };

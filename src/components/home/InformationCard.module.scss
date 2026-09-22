@@ -93,6 +93,9 @@
 @media (max-width: 850px) {
   .heroContainer {
     margin-bottom: 12px;
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: auto !important;
 
     &::before {
       display: none;
