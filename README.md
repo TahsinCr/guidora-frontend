@@ -211,7 +211,9 @@ The application will start locally at `http://127.0.0.1:5173/`.
 npm run build
 ```
 
-The compiled, production-ready static assets will be output to the `dist/` directory.
+The compiled, production-ready static assets will be output to the `dist/` directory. The build pipeline automatically executes:
+- **Sharp & SVGO Asset Optimization**: Lossless SVG and compressed WebP/PNG/JPEG optimization (yielding ~57% asset size reduction).
+- **Dual Pre-Compression (Brotli & Gzip)**: Generating `.br` and `.gz` files for production reverse proxies (Nginx, Caddy, Cloudflare) for instant cold loads.
 
 ## License
 

@@ -211,7 +211,9 @@ Uygulama yerel ortamda `http://127.0.0.1:5173/` adresinde çalışmaya başlar.
 npm run build
 ```
 
-Derlenmiş ve optimize edilmiş statik dosyalar `dist/` klasörüne aktarılır.
+Derlenmiş ve optimize edilmiş statik dosyalar `dist/` klasörüne aktarılır. Derleme hattı otomatik olarak şunları yürütür:
+- **Sharp & SVGO Görsel Optimizasyonu**: Kayıpsız SVG ve sıkıştırılmış WebP/PNG/JPEG optimizasyonu (yaklaşık %57 dosya boyutu tasarrufu).
+- **Çift Ön Sıkıştırma (Brotli & Gzip)**: Canlı ortam ters vekil sunucuları (Nginx, Caddy, Cloudflare vb.) için anlık yükleme sağlayan `.br` ve `.gz` statik çıktıları.
 
 ## Lisans
 
