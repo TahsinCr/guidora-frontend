@@ -238,7 +238,17 @@ npm test
 npm run test:watch
 ```
 
-Executes 34 automated tests covering in-memory token security, silent 401 refresh with mutex concurrency locks, mock API contract handling, circuit breaker state transitions, graceful maintenance draining, and rate limiting in <500ms via Vitest and Happy-DOM.
+Executes **47 automated tests** covering in-memory token security, silent 401 refresh with mutex concurrency locks, mock API contract handling, circuit breaker state transitions, database table stats & VACUUM triggers, safe read-only SQL execution, audit rollback with PostgreSQL `xmin` concurrency, and rate limiting in <500ms via Vitest and Happy-DOM.
+
+### Enterprise Admin Workspace & PostgreSQL 18 Management
+
+Guidora features a modular, full-fledged administrative workspace (`AdminDashboardPage`) tailored for platform administrators and community moderators:
+
+- **Collapsible Workspace Sidebar**: Classic enterprise desktop layout with smooth CSS transition (260px expanded $\leftrightarrow$ 76px compact icon mode), persistent localStorage memory, `Ctrl+B` / `Cmd+B` keyboard shortcut, and mobile off-canvas drawer (`AdminSidebar.jsx`).
+- **Analytics & Interactive SVG Charts**: 14-day API request volume and p95 latency curves rendered via responsive SVG area chart with interactive hover tooltips (`OverviewTab.jsx`), category distribution bars, and SLA reliability gauges.
+- **PostgreSQL 18 Database Hub**: Deep visibility into 10 core tables (`products`, `categories`, `audit_logs`, `product_edit_proposals`, etc.) showing row estimates, table/index disk footprints, dead tuples, on-demand `VACUUM (VERBOSE, ANALYZE)` triggers, EF Core 10 migration history timeline, and safe read-only SQL Query Explorer (`DatabaseTab.jsx`).
+- **Enterprise Audit Hub & JSONB Diff**: Multi-channel event filtering by level and category, OpenTelemetry W3C trace ID inspection, side-by-side JSONB diff modal (`JsonbDiffModal.jsx`) highlighting additions/deletions, and one-click audit rollback (`Audit.Revert`) safeguarded by PostgreSQL `xmin` concurrency tokens.
+- **Governance Proposals & Moderation**: Review queue for community `ProductEditProposals` with field-level delta comparisons and instant catalog integration (`ProposalsTab.jsx`), user reports triaging, and review moderation.
 
 ### Configuration Architecture
 
