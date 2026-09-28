@@ -8,8 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Production Multi-Stage Docker & Hardened Nginx Reverse Proxy Architecture**:
+  - Implemented multi-stage Docker build pipeline (`node:22-alpine` builder $\rightarrow$ `nginx:1.27-alpine-slim` runner) with minimal footprint (<30 MB image size).
+  - Hardened Nginx configuration (`infra/nginx/default.conf`) equipped with strict security headers (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Permissions-Policy`, `Referrer-Policy: strict-origin-when-cross-origin`).
+  - Added internal `/api/` reverse proxy forwarding to .NET 10 backend container, eliminating CORS entirely and shielding backend ports from the public internet.
+  - Implemented dynamic cache management: immutable 1-year caching for fingerprinted assets (`/assets/`), 30-day caching for media, and `no-store` immediate invalidation for `index.html` and `config.json`.
+  - Added native Docker healthcheck (`/healthz`) and unified `docker-compose.yml` linking frontend, backend, PostgreSQL 18, and Redis into an isolated bridge network.
 - **Enterprise Dual Configuration Architecture (`.env` & `public/config.json`)**:
-  - Implemented immutable build-time environment layer (`.env.example`, `.env.production`, `.env.development`) for core infrastructure constants and build flags.
+  - Implemented immutable build-time environment layer (`.env.example`, `.env`) for core infrastructure constants and build flags.
   - Implemented zero-rebuild runtime configuration (`public/config.json`) enabling on-the-fly tuning of network timeouts, rate limit thresholds, circuit breakers, and maintenance mode directly in Docker/Nginx without compiling code.
   - Created `configService.js` singleton with safe immutable defaults (`safeDefaults.js`), `deepFreeze` anti-tamper security, schema validation fallback, and reactive subscription hooks.
   - Equipped `httpClient.js` with dynamic `AbortController` timeout guards derived directly from the runtime configuration engine (8s default, 25s upload).

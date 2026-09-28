@@ -233,6 +233,19 @@ Guidora, derleme zamanı sabitlerini operasyonel çalışma zamanı parametreler
    - Statik dosyalarla birlikte dağıtılır; Docker container'ı yeniden derlemeden sunucu üzerinden anında düzenlenebilir.
    - Ağ zaman aşımları (varsayılan 8s, yükleme 25s), yeniden deneme kuralları, devre kesici (circuit breaker) eşikleri ve bakım modunu yönetir.
 
+### Canlı Ortam Docker Dağıtımı
+
+Çok aşamalı (multi-stage) derleme mimarisi, optimize edilmiş Nginx çalışma ortamı (<30 MB) ve sıfır-CORS ters vekil sunucu desteği ile hazır Docker altyapısı:
+
+```bash
+# Ön yüz konteynerini bağımsız derleyin ve çalıştırın
+docker build -t guidora-frontend .
+docker run -d -p 80:80 --name guidora-ui guidora-frontend
+
+# Ya da tüm sistemi (Ön yüz + .NET 10 API + PostgreSQL + Redis) tek komutla ayağa kaldırın
+docker compose up -d --build
+```
+
 ## Lisans
 
 Bu proje MIT Lisansı ile lisanslanmıştır — ayrıntılar için [LICENSE](LICENSE) dosyasına bakabilirsiniz.

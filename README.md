@@ -233,6 +233,19 @@ Guidora implements a dual-layer configuration strategy separating build-time con
    - Deployed alongside static assets; can be modified directly on server / Docker volume mounts without rebuilding JavaScript chunks.
    - Configures network timeouts (default 8s, upload 25s), retry policies, circuit breaker thresholds, and maintenance mode.
 
+### Production Docker Deployment
+
+A production-ready, multi-stage Docker build with an optimized Nginx runtime (<30 MB) and zero-CORS reverse proxy is provided:
+
+```bash
+# Build and run frontend container standalone
+docker build -t guidora-frontend .
+docker run -d -p 80:80 --name guidora-ui guidora-frontend
+
+# Or launch entire full-stack ecosystem (Frontend + .NET 10 API + PostgreSQL + Redis)
+docker compose up -d --build
+```
+
 ## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
