@@ -34,13 +34,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Integrated bootstrap administrator credentials driven by `.env` (`MOCK_ADMIN_USERNAME`, `MOCK_ADMIN_EMAIL`, `MOCK_ADMIN_PASSWORD`), matching backend `BOOTSTRAP_ADMIN_*` settings so developers and QA can authenticate with the exact same credentials in both mock and real backend.
   - Removed temporary demo buttons from UI: cleanly purged `10s Test: ON/OFF` button from `Header.jsx`, purged `handleFillDemoAdmin` and hardcoded demo credentials from `AuthModal.jsx`, and normalized input placeholders.
 
-- **Automated Enterprise Test Suite (Vitest & Happy-DOM)**:
-  - Configured high-performance `vitest` test suite in `tests/` directory with dedicated npm scripts (`npm test`, `npm run test:watch`) executing 27 critical integration and contract tests in <500ms.
+- **Automated Enterprise Test Suite (Vitest & Happy-DOM - 71 Passing Tests)**:
+  - Configured high-performance `vitest` test suite in `tests/` directory with dedicated npm scripts (`npm test`, `npm run test:watch`) executing **71 critical integration and contract tests in ~550ms** across 12 specialized test suites.
   - Implemented `httpClient.test.js`: verifies in-memory access token injection, `credentials: 'include'` headers, transparent 401 token refresh with mutex queue concurrency locking, 429 rate-limiting parsing `Retry-After`, and .NET 10 validation exception mapping.
   - Implemented `circuitBreaker.test.js`: verifies failure threshold triggering (`CLOSED -> OPEN`), fast-fail zero-network protection, and `/health/live` probe recovery (`HALF_OPEN -> CLOSED`).
   - Implemented `networkTracker.test.js`: verifies in-flight request tracking, graceful draining (`waitForInFlight`), and browser online/offline events.
+  - Implemented `tokenManager.test.js`: verifies runtime memory access token storage, prevention of XSS leaks into `localStorage`, and event-driven subscriber callbacks.
+  - Implemented `toolAdapter.test.js`: verifies .NET 10 `ProductResponseDto` to frontend `ToolItem` contract conversion, null/partial field resilience, and `CreateProductRequest` generation.
+  - Implemented `configService.test.js`: verifies runtime `config.json` loading, recursive deep-freeze immutability protection, and graceful fallback to `SAFE_CONFIG_DEFAULTS`.
   - Implemented `maintenanceHelper.test.js`: verifies emergency bypass keys (`?bypass=...`, sessionStorage, role authorization) and scheduled maintenance countdown calculation.
+  - Implemented `authService.test.js`: verifies backend-agnostic authentication, server-driven session creation, custom event dispatching, and password validation.
+  - Implemented `toolsService.test.js`: verifies catalog multi-filtering, search query matching, `highest-rated` sorting, slug resolution, and single-select tag category enforcement.
+  - Implemented `adminService.test.js`: verifies PG18 database statistics, VACUUM execution, EF Core migrations history, read-only SQL query explorer safety, proposals review queue, and audit reversion.
   - Implemented `toastService.test.js`: verifies toast deduplication, automatic timer dismiss, and manual dismissal.
+  - Implemented `mockHandler.test.js`: verifies in-process dev mock engine, health probes, JWT cookies, and 400/404 handling.
 - **Enterprise Resilience, Ambient Status Line, Circuit Breaker & Graceful Maintenance Engine**:
   - Implemented `circuitBreaker.js` (CLOSED, OPEN, HALF-OPEN state machine) with automated fast-fail protection and lightweight `/health/live` probe recovery.
   - Built `AmbientStatusBar.jsx` ambient status line (2.5px) directly beneath the sticky navbar: amber/yellow for offline, vibrant red for backend outage, green for recovery, and purple-blue gradient shimmer for navigation.
