@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Sparkles,
   Info,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   getNotifications,
@@ -15,11 +16,13 @@ import {
   markAllAsRead,
   clearAllNotifications,
 } from '@/services/notificationService';
+import { getScheduledMaintenanceDetails } from '@/services/config/maintenanceHelper';
 import styles from './NotificationDrawer.module.scss';
 
 export default function NotificationDrawer({ isOpen, onClose, onOpenTool }) {
   const { t } = useLanguage();
   const [notifications, setNotifications] = useState([]);
+  const [schedInfo, setSchedInfo] = useState(() => getScheduledMaintenanceDetails());
 
   const refreshNotifs = () => {
     setNotifications(getNotifications());
@@ -28,8 +31,23 @@ export default function NotificationDrawer({ isOpen, onClose, onOpenTool }) {
   useEffect(() => {
     if (isOpen) {
       refreshNotifs();
+      const updateSched = () => setSchedInfo(getScheduledMaintenanceDetails());
+      updateSched();
+      const timer = setInterval(updateSched, 1000);
+      return () => clearInterval(timer);
     }
   }, [isOpen]);
+
+  const formatCountdown = (secs) => {
+    if (secs <= 0) return '00:00';
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    if (h > 0) {
+      return `${h}s ${m.toString().padStart(2, '0')}d`;
+    }
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   if (!isOpen) return null;
 
@@ -89,6 +107,24 @@ export default function NotificationDrawer({ isOpen, onClose, onOpenTool }) {
             >
               {t('notif.clearAll', 'Clear All')}
             </button>
+          </div>
+        )}
+
+        {/* Pinned Scheduled Maintenance Card */}
+        {schedInfo && schedInfo.remainingSeconds > 0 && (
+          <div className={styles.pinnedMaintenance}>
+            <div className={styles.pinnedHeader}>
+              <span className={styles.pinnedTitle}>
+                <AlertTriangle size={15} />
+                {t('notif.schedMaintenanceTitle', 'Planlı Sistem Bakımı')}
+              </span>
+              <span className={styles.countdownBadge}>
+                {formatCountdown(schedInfo.remainingSeconds)}
+              </span>
+            </div>
+            <p className={styles.pinnedDesc}>
+              {schedInfo.scheduledWarningDescription}
+            </p>
           </div>
         )}
 

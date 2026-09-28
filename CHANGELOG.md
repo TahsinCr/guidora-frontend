@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Enterprise Resilience, Ambient Status Line, Circuit Breaker & Graceful Maintenance Engine**:
+  - Implemented `circuitBreaker.js` (CLOSED, OPEN, HALF-OPEN state machine) with automated fast-fail protection and lightweight `/health/live` probe recovery.
+  - Built `AmbientStatusBar.jsx` ambient status line (2.5px) directly beneath the sticky navbar: amber/yellow for offline, vibrant red for backend outage, green for recovery, and purple-blue gradient shimmer for navigation.
+  - Created zero-dependency `toastService.js` and `ToastContainer.jsx` with configurable 3-second auto-dismiss, deduplication, and glassmorphism styling.
+  - Implemented `MaintenancePage.jsx` featuring Guidora's breathing compass emblem, custom operational description from `config.json` (no timer on maintenance screen per requirements), emergency bypass key authorization, and health check validation.
+  - Built scheduled maintenance countdown with graceful in-flight request draining (`waitForInFlight`) and a pinned countdown card in `NotificationDrawer.jsx`.
+  - Added 429 Too Many Requests rate-limiting interceptor with dynamic `Retry-After` header parsing.
 - **Isolated Standalone Docker Compose & Demo Mock Backend**:
   - Decoupled `docker-compose.yml` to run the frontend repository in complete isolation without requiring the separate .NET backend repository on disk.
   - Implemented lightweight zero-dependency Node 22 Alpine mock API server container (`infra/mock-server/`) emulating core .NET 10 WebAPI contracts (`/health/live`, `/api/auth/*`, `/api/categories`, `/api/products`).

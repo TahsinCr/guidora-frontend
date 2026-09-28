@@ -8,6 +8,11 @@ import PageLoader from '@/components/common/PageLoader';
 import { useDebounce } from '@/hooks/useDebounce';
 import { getTools, getCategories } from '@/services/toolsService';
 import { getCurrentUser } from '@/services/userService';
+import ToastContainer from '@/components/common/ToastContainer';
+import MaintenancePage from '@/components/common/MaintenancePage';
+import { isMaintenanceActive, getScheduledMaintenanceDetails } from '@/services/config/maintenanceHelper';
+import { networkTracker } from '@/services/api/networkTracker';
+import { toast } from '@/services/toast/toastService';
 
 // Lazy-loaded heavy views and secondary modals (Code Splitting)
 const ToolDialog = lazy(() => import('@/components/tool-detail/ToolDialog'));
@@ -20,7 +25,40 @@ const AccountSettingsModal = lazy(() => import('@/components/settings/AccountSet
 
 export default function App() {
   const [isNavigating, startTransition] = useTransition();
+  const [isMaintenance, setIsMaintenance] = useState(() => isMaintenanceActive());
   const [categories, setCategories] = useState([]);
+  
+  // Scheduled Maintenance Handler
+  useEffect(() => {
+    if (isMaintenance) return;
+
+    const sched = getScheduledMaintenanceDetails();
+    if (!sched || !sched.isScheduled) return;
+
+    if (sched.isStarted) {
+      setIsMaintenance(true);
+      return;
+    }
+
+    // Show dismissible warning toast once per session
+    const toastKey = 'guidora_sched_toast_shown';
+    if (typeof sessionStorage !== 'undefined' && !sessionStorage.getItem(toastKey)) {
+      toast.warning('Planlı Bakım Bildirimi', sched.scheduledWarningDescription, {
+        id: 'toast_sched_maintenance',
+        durationMs: 8000,
+      });
+      sessionStorage.setItem(toastKey, 'true');
+    }
+
+    // Timer to switch to maintenance mode with graceful draining
+    const timer = setTimeout(async () => {
+      // Graceful drain: wait for in-flight requests to complete before locking UI
+      await networkTracker.waitForInFlight(5000);
+      setIsMaintenance(true);
+    }, sched.remainingSeconds * 1000);
+
+    return () => clearTimeout(timer);
+  }, [isMaintenance]);
   
   // Read initial filter values from URL params
   const initialParams = new URLSearchParams(window.location.search);
@@ -453,6 +491,15 @@ export default function App() {
     });
   }, [startTransition]);
 
+  if (isMaintenance) {
+    return (
+      <div className="app-container">
+        <MaintenancePage onUnlock={() => setIsMaintenance(false)} />
+        <ToastContainer />
+      </div>
+    );
+  }
+
   return (
     <div className="app-container">
       <Header
@@ -588,6 +635,8 @@ export default function App() {
           />
         )}
       </Suspense>
+
+      <ToastContainer />
     </div>
   );
 }

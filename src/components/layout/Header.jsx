@@ -5,6 +5,7 @@ import { Plus, Bell, Sun, Moon, ChevronRight, Hourglass } from 'lucide-react';
 import { isDemoDelayActive, toggleDemoDelay } from '@/utils/demoDelay';
 import UserMenu from './UserMenu';
 import LanguageDropdown from './LanguageDropdown';
+import AmbientStatusBar from './AmbientStatusBar';
 import styles from './Header.module.scss';
 
 export default function Header({
@@ -169,6 +170,7 @@ export default function Header({
           )}
         </div>
       </div>
+      <AmbientStatusBar isNavigating={isNavigating} />
     </header>
   );
 }

@@ -1,5 +1,9 @@
 import { getAccessToken, setAccessToken, clearAccessToken } from './tokenManager';
 import { getConfig } from '../config/configService';
+import { circuitBreaker } from './circuitBreaker';
+import { networkTracker } from './networkTracker';
+import { isMaintenanceActive } from '../config/maintenanceHelper';
+import { toast } from '../toast/toastService';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -32,9 +36,28 @@ function onRefreshFailed(error) {
  * - Injects in-memory Access Token into Authorization header.
  * - Dynamic timeout enforcement via AbortController powered by config.json.
  * - Automatic silent refresh on 401 with concurrency locking.
+ * - Circuit Breaker pattern with fast-fail protection when backend is down.
+ * - In-flight request counting for graceful draining before maintenance mode.
+ * - Automatic rate-limit (429) backoff toast and user notification.
  * - Sanitizes error responses according to .NET 10 WebAPI structure.
  */
 export async function apiRequest(endpoint, options = {}) {
+  const isHealthCheck = endpoint.includes('health/live') || endpoint.includes('health/ready');
+
+  // 1. Check Maintenance Mode (except health checks)
+  if (!isHealthCheck && isMaintenanceActive()) {
+    throw new ApiError('Guidora şu anda planlı bakım modundadır.', 503, { isMaintenance: true });
+  }
+
+  // 2. Check Circuit Breaker (fast-fail if backend is down)
+  if (!isHealthCheck && !circuitBreaker.canRequest()) {
+    throw new ApiError(
+      'Guidora sunucuları geçici olarak yanıt vermiyor. Sistem kısa süre içinde otomatik yeniden bağlanacak.',
+      503,
+      { isCircuitBreaker: true }
+    );
+  }
+
   const runtimeConfig = getConfig();
   const defaultTimeout = runtimeConfig?.network?.timeouts?.defaultMs || 8000;
   const timeoutMs = options.timeoutMs || defaultTimeout;
@@ -63,6 +86,9 @@ export async function apiRequest(endpoint, options = {}) {
     credentials: 'include', // Crucial for HttpOnly cookies
   };
 
+  // Track in-flight request for graceful draining
+  const decrementInFlight = networkTracker.incrementInFlight();
+
   try {
     let response;
     try {
@@ -71,8 +97,26 @@ export async function apiRequest(endpoint, options = {}) {
       clearTimeout(timeoutId);
     }
 
+    // Handle 429 Too Many Requests (Rate Limiting)
+    if (response.status === 429) {
+      const retryAfterHeader = response.headers.get('Retry-After');
+      const fallbackSec = runtimeConfig?.network?.rateLimiting?.retryAfterFallbackSeconds || 15;
+      const waitSeconds = retryAfterHeader ? parseInt(retryAfterHeader, 10) || fallbackSec : fallbackSec;
+
+      toast.warning(
+        'İşlem Sınırı',
+        `İşlemler çok hızlı yapıldı. Sistem güvenliği için lütfen ${waitSeconds} saniye bekleyin.`,
+        { id: 'toast_rate_limit_429', durationMs: 3000 }
+      );
+
+      throw new ApiError(
+        `Çok fazla istek yapıldı. Lütfen ${waitSeconds} saniye sonra tekrar deneyin.`,
+        429,
+        { retryAfter: waitSeconds }
+      );
+    }
+
     // If 401 Unauthorized, attempt transparent silent refresh
-    // Note: Do not attempt refresh on auth endpoints themselves to avoid infinite recursion
     const isAuthEndpoint = endpoint.includes('auth/login') ||
                            endpoint.includes('auth/register') ||
                            endpoint.includes('auth/refresh');
@@ -99,7 +143,9 @@ export async function apiRequest(endpoint, options = {}) {
 
               // Retry original request with newly acquired token
               config.headers.set('Authorization', `Bearer ${newAccessToken}`);
-              return await fetch(url, config).then(parseApiResponse);
+              const retried = await fetch(url, config);
+              circuitBreaker.recordSuccess();
+              return await parseApiResponse(retried);
             }
           }
 
@@ -120,6 +166,7 @@ export async function apiRequest(endpoint, options = {}) {
               config.headers.set('Authorization', `Bearer ${newToken}`);
               try {
                 const res = await fetch(url, config);
+                circuitBreaker.recordSuccess();
                 resolve(await parseApiResponse(res));
               } catch (retryErr) {
                 reject(retryErr);
@@ -132,16 +179,27 @@ export async function apiRequest(endpoint, options = {}) {
       }
     }
 
+    // Check for 5xx Server Outages
+    if (response.status >= 500) {
+      circuitBreaker.recordFailure(new Error(`Server returned ${response.status}`));
+    } else if (response.ok) {
+      circuitBreaker.recordSuccess();
+    }
+
     return await parseApiResponse(response);
   } catch (err) {
     if (err.name === 'AbortError') {
+      circuitBreaker.recordFailure(err);
       throw new ApiError(`İstek zaman aşımına uğradı (${timeoutMs}ms). Sunucu yanıt vermedi.`, 408, null);
     }
     if (err.name === 'TypeError' && err.message.includes('fetch')) {
       // Network failure / server offline
+      circuitBreaker.recordFailure(err);
       throw new ApiError('Sunucuya erişilemiyor veya ağ bağlantısı koptu.', 0, null);
     }
     throw err;
+  } finally {
+    decrementInFlight();
   }
 }
 
