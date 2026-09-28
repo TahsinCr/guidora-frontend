@@ -4,8 +4,15 @@ const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem('guidora-theme');
-    return saved === 'light' ? 'light' : 'dark';
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('guidora-theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+      // Detect system preference
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        return 'light';
+      }
+    }
+    return 'dark'; // Guidora default theme
   });
 
   useEffect(() => {
@@ -15,8 +22,26 @@ export function ThemeProvider({ children }) {
     localStorage.setItem('guidora-theme', theme);
   }, [theme]);
 
+  // Listen to system theme changes if user hasn't explicitly chosen one yet
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
+    const handleSystemThemeChange = (e) => {
+      const explicitSaved = localStorage.getItem('guidora-theme-explicit');
+      if (!explicitSaved) {
+        setTheme(e.matches ? 'light' : 'dark');
+      }
+    };
+    mediaQuery.addEventListener('change', handleSystemThemeChange);
+    return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
+  }, []);
+
   const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    setTheme((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('guidora-theme-explicit', 'true');
+      return next;
+    });
   };
 
   return (

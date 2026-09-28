@@ -1507,8 +1507,21 @@ export const SUPPORTED_LANGUAGES = [
 
 export function LanguageProvider({ children }) {
   const [lang, setLang] = useState(() => {
-    const saved = localStorage.getItem('guidora-lang');
-    return ['en', 'tr', 'ru'].includes(saved) ? saved : 'en';
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('guidora-lang');
+      if (['en', 'tr', 'ru'].includes(saved)) return saved;
+
+      // Detect browser language preferences
+      const browserLangs = navigator.languages || [navigator.language || navigator.userLanguage || ''];
+      for (const rawLang of browserLangs) {
+        if (!rawLang) continue;
+        const normalized = rawLang.toLowerCase();
+        if (normalized.startsWith('tr')) return 'tr';
+        if (normalized.startsWith('ru')) return 'ru';
+        if (normalized.startsWith('en')) return 'en';
+      }
+    }
+    return 'en'; // Global fallback
   });
 
   const [taxonomyTick, setTaxonomyTick] = useState(0);

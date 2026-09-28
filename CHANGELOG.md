@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Automatic Browser-Based Theme & Language Detection**:
+  - Implemented automatic initial theme detection in `ThemeContext.jsx` using `window.matchMedia('(prefers-color-scheme: light)')`. If the user hasn't explicitly chosen a theme, it adapts to their OS/browser dark/light mode and listens to real-time system theme changes.
+  - Implemented automatic initial language detection in `LanguageContext.jsx` parsing `navigator.languages` and `navigator.language` to seamlessly match Turkish (`tr`), Russian (`ru`), or English (`en`) without disrupting stored user overrides.
 - **Production Multi-Stage Docker & Hardened Nginx Reverse Proxy Architecture**:
   - Implemented multi-stage Docker build pipeline (`node:22-alpine` builder $\rightarrow$ `nginx:1.27-alpine-slim` runner) with minimal footprint (<30 MB image size).
   - Hardened Nginx configuration (`infra/nginx/default.conf`) equipped with strict security headers (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Permissions-Policy`, `Referrer-Policy: strict-origin-when-cross-origin`).
