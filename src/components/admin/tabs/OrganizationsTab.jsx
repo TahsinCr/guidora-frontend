@@ -3,19 +3,19 @@ import {
   Building2,
   Plus,
   Search,
-  ExternalLink,
   ShieldCheck,
   Trash2,
   Globe,
-  CheckCircle2,
+  X,
 } from 'lucide-react';
 import {
-  getOrganizations,
   adminCreateOrganization,
   adminDeleteOrganization,
   adminToggleOrgVerification,
 } from '@/services/userService';
 import { adminAddLog } from '@/services/adminService';
+import toastService from '@/services/toast/toastService';
+import AdminConfirmModal from '../modals/AdminConfirmModal';
 import styles from '../AdminDashboardPage.module.scss';
 
 export default function OrganizationsTab({
@@ -27,6 +27,16 @@ export default function OrganizationsTab({
   const [name, setName] = useState('');
   const [website, setWebsite] = useState('');
   const [description, setDescription] = useState('');
+
+  // In-App Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'danger',
+    confirmText: 'Sil',
+    onConfirm: () => {},
+  });
 
   const filteredOrgs = organizations.filter((org) => {
     if (search) {
@@ -42,7 +52,7 @@ export default function OrganizationsTab({
   const handleCreateOrg = (e) => {
     e.preventDefault();
     if (!name.trim()) {
-      alert('Kuruluş adı zorunludur.');
+      toastService.warning('Kuruluş adı zorunludur.');
       return;
     }
     try {
@@ -55,13 +65,14 @@ export default function OrganizationsTab({
         entityName: 'Organization',
         category: 'GOVERNANCE',
       });
+      toastService.success(`"${name.trim()}" kuruluşu oluşturuldu.`);
       setAddModalOpen(false);
       setName('');
       setWebsite('');
       setDescription('');
       if (onRefreshOrgs) onRefreshOrgs();
     } catch (err) {
-      alert('Hata: ' + err.message);
+      toastService.error('Hata: ' + err.message);
     }
   };
 
@@ -75,26 +86,35 @@ export default function OrganizationsTab({
         nextVer ? 'success' : 'warning',
         { entityName: 'Organization', entityId: org.id, category: 'GOVERNANCE' }
       );
+      toastService.success(nextVer ? `"${org.name}" doğrulandı.` : `"${org.name}" doğrulaması kaldırıldı.`);
       if (onRefreshOrgs) onRefreshOrgs();
     } catch (err) {
-      alert('Hata: ' + err.message);
+      toastService.error('Hata: ' + err.message);
     }
   };
 
   const handleDeleteOrg = (org) => {
-    if (window.confirm(`"${org.name}" kuruluşunu silmek istediğinize emin misiniz?`)) {
-      try {
-        adminDeleteOrganization(org.id);
-        adminAddLog('ORGANIZATION_DELETED', org.name, 'warning', {
-          entityName: 'Organization',
-          entityId: org.id,
-          category: 'GOVERNANCE',
-        });
-        if (onRefreshOrgs) onRefreshOrgs();
-      } catch (err) {
-        alert('Hata: ' + err.message);
-      }
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Kuruluşu Sil',
+      message: `"${org.name}" kuruluşunu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
+      variant: 'danger',
+      confirmText: 'Kuruluşu Sil',
+      onConfirm: () => {
+        try {
+          adminDeleteOrganization(org.id);
+          adminAddLog('ORGANIZATION_DELETED', org.name, 'warning', {
+            entityName: 'Organization',
+            entityId: org.id,
+            category: 'GOVERNANCE',
+          });
+          toastService.success(`"${org.name}" kuruluşu silindi.`);
+          if (onRefreshOrgs) onRefreshOrgs();
+        } catch (err) {
+          toastService.error('Hata: ' + err.message);
+        }
+      },
+    });
   };
 
   return (
@@ -190,8 +210,9 @@ export default function OrganizationsTab({
                 type="button"
                 className={styles.modalCloseBtn}
                 onClick={() => setAddModalOpen(false)}
+                aria-label="Kapat"
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
@@ -240,7 +261,7 @@ export default function OrganizationsTab({
                 >
                   İptal
                 </button>
-                <button type="submit" className={styles.confirmBtn}>
+                <button type="submit" className={styles.confirmBtnPrimary}>
                   Kuruluşu Kaydet
                 </button>
               </div>
@@ -248,6 +269,17 @@ export default function OrganizationsTab({
           </div>
         </div>
       )}
+
+      {/* In-App Confirmation Modal */}
+      <AdminConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+        confirmText={confirmModal.confirmText}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

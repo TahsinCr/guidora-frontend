@@ -13,6 +13,7 @@ import {
 import { getAllTools, getAllReviews } from '@/services/toolsService';
 import { getOrganizations, getAllUsers, getCurrentUser } from '@/services/userService';
 import { useLanguage } from '@/context/LanguageContext';
+import { toast } from '@/services/toast/toastService';
 
 // Admin Sub-Components
 import AdminSidebar from './AdminSidebar';
@@ -112,7 +113,11 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
       setReports(allR);
       setProposals(allP);
       setLogs(allL);
-      setAllReviews(allRev);
+      if (allRev && typeof allRev.then === 'function') {
+        allRev.then((revs) => Array.isArray(revs) && setAllReviews(revs));
+      } else if (Array.isArray(allRev)) {
+        setAllReviews(allRev);
+      }
       setTagCategories(allTC);
     } catch (err) {
       console.error('[AdminDashboardPage] Error loading data:', err);
@@ -197,9 +202,9 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
     try {
       adminImportAllData(jsonString);
       refreshAllData();
-      alert('Yedek başarıyla yüklendi ve tüm veriler güncellendi.');
+      toast.success('Yedek başarıyla yüklendi ve tüm veriler güncellendi.');
     } catch (err) {
-      alert('Yedek yükleme başarısız: ' + err.message);
+      toast.error('Yedek yükleme başarısız: ' + err.message);
     }
   };
 
@@ -325,7 +330,11 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
             <ReviewsTab
               reviews={allReviews}
               tools={tools}
-              onRefreshReviews={() => setAllReviews(getAllReviews())}
+              onRefreshReviews={() => {
+                Promise.resolve(getAllReviews()).then((revs) => {
+                  if (Array.isArray(revs)) setAllReviews(revs);
+                });
+              }}
               onOpenTool={onOpenTool}
             />
           )}

@@ -3,35 +3,58 @@ import {
   Users,
   Search,
   Plus,
-  ShieldCheck,
-  UserCheck,
   Ban,
-  Trash2,
   Edit2,
-  Lock,
   Eye,
   EyeOff,
   User,
-  CheckCircle2,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  X,
 } from 'lucide-react';
 import {
   adminCreateUser,
   adminUpdateUserRole,
-  adminDeleteUser,
   adminUpdateUserDetails,
 } from '@/services/userService';
 import { adminAddLog } from '@/services/adminService';
+import toastService from '@/services/toast/toastService';
+import AdminConfirmModal from '../modals/AdminConfirmModal';
 import styles from '../AdminDashboardPage.module.scss';
+
+const ROLE_CHIPS = [
+  { id: 'all', label: 'Tüm Roller' },
+  { id: 'admin', label: 'Admin (Yönetici)' },
+  { id: 'moderator', label: 'Moderator' },
+  { id: 'creator', label: 'Creator (Üretici)' },
+  { id: 'member', label: 'Member (Standart)' },
+];
 
 export default function UsersTab({
   users = [],
   onRefreshUsers,
 }) {
+  const safeUsers = Array.isArray(users) ? users : [];
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [addUserModalOpen, setAddUserModalOpen] = useState(false);
   const [editUserModalOpen, setEditUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // In-App Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'danger',
+    confirmText: 'Onayla',
+    onConfirm: () => {},
+  });
 
   // New User Form State
   const [name, setName] = useState('');
@@ -49,7 +72,7 @@ export default function UsersTab({
   const [editTitle, setEditTitle] = useState('');
 
   const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
+    return safeUsers.filter((u) => {
       if (roleFilter !== 'all' && u.role !== roleFilter) return false;
       if (search) {
         const q = search.toLowerCase();
@@ -60,13 +83,28 @@ export default function UsersTab({
       }
       return true;
     });
-  }, [users, roleFilter, search]);
+  }, [safeUsers, roleFilter, search]);
+
+  // Paginated users
+  const paginatedUsers = useMemo(() => {
+    if (pageSize === 'all') return filteredUsers;
+    const start = (currentPage - 1) * pageSize;
+    return filteredUsers.slice(start, start + pageSize);
+  }, [filteredUsers, currentPage, pageSize]);
+
+  const totalPages = pageSize === 'all' ? 1 : Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   // Handle Add User
   const handleCreateUser = (e) => {
     e.preventDefault();
     if (!name.trim() || !username.trim() || !email.trim()) {
-      alert('İsim, kullanıcı adı ve e-posta zorunludur.');
+      toastService.warning('İsim, kullanıcı adı ve e-posta zorunludur.');
       return;
     }
 
@@ -82,6 +120,7 @@ export default function UsersTab({
         entityName: 'User',
         category: 'AUTH',
       });
+      toastService.success(`"${name}" kullanıcısı başarıyla oluşturuldu.`);
       setAddUserModalOpen(false);
       setName('');
       setUsername('');
@@ -89,7 +128,7 @@ export default function UsersTab({
       setPassword('');
       if (onRefreshUsers) onRefreshUsers();
     } catch (err) {
-      alert('Kullanıcı oluşturma hatası: ' + err.message);
+      toastService.error('Kullanıcı oluşturma hatası: ' + err.message);
     }
   };
 
@@ -102,26 +141,39 @@ export default function UsersTab({
         entityId: userId,
         category: 'AUTH',
       });
+      toastService.success(`${userName} rolü "${newRole}" olarak güncellendi.`);
       if (onRefreshUsers) onRefreshUsers();
     } catch (err) {
-      alert('Rol güncelleme hatası: ' + err.message);
+      toastService.error('Rol güncelleme hatası: ' + err.message);
     }
   };
 
   // Handle Ban / Unban
   const handleToggleBan = (user) => {
     const nextBan = !user.isBanned;
-    try {
-      adminUpdateUserDetails(user.id, { isBanned: nextBan });
-      adminAddLog(nextBan ? 'USER_BANNED' : 'USER_UNBANNED', user.name, nextBan ? 'error' : 'info', {
-        entityName: 'User',
-        entityId: user.id,
-        category: 'GOVERNANCE',
-      });
-      if (onRefreshUsers) onRefreshUsers();
-    } catch (err) {
-      alert('İşlem hatası: ' + err.message);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: nextBan ? 'Kullanıcıyı Yasakla' : 'Kullanıcı Yasağını Kaldır',
+      message: nextBan
+        ? `"${user.name}" (@${user.username}) kullanıcısını yasaklamak istediğinize emin misiniz? Kullanıcı platforma giriş yapamayacaktır.`
+        : `"${user.name}" (@${user.username}) kullanıcısının yasağını kaldırmak istiyor musunuz?`,
+      variant: nextBan ? 'danger' : 'primary',
+      confirmText: nextBan ? 'Yasakla' : 'Yasağı Kaldır',
+      onConfirm: () => {
+        try {
+          adminUpdateUserDetails(user.id, { isBanned: nextBan });
+          adminAddLog(nextBan ? 'USER_BANNED' : 'USER_UNBANNED', user.name, nextBan ? 'error' : 'info', {
+            entityName: 'User',
+            entityId: user.id,
+            category: 'GOVERNANCE',
+          });
+          toastService.success(nextBan ? 'Kullanıcı yasaklandı.' : 'Kullanıcı yasağı kaldırıldı.');
+          if (onRefreshUsers) onRefreshUsers();
+        } catch (err) {
+          toastService.error('İşlem hatası: ' + err.message);
+        }
+      },
+    });
   };
 
   // Open Edit User
@@ -152,16 +204,66 @@ export default function UsersTab({
         entityId: editingUser.id,
         category: 'AUTH',
       });
+      toastService.success(`"${editName}" bilgileri başarıyla güncellendi.`);
       setEditUserModalOpen(false);
       setEditingUser(null);
       if (onRefreshUsers) onRefreshUsers();
     } catch (err) {
-      alert('Güncelleme hatası: ' + err.message);
+      toastService.error('Güncelleme hatası: ' + err.message);
     }
+  };
+
+  const handleExportCSV = () => {
+    if (filteredUsers.length === 0) {
+      toastService.warning('Dışa aktarılacak kullanıcı bulunmuyor.');
+      return;
+    }
+    const headers = ['ID', 'Ad Soyad', 'Kullanıcı Adı', 'E-posta', 'Rol', 'İtibar', 'Kayıt Tarihi', 'Yasaklı'];
+    const rows = filteredUsers.map((u) => [
+      `"${u.id || ''}"`,
+      `"${(u.name || '').replace(/"/g, '""')}"`,
+      `"${(u.username || '').replace(/"/g, '""')}"`,
+      `"${u.email || ''}"`,
+      `"${u.role || 'member'}"`,
+      u.reputation ?? 100,
+      `"${u.joinedDate || ''}"`,
+      u.isBanned ? 'Evet' : 'Hayır',
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `guidora_users_${Date.now()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toastService.success(`${filteredUsers.length} kullanıcı CSV olarak indirildi.`);
   };
 
   return (
     <div className={styles.tabContent}>
+      {/* Quick Role Filter Chips */}
+      <div className={styles.quickFilterChips}>
+        {ROLE_CHIPS.map((chip) => {
+          const count = chip.id === 'all'
+            ? safeUsers.length
+            : safeUsers.filter((u) => u.role === chip.id).length;
+          return (
+            <button
+              key={chip.id}
+              type="button"
+              className={`${styles.filterChip} ${roleFilter === chip.id ? styles.filterChipActive : ''}`}
+              onClick={() => {
+                setRoleFilter(chip.id);
+                setCurrentPage(1);
+              }}
+            >
+              {chip.label} ({count})
+            </button>
+          );
+        })}
+      </div>
+
       {/* Toolbar */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarFilters}>
@@ -172,34 +274,34 @@ export default function UsersTab({
               className={styles.searchInput}
               placeholder="İsim, @kullanıcı veya e-posta ara..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
             />
-          </div>
-
-          <div className={styles.selectWrapper}>
-            <select
-              className={styles.adminSelect}
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              aria-label="Role Göre Filtrele"
-            >
-              <option value="all">Tüm Roller</option>
-              <option value="admin">Admin (Yönetici)</option>
-              <option value="moderator">Moderator (Moderatör)</option>
-              <option value="creator">Creator (İçerik Üretici)</option>
-              <option value="member">Member (Üye)</option>
-            </select>
           </div>
         </div>
 
-        <button
-          type="button"
-          className={styles.actionBtnPrimary}
-          onClick={() => setAddUserModalOpen(true)}
-        >
-          <Plus size={16} />
-          <span>Yeni Kullanıcı Ekle</span>
-        </button>
+        <div className={styles.toolbarActions}>
+          <button
+            type="button"
+            className={styles.actionBtnOutline}
+            onClick={handleExportCSV}
+            title="CSV Dışa Aktar"
+          >
+            <Download size={14} />
+            <span>CSV Dışa Aktar</span>
+          </button>
+
+          <button
+            type="button"
+            className={styles.actionBtnPrimary}
+            onClick={() => setAddUserModalOpen(true)}
+          >
+            <Plus size={16} />
+            <span>Yeni Kullanıcı Ekle</span>
+          </button>
+        </div>
       </div>
 
       {/* Users Data Grid */}
@@ -217,76 +319,156 @@ export default function UsersTab({
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className={user.isBanned ? styles.rowDeleted : ''}>
-                  <td>
-                    <div className={styles.userIdentityCell}>
-                      <div className={styles.userAvatarSquare}>
-                        {user.avatar || (user.name ? user.name.substring(0, 2).toUpperCase() : 'U')}
-                      </div>
-                      <div>
-                        <div className={styles.userNameTitle}>
-                          <strong>{user.name}</strong>
-                          <span className={styles.userHandle}>@{user.username}</span>
-                        </div>
-                        <span className={styles.userEmailText}>{user.email}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <select
-                      className={`${styles.roleSelectInline} ${styles[user.role]}`}
-                      value={user.role}
-                      onChange={(e) => handleRoleChange(user.id, e.target.value, user.name)}
-                      aria-label="Kullanıcı Rolü Değiştir"
-                    >
-                      <option value="member">Member</option>
-                      <option value="creator">Creator</option>
-                      <option value="moderator">Moderator</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </td>
-                  <td>
-                    <span className={styles.reputationBadge}>
-                      {user.reputation ?? 100} pts
-                    </span>
-                  </td>
-                  <td>
-                    <span className={styles.joinedDateText}>
-                      {user.joinedDate || 'Eylül 2024'}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={user.isBanned ? styles.bannedBadge : styles.activeBadge}>
-                      {user.isBanned ? 'Yasaklı (Banned)' : 'Aktif (Normal)'}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <div className={styles.rowActionsRight}>
-                      <button
-                        type="button"
-                        className={styles.actionIconBtn}
-                        onClick={() => handleOpenEdit(user)}
-                        title="Kullanıcı Detaylarını Düzenle"
-                      >
-                        <Edit2 size={15} />
-                      </button>
-
-                      <button
-                        type="button"
-                        className={user.isBanned ? styles.actionIconBtnSuccess : styles.actionIconBtnDanger}
-                        onClick={() => handleToggleBan(user)}
-                        title={user.isBanned ? 'Yasağı Kaldır' : 'Kullanıcıyı Yasakla'}
-                      >
-                        <Ban size={15} />
-                      </button>
-                    </div>
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className={styles.emptyTableTd}>
+                    Filtre kriterlerine uygun kullanıcı bulunamadı.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                paginatedUsers.map((user) => (
+                  <tr key={user.id} className={user.isBanned ? styles.rowDeleted : ''}>
+                    <td>
+                      <div className={styles.userIdentityCell}>
+                        <div className={styles.userAvatarSquare}>
+                          {user.avatar || (user.name ? user.name.substring(0, 2).toUpperCase() : 'U')}
+                        </div>
+                        <div>
+                          <div className={styles.userNameTitle}>
+                            <strong>{user.name || 'İsimsiz'}</strong>
+                            {user.username && <span className={styles.userHandle}> @{user.username}</span>}
+                          </div>
+                          <span className={styles.userEmailText}>{user.email}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <select
+                        className={`${styles.roleSelectInline} ${styles[user.role]}`}
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user.id, e.target.value, user.name)}
+                        aria-label="Kullanıcı Rolü Değiştir"
+                      >
+                        <option value="member">Member</option>
+                        <option value="creator">Creator</option>
+                        <option value="moderator">Moderator</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </td>
+                    <td>
+                      <span className={styles.reputationBadge}>
+                        {user.reputation ?? 100} pts
+                      </span>
+                    </td>
+                    <td>
+                      <span className={styles.joinedDateText}>
+                        {user.joinedDate || 'Eylül 2024'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={user.isBanned ? styles.bannedBadge : styles.activeBadge}>
+                        {user.isBanned ? 'Yasaklı (Banned)' : 'Aktif (Normal)'}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div className={styles.rowActionsRight}>
+                        <button
+                          type="button"
+                          className={styles.actionIconBtn}
+                          onClick={() => handleOpenEdit(user)}
+                          title="Kullanıcı Detaylarını Düzenle"
+                        >
+                          <Edit2 size={15} />
+                        </button>
+
+                        <button
+                          type="button"
+                          className={user.isBanned ? styles.actionIconBtnSuccess : styles.actionIconBtnDanger}
+                          onClick={() => handleToggleBan(user)}
+                          title={user.isBanned ? 'Yasağı Kaldır' : 'Kullanıcıyı Yasakla'}
+                        >
+                          <Ban size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Bar */}
+        {filteredUsers.length > 0 && (
+          <div className={styles.paginationBar}>
+            <div className={styles.paginationInfo}>
+              <span>
+                Toplam <strong>{filteredUsers.length}</strong> kullanıcıdan <strong>{pageSize === 'all' ? filteredUsers.length : Math.min((currentPage - 1) * pageSize + 1, filteredUsers.length)}</strong> - <strong>{pageSize === 'all' ? filteredUsers.length : Math.min(currentPage * pageSize, filteredUsers.length)}</strong> arası gösteriliyor
+              </span>
+
+              <div className={styles.pageSizeSelector}>
+                <label>Sayfa Başına:</label>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    const val = e.target.value === 'all' ? 'all' : parseInt(e.target.value, 10);
+                    setPageSize(val);
+                    setCurrentPage(1);
+                  }}
+                  className={styles.pageSizeSelect}
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value="all">Tümü</option>
+                </select>
+              </div>
+            </div>
+
+            {pageSize !== 'all' && totalPages > 1 && (
+              <div className={styles.paginationNav}>
+                <button
+                  type="button"
+                  className={styles.pageBtn}
+                  disabled={currentPage <= 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  aria-label="Önceki Sayfa"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, idx) => {
+                  let pageNum = idx + 1;
+                  if (totalPages > 7) {
+                    if (currentPage <= 4) pageNum = idx + 1;
+                    else if (currentPage >= totalPages - 3) pageNum = totalPages - 6 + idx;
+                    else pageNum = currentPage - 3 + idx;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      type="button"
+                      className={`${styles.pageBtn} ${currentPage === pageNum ? styles.pageBtnActive : ''}`}
+                      onClick={() => handlePageChange(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                <button
+                  type="button"
+                  className={styles.pageBtn}
+                  disabled={currentPage >= totalPages}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  aria-label="Sonraki Sayfa"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Add User Modal */}
@@ -299,8 +481,9 @@ export default function UsersTab({
                 type="button"
                 className={styles.modalCloseBtn}
                 onClick={() => setAddUserModalOpen(false)}
+                aria-label="Kapat"
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
@@ -385,7 +568,7 @@ export default function UsersTab({
                 >
                   İptal
                 </button>
-                <button type="submit" className={styles.confirmBtn}>
+                <button type="submit" className={styles.confirmBtnPrimary}>
                   Hesabı Oluştur
                 </button>
               </div>
@@ -404,8 +587,9 @@ export default function UsersTab({
                 type="button"
                 className={styles.modalCloseBtn}
                 onClick={() => setEditUserModalOpen(false)}
+                aria-label="Kapat"
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
@@ -478,7 +662,7 @@ export default function UsersTab({
                 >
                   İptal
                 </button>
-                <button type="submit" className={styles.confirmBtn}>
+                <button type="submit" className={styles.confirmBtnPrimary}>
                   Değişiklikleri Kaydet
                 </button>
               </div>
@@ -486,6 +670,17 @@ export default function UsersTab({
           </div>
         </div>
       )}
+
+      {/* In-App Confirmation Modal */}
+      <AdminConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+        confirmText={confirmModal.confirmText}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

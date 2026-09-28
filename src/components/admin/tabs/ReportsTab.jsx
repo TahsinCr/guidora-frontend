@@ -16,6 +16,7 @@ import {
   adminDismissReport,
   adminAddLog,
 } from '@/services/adminService';
+import toastService from '@/services/toast/toastService';
 import styles from '../AdminDashboardPage.module.scss';
 
 export default function ReportsTab({
@@ -51,6 +52,7 @@ export default function ReportsTab({
       category: 'GOVERNANCE',
       newValues: { actionTaken: note },
     });
+    toastService.success(`Şikayet çözüldü olarak işaretlendi: "${toolName || reportId}".`);
     if (onRefreshReports) onRefreshReports();
   };
 
@@ -59,6 +61,7 @@ export default function ReportsTab({
     adminAddLog('REPORT_DISMISSED', toolName || reportId, 'info', {
       category: 'GOVERNANCE',
     });
+    toastService.info(`Şikayet kapatıldı: "${toolName || reportId}".`);
     if (onRefreshReports) onRefreshReports();
   };
 

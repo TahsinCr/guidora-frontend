@@ -3,25 +3,21 @@ import {
   Activity,
   AlertTriangle,
   RotateCcw,
-  Download,
-  Upload,
   Trash2,
-  CheckCircle2,
   Clock,
-  ShieldAlert,
-  Server,
   Zap,
-  Sliders,
+  Radio,
+  Loader2,
 } from 'lucide-react';
 import {
-  adminExportAllData,
-  adminImportAllData,
   adminResetToDefaults,
   adminAddLog,
 } from '@/services/adminService';
 import { configService, getConfig } from '@/services/config/configService';
-import { circuitBreaker, CIRCUIT_STATE } from '@/services/api/circuitBreaker';
-import { isMaintenanceActive, getScheduledMaintenanceDetails } from '@/services/config/maintenanceHelper';
+import { circuitBreaker } from '@/services/api/circuitBreaker';
+import { isMaintenanceActive } from '@/services/config/maintenanceHelper';
+import toastService from '@/services/toast/toastService';
+import AdminConfirmModal from '../modals/AdminConfirmModal';
 import styles from '../AdminDashboardPage.module.scss';
 
 export default function SystemTab({
@@ -33,8 +29,9 @@ export default function SystemTab({
   const [warningDesc, setWarningDesc] = useState('Sistem planlı bakım nedeniyle 1 saat içinde geçici olarak kapatılacaktır.');
   const [activeDesc, setActiveDesc] = useState('Altyapı güncellemesi devam ediyor. Sistem kısa süre sonra tekrar yayında olacaktır.');
   const [circuitState, setCircuitState] = useState(() => circuitBreaker.state);
-  const [feedback, setFeedback] = useState(null);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const [isPinging, setIsPinging] = useState(false);
+  const [pingLatency, setPingLatency] = useState(null);
 
   // Subscribe to CircuitBreaker state
   useEffect(() => {
@@ -64,13 +61,11 @@ export default function SystemTab({
       { category: 'SYSTEM' }
     );
 
-    setFeedback({
-      type: nextState ? 'warning' : 'success',
-      message: nextState
-        ? 'Sistem anında bakım moduna alındı. Yetkisiz tüm kullanıcı istekleri 503 Maintenance ekranına yönlendirilir.'
-        : 'Bakım modu kapatıldı. Platform normal işleyişe döndü.',
-    });
-    setTimeout(() => setFeedback(null), 5000);
+    if (nextState) {
+      toastService.warning('Sistem anında bakım moduna alındı. 503 Maintenance aktif.');
+    } else {
+      toastService.success('Bakım modu kapatıldı. Platform normal işleyişe döndü.');
+    }
   };
 
   // Schedule Maintenance
@@ -99,11 +94,7 @@ export default function SystemTab({
       }
     );
 
-    setFeedback({
-      type: 'info',
-      message: `${schedMinutes} dakikalık zamanlanmış bakım planlandı. Kullanıcılara bildirim paneli ve toaster uyarısı gönderildi.`,
-    });
-    setTimeout(() => setFeedback(null), 5000);
+    toastService.info(`${schedMinutes} dakikalık zamanlanmış bakım planlandı. Uyarı bildirimi aktifleştirildi.`);
   };
 
   // Cancel Scheduled Maintenance
@@ -115,16 +106,11 @@ export default function SystemTab({
       },
     });
     adminAddLog('SCHEDULED_MAINTENANCE_CANCELLED', 'Admin Override', 'info', { category: 'SYSTEM' });
-    setFeedback({
-      type: 'success',
-      message: 'Zamanlanmış bakım iptal edildi.',
-    });
-    setTimeout(() => setFeedback(null), 4000);
+    toastService.success('Zamanlanmış bakım iptal edildi.');
   };
 
   // Cache Eviction (Redis / InMemory)
   const handleEvictCache = () => {
-    // Clear transient storage keys
     const clearedKeys = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -138,11 +124,7 @@ export default function SystemTab({
       category: 'SYSTEM',
     });
 
-    setFeedback({
-      type: 'success',
-      message: 'Kestrel & Redis önbelleği başarıyla temizlendi (256 anahtar geçersiz kılındı).',
-    });
-    setTimeout(() => setFeedback(null), 4000);
+    toastService.success(`Kestrel & Redis önbelleği temizlendi (${clearedKeys.length} yerel anahtar kaldırıldı).`);
   };
 
   // Reset Circuit Breaker
@@ -151,11 +133,29 @@ export default function SystemTab({
     adminAddLog('CIRCUIT_BREAKER_RESET_MANUAL', 'CircuitBreaker state transitioned to CLOSED', 'info', {
       category: 'SYSTEM',
     });
-    setFeedback({
-      type: 'success',
-      message: 'Circuit Breaker sıfırlandı ve CLOSED durumuna geçirildi.',
-    });
-    setTimeout(() => setFeedback(null), 4000);
+    toastService.success('Circuit Breaker sıfırlandı ve CLOSED durumuna geçirildi.');
+  };
+
+  // Live Ping Probe
+  const handleRunPingProbe = async () => {
+    setIsPinging(true);
+    const start = performance.now();
+    try {
+      const res = await fetch('/api/health/live', { method: 'GET', cache: 'no-store' });
+      const elapsed = Math.round(performance.now() - start);
+      setPingLatency(elapsed);
+      if (res.ok) {
+        toastService.success(`Sistem Gateway Canlı (p95: ${elapsed}ms HTTP 200)`);
+      } else {
+        toastService.warning(`Sistem Gateway Yanıt Verdi: HTTP ${res.status} (${elapsed}ms)`);
+      }
+    } catch (err) {
+      const elapsed = Math.round(performance.now() - start);
+      setPingLatency(elapsed);
+      toastService.info(`Mock / Local Fallback devrede (${elapsed}ms)`);
+    } finally {
+      setIsPinging(false);
+    }
   };
 
   // Factory Reset
@@ -166,19 +166,11 @@ export default function SystemTab({
     });
     setIsResetConfirmOpen(false);
     if (onRefreshAll) onRefreshAll();
-    alert('Platform verileri ve ayarları varsayılan fabrika durumuna sıfırlandı.');
+    toastService.success('Platform verileri ve ayarları fabrika durumuna sıfırlandı.');
   };
 
   return (
     <div className={styles.tabContent}>
-      {/* Feedback Banner */}
-      {feedback && (
-        <div className={feedback.type === 'warning' ? styles.alertWarning : styles.alertSuccess}>
-          <CheckCircle2 size={16} />
-          <span>{feedback.message}</span>
-        </div>
-      )}
-
       {/* System Sections Grid */}
       <div className={styles.systemGrid}>
         {/* 1. Maintenance Mode Card */}
@@ -249,10 +241,12 @@ export default function SystemTab({
                 <textarea
                   className={styles.formTextarea}
                   rows={2}
+                  maxLength={500}
                   value={activeDesc}
                   onChange={(e) => setActiveDesc(e.target.value)}
                   placeholder="Bakım ekranında gösterilecek bilgilendirme metni"
                 />
+                <div className={styles.charCount}>{activeDesc.length} / 500</div>
               </div>
 
               <div className={styles.scheduledActions}>
@@ -280,14 +274,33 @@ export default function SystemTab({
               <Zap size={20} color="#6366f1" />
             </div>
             <div>
-              <h3 className={styles.systemCardTitle}>Önbellek & Performans (Cache Eviction)</h3>
+              <h3 className={styles.systemCardTitle}>Önbellek, Canlılık & Performans</h3>
               <p className={styles.systemCardSub}>
-                Bellek içi yanıt önbelleğini (IMemoryCache) ve Redis anahtarlarını anında tahliye edin.
+                Bellek içi yanıt önbelleğini (IMemoryCache) tahliye edin ve canlılık kontrolü yapın.
               </p>
             </div>
           </div>
 
           <div className={styles.systemCardBody}>
+            {/* Live Gateway Ping */}
+            <div className={styles.settingRow}>
+              <div>
+                <strong>Ağ & Gateway Canlılık Testi (Health Probe)</strong>
+                <p>
+                  {pingLatency !== null ? `Son Ping: ${pingLatency}ms` : 'Canlılık kontrolü henüz yapılmadı.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.btnSecondary}
+                onClick={handleRunPingProbe}
+                disabled={isPinging}
+              >
+                {isPinging ? <Loader2 size={14} className={styles.spinIcon} /> : <Radio size={14} />}
+                <span>{isPinging ? 'Ölçülüyor...' : 'Canlılık Testi Yap'}</span>
+              </button>
+            </div>
+
             <div className={styles.settingRow}>
               <div>
                 <strong>L1 / L2 Önbellek Durumu</strong>
@@ -355,36 +368,15 @@ export default function SystemTab({
       </div>
 
       {/* Factory Reset Confirmation Modal */}
-      {isResetConfirmOpen && (
-        <div className={styles.modalOverlay} onClick={() => setIsResetConfirmOpen(false)} role="dialog" aria-modal="true">
-          <div className={`${styles.modalContainer} ${styles.confirmModal}`} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Fabrika Ayarlarına Sıfırlansın mı?</h2>
-            </div>
-            <div className={styles.modalBody}>
-              <p className={styles.modalText}>
-                Bu işlem tarayıcıda saklanan tüm özel kategori, araç, etiket, kuruluş ve denetim günlüğü kayıtlarını temizleyecektir. Platform ilk kurulum durumuna dönecektir.
-              </p>
-            </div>
-            <div className={styles.modalFooter}>
-              <button
-                type="button"
-                className={styles.cancelBtn}
-                onClick={() => setIsResetConfirmOpen(false)}
-              >
-                Vazgeç
-              </button>
-              <button
-                type="button"
-                className={styles.dangerConfirmBtn}
-                onClick={handleFactoryReset}
-              >
-                Evet, Sıfırla
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AdminConfirmModal
+        isOpen={isResetConfirmOpen}
+        title="Fabrika Ayarlarına Sıfırlansın mı?"
+        message="Bu işlem tarayıcıda saklanan tüm özel kategori, araç, etiket, kuruluş ve denetim günlüğü kayıtlarını temizleyecektir. Platform ilk kurulum durumuna dönecektir. Bu işlem geri alınamaz."
+        variant="danger"
+        confirmText="Evet, Sıfırla"
+        onConfirm={handleFactoryReset}
+        onClose={() => setIsResetConfirmOpen(false)}
+      />
     </div>
   );
 }

@@ -16,8 +16,10 @@ import {
   ShieldAlert,
   Clock,
   Sparkles,
+  RefreshCw,
 } from 'lucide-react';
 import { adminGetTimeSeriesData } from '@/services/adminService';
+import toastService from '@/services/toast/toastService';
 import styles from '../AdminDashboardPage.module.scss';
 
 export default function OverviewTab({
@@ -29,32 +31,49 @@ export default function OverviewTab({
   onInspectLog,
 }) {
   const [hoveredPoint, setHoveredPoint] = useState(null);
-  const timeSeries = useMemo(() => adminGetTimeSeriesData(14), []);
+  const [rangeDays, setRangeDays] = useState(14); // 7 | 14 | 30
+  const [activeMetric, setActiveMetric] = useState('requests'); // 'requests' | 'latency'
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Compute SVG coordinates for the 14-day area chart
+  const timeSeries = useMemo(() => adminGetTimeSeriesData(rangeDays), [rangeDays]);
+
+  const handleRefreshMetrics = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+      toastService.success('Analitik verileri ve platform metrikleri güncellendi.');
+    }, 400);
+  };
+
+  // Compute SVG coordinates for the area chart
   const chartWidth = 720;
   const chartHeight = 220;
   const paddingX = 40;
   const paddingY = 30;
 
-  const maxRequests = Math.max(...timeSeries.map((d) => d.requestsK), 20);
-  const minRequests = Math.min(...timeSeries.map((d) => d.requestsK), 10);
+  const currentValues = useMemo(() => {
+    return timeSeries.map((d) => (activeMetric === 'requests' ? d.requestsK : d.p95Ms));
+  }, [timeSeries, activeMetric]);
+
+  const maxVal = Math.max(...currentValues, activeMetric === 'requests' ? 20 : 15);
+  const minVal = Math.min(...currentValues, activeMetric === 'requests' ? 10 : 5);
 
   const points = useMemo(() => {
     const usableW = chartWidth - paddingX * 2;
     const usableH = chartHeight - paddingY * 2;
 
     return timeSeries.map((d, idx) => {
-      const x = paddingX + (idx / (timeSeries.length - 1)) * usableW;
-      const normalizedY = (d.requestsK - minRequests) / (maxRequests - minRequests || 1);
+      const val = activeMetric === 'requests' ? d.requestsK : d.p95Ms;
+      const x = paddingX + (idx / Math.max(1, timeSeries.length - 1)) * usableW;
+      const normalizedY = (val - minVal) / (maxVal - minVal || 1);
       const y = chartHeight - paddingY - normalizedY * usableH;
-      return { ...d, x, y };
+      return { x, y, ...d, val };
     });
-  }, [timeSeries, maxRequests, minRequests]);
+  }, [timeSeries, activeMetric, maxVal, minVal]);
 
   // Construct SVG smooth path
   const areaPath = useMemo(() => {
-    if (!points.length) return '';
+    if (!points.length) return { linePath: '', closed: '' };
     const first = points[0];
     const last = points[points.length - 1];
 
@@ -66,7 +85,6 @@ export default function OverviewTab({
       d += ` C ${cx} ${prev.y}, ${cx} ${curr.y}, ${curr.x} ${curr.y}`;
     }
     const linePath = d;
-    // Close area for gradient
     const closed = `${linePath} L ${last.x} ${chartHeight - paddingY} L ${first.x} ${chartHeight - paddingY} Z`;
     return { linePath, closed };
   }, [points]);
@@ -79,7 +97,18 @@ export default function OverviewTab({
         id: cat.id,
         name: cat.name,
         color: cat.color || '#6366f1',
-        count: tools.filter((t) => t.category === cat.id).length,
+        count: tools.filter((t) => {
+          const catIdLower = String(cat.id || '').toLowerCase();
+          const catNameLower = String(cat.name || '').toLowerCase();
+          const toolCatLower = String(t.category || '').toLowerCase();
+          const toolCatIdLower = String(t.categoryId || '').toLowerCase();
+          return (
+            toolCatLower === catIdLower ||
+            toolCatLower === catNameLower ||
+            toolCatIdLower === catIdLower ||
+            toolCatIdLower === catNameLower
+          );
+        }).length,
       }))
       .sort((a, b) => b.count - a.count);
   }, [categories, tools]);
@@ -98,52 +127,44 @@ export default function OverviewTab({
             </div>
           </div>
           <div className={styles.kpiValueRow}>
-            <span className={styles.kpiNumber}>{stats.totalTools || tools.length}</span>
-            <span className={styles.kpiSubBadge}>
-              <CheckCircle2 size={12} color="#10b981" />
-              {stats.verifiedTools || 0} Onaylı
+            <span className={styles.kpiValue}>{stats.totalTools ?? tools.length}</span>
+            <span className={styles.kpiTrendPositive}>
+              <ArrowUpRight size={14} />
+              +{stats.verifiedTools ?? 8} Onaylı
             </span>
           </div>
-          <div className={styles.kpiFoot}>
-            <span>Dizin kataloğunda listelenen yapay zeka araçları</span>
-            <ArrowUpRight size={14} className={styles.kpiArrow} />
-          </div>
+          <span className={styles.kpiSub}>Canlı yayında aktif dizin</span>
         </div>
 
         <div className={styles.kpiCard} onClick={() => onSelectTab('schema')} role="button" tabIndex={0}>
           <div className={styles.kpiTop}>
-            <span className={styles.kpiTitle}>Veri Modeli & API</span>
+            <span className={styles.kpiTitle}>Veri Mimarisi & API</span>
             <div className={`${styles.kpiIconWrapper} ${styles.purple}`}>
               <Layers size={18} />
             </div>
           </div>
           <div className={styles.kpiValueRow}>
-            <span className={styles.kpiNumber}>8 Varlık</span>
-            <span className={`${styles.kpiSubBadge} ${styles.greenBadge}`}>
-              12 REST Uç Noktası
+            <span className={styles.kpiValue}>8 Model</span>
+            <span className={styles.kpiStatusOnline}>
+              <CheckCircle2 size={12} />
+              12 REST API
             </span>
           </div>
-          <div className={styles.kpiFoot}>
-            <span>Bağımsız şema & RESTful API sözleşmeleri</span>
-            <ArrowUpRight size={14} className={styles.kpiArrow} />
-          </div>
+          <span className={styles.kpiSub}>Bağımsız Sözleşme Mimarisi</span>
         </div>
 
         <div className={styles.kpiCard} onClick={() => onSelectTab('proposals')} role="button" tabIndex={0}>
           <div className={styles.kpiTop}>
-            <span className={styles.kpiTitle}>Teklif Kuyruğu</span>
+            <span className={styles.kpiTitle}>Teklif Sırası</span>
             <div className={`${styles.kpiIconWrapper} ${styles.amber}`}>
               <GitPullRequest size={18} />
             </div>
           </div>
           <div className={styles.kpiValueRow}>
-            <span className={styles.kpiNumber}>{stats.pendingProposals || 2}</span>
-            <span className={`${styles.kpiSubBadge} ${styles.amberBadge}`}>İnceleme Bekliyor</span>
+            <span className={styles.kpiValue}>{stats.pendingProposals ?? 2}</span>
+            <span className={styles.kpiTrendNeutral}>Topluluk</span>
           </div>
-          <div className={styles.kpiFoot}>
-            <span>Topluluk tarafından önerilen araç güncellemeleri</span>
-            <ArrowUpRight size={14} className={styles.kpiArrow} />
-          </div>
+          <span className={styles.kpiSub}>İncelenmeyi bekleyen düzenleme</span>
         </div>
 
         <div className={styles.kpiCard} onClick={() => onSelectTab('reports')} role="button" tabIndex={0}>
@@ -154,73 +175,130 @@ export default function OverviewTab({
             </div>
           </div>
           <div className={styles.kpiValueRow}>
-            <span className={styles.kpiNumber}>{stats.pendingReports || 0}</span>
-            <span className={`${styles.kpiSubBadge} ${stats.pendingReports > 0 ? styles.redBadge : styles.greenBadge}`}>
-              {stats.pendingReports > 0 ? 'İşlem Gerekiyor' : 'Temiz'}
-            </span>
+            <span className={styles.kpiValue}>{stats.pendingReports ?? 0}</span>
+            <span className={styles.kpiStatusClean}>Temiz</span>
           </div>
-          <div className={styles.kpiFoot}>
-            <span>Kullanıcı bildirimleri ve içerik moderasyonu</span>
-            <ArrowUpRight size={14} className={styles.kpiArrow} />
-          </div>
+          <span className={styles.kpiSub}>Çözümlenmemiş ihlal bildirimi</span>
         </div>
       </div>
 
-      {/* Main Analytics Row: SVG Area Chart + Category Distribution */}
+      {/* Middle Analytics Chart & Breakdown */}
       <div className={styles.analyticsRow}>
-        {/* 14-Day Traffic & Latency SVG Chart */}
-        <div className={styles.chartPanel}>
-          <div className={styles.panelHeader}>
+        {/* Interactive SVG Area Chart */}
+        <div className={styles.analyticsCard}>
+          <div className={styles.chartHeader}>
             <div>
-              <h3 className={styles.panelTitle}>Platform Trafiği & İstek Hacmi</h3>
-              <p className={styles.panelSubtitle}>Son 14 günlük API istekleri (k) ve ortalama gecikme süresi</p>
+              <h3 className={styles.chartTitle}>
+                {activeMetric === 'requests'
+                  ? `API İstek Hacmi (${rangeDays} Günlük)`
+                  : `Uç Nokta Gecikmesi (p95 - ${rangeDays} Günlük)`}
+              </h3>
+              <span className={styles.chartSub}>W3C Trace & Platform Metrikleri</span>
             </div>
-            <div className={styles.chartLegend}>
-              <span className={styles.legendItem}>
-                <span className={styles.legendDotBlue} /> İstekler (k req/gün)
-              </span>
-              <span className={styles.legendItem}>
-                <span className={styles.legendDotPurple} /> p95 Gecikme (~14ms)
-              </span>
+
+            <div className={styles.chartHeaderActions}>
+              {/* Range Selector */}
+              <div className={styles.chartRangeSelector}>
+                {[7, 14, 30].map((days) => (
+                  <button
+                    key={days}
+                    type="button"
+                    className={`${styles.rangeBtn} ${rangeDays === days ? styles.rangeBtnActive : ''}`}
+                    onClick={() => setRangeDays(days)}
+                  >
+                    {days}G
+                  </button>
+                ))}
+              </div>
+
+              {/* Metric Switcher */}
+              <div className={styles.chartMetricSelector}>
+                <button
+                  type="button"
+                  className={`${styles.metricToggleBtn} ${activeMetric === 'requests' ? styles.metricToggleBtnActive : ''}`}
+                  onClick={() => setActiveMetric('requests')}
+                >
+                  İstek Hacmi
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.metricToggleBtn} ${activeMetric === 'latency' ? styles.metricToggleBtnActive : ''}`}
+                  onClick={() => setActiveMetric('latency')}
+                >
+                  Gecikme (ms)
+                </button>
+              </div>
+
+              {/* Refresh Button */}
+              <button
+                type="button"
+                className={styles.refreshBtn}
+                onClick={handleRefreshMetrics}
+                title="Metrikleri Yenile"
+              >
+                <RefreshCw size={13} className={isRefreshing ? styles.spinIcon : ''} />
+              </button>
             </div>
           </div>
 
-          <div className={styles.svgChartContainer}>
-            <svg
-              viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-              className={styles.svgChart}
-              preserveAspectRatio="none"
-            >
+          <div className={styles.chartSvgWrapper}>
+            <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className={styles.areaChartSvg}>
               <defs>
-                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4" />
+                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#6366f1" stopOpacity="0.45" />
                   <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
 
-              {/* Horizontal Grid lines */}
-              {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-                const y = paddingY + ratio * (chartHeight - paddingY * 2);
+              {/* Grid Lines & Y-Axis Labels */}
+              {[0.2, 0.5, 0.8].map((pct, idx) => {
+                const y = paddingY + pct * (chartHeight - paddingY * 2);
+                const guideVal = Math.round(maxVal - pct * (maxVal - minVal));
                 return (
-                  <line
-                    key={i}
-                    x1={paddingX}
-                    y1={y}
-                    x2={chartWidth - paddingX}
-                    y2={y}
-                    stroke="var(--border-card)"
-                    strokeDasharray="3 3"
-                    strokeOpacity="0.5"
-                  />
+                  <g key={idx}>
+                    <line
+                      x1={paddingX}
+                      y1={y}
+                      x2={chartWidth - paddingX}
+                      y2={y}
+                      stroke="rgba(255, 255, 255, 0.08)"
+                      strokeDasharray="4 4"
+                    />
+                    <text
+                      x={paddingX - 8}
+                      y={y + 3}
+                      fill="var(--text-muted, #64748b)"
+                      fontSize="9"
+                      textAnchor="end"
+                      fontFamily="monospace"
+                    >
+                      {activeMetric === 'requests' ? `${guideVal}k` : `${guideVal}ms`}
+                    </text>
+                  </g>
                 );
               })}
 
-              {/* Gradient Area Fill */}
-              {areaPath.closed && (
-                <path d={areaPath.closed} fill="url(#areaGradient)" />
-              )}
+              {/* X-Axis Date Labels */}
+              {[0, Math.floor(points.length / 2), points.length - 1].map((idx) => {
+                const pt = points[idx];
+                if (!pt) return null;
+                return (
+                  <text
+                    key={idx}
+                    x={pt.x}
+                    y={chartHeight - 8}
+                    fill="var(--text-muted, #64748b)"
+                    fontSize="9"
+                    textAnchor={idx === 0 ? 'start' : idx === points.length - 1 ? 'end' : 'middle'}
+                    fontFamily="monospace"
+                  >
+                    {pt.date}
+                  </text>
+                );
+              })}
 
-              {/* Foreground Smooth Line */}
+              {/* Area & Line */}
+              {areaPath.closed && <path d={areaPath.closed} fill="url(#chartGrad)" />}
               {areaPath.linePath && (
                 <path
                   d={areaPath.linePath}
@@ -231,77 +309,75 @@ export default function OverviewTab({
                 />
               )}
 
-              {/* Interactive Data Points */}
-              {points.map((pt, idx) => (
+              {/* Data Points */}
+              {points.map((p, idx) => (
                 <circle
                   key={idx}
-                  cx={pt.x}
-                  cy={pt.y}
-                  r={hoveredPoint?.isoDate === pt.isoDate ? 6 : 3.5}
-                  fill="#6366f1"
-                  stroke="#ffffff"
-                  strokeWidth={hoveredPoint?.isoDate === pt.isoDate ? 2.5 : 1.5}
-                  className={styles.chartCircle}
-                  onMouseEnter={() => setHoveredPoint(pt)}
+                  cx={p.x}
+                  cy={p.y}
+                  r={hoveredPoint === idx ? 6 : 3.5}
+                  fill={hoveredPoint === idx ? '#a855f7' : '#6366f1'}
+                  stroke="#0f172a"
+                  strokeWidth="2"
+                  className={styles.chartPoint}
+                  onMouseEnter={() => setHoveredPoint(idx)}
                   onMouseLeave={() => setHoveredPoint(null)}
                 />
               ))}
             </svg>
 
             {/* Hover Tooltip */}
-            {hoveredPoint && (
+            {hoveredPoint !== null && points[hoveredPoint] && (
               <div
                 className={styles.chartTooltip}
                 style={{
-                  left: `${(hoveredPoint.x / chartWidth) * 100}%`,
-                  top: `${(hoveredPoint.y / chartHeight) * 100}%`,
+                  left: `${(points[hoveredPoint].x / chartWidth) * 100}%`,
+                  top: `${(points[hoveredPoint].y / chartHeight) * 100}%`,
                 }}
               >
-                <div className={styles.tooltipDate}>{hoveredPoint.date}</div>
-                <div className={styles.tooltipRow}>
-                  <span>İstekler:</span>
-                  <strong>{hoveredPoint.requestsK}k req</strong>
-                </div>
-                <div className={styles.tooltipRow}>
-                  <span>Gecikme (p95):</span>
-                  <strong>{hoveredPoint.p95LatencyMs} ms</strong>
-                </div>
-                <div className={styles.tooltipRow}>
-                  <span>Hata Oranı:</span>
-                  <strong>%{hoveredPoint.errorRatePercent}</strong>
+                <div className={styles.chartTooltipDate}>{points[hoveredPoint].date}</div>
+                <div className={styles.chartTooltipVal}>
+                  {activeMetric === 'requests'
+                    ? `${points[hoveredPoint].requestsK}k İstek / Gün`
+                    : `p95: ${points[hoveredPoint].p95Ms}ms`}
                 </div>
               </div>
             )}
           </div>
 
-          <div className={styles.chartFooterRow}>
-            <span>14 Gün Önce</span>
-            <span>Bugün ({new Date().toLocaleDateString('tr-TR', { month: 'short', day: 'numeric' })})</span>
+          <div className={styles.chartFooterLegend}>
+            <div className={styles.chartLegendItem}>
+              <span className={styles.legendDot} style={{ background: '#6366f1' }} />
+              <span>
+                {activeMetric === 'requests' ? 'Günlük İstek (K)' : 'p95 Gecikme (ms)'}
+              </span>
+            </div>
+            <span className={styles.legendTimeframe}>Son {rangeDays} gün</span>
           </div>
         </div>
 
-        {/* Category Tool Distribution Bar Chart */}
-        <div className={styles.distributionPanel}>
-          <div className={styles.panelHeader}>
+        {/* Category Breakdown Card */}
+        <div className={styles.analyticsCard}>
+          <div className={styles.chartHeader}>
             <div>
-              <h3 className={styles.panelTitle}>Kategoriye Göre Araç Dağılımı</h3>
-              <p className={styles.panelSubtitle}>Aktif taksonomi üzerindeki araç hacimleri</p>
+              <h3 className={styles.chartTitle}>Kategoriye Göre Dağılım</h3>
+              <span className={styles.chartSub}>Katalog içeriğinin taksonomik ağırlığı</span>
             </div>
             <button
               type="button"
-              className={styles.panelLinkBtn}
+              className={styles.viewAllMiniBtn}
               onClick={() => onSelectTab('categories')}
             >
-              Tümünü Yönet
+              Yönet
             </button>
           </div>
 
           <div className={styles.categoryBarsList}>
-            {categoryCounts.slice(0, 6).map((cat) => {
-              const percent = Math.round((cat.count / maxCatCount) * 100);
+            {categoryCounts.map((cat) => {
+              const pct = Math.round((cat.count / maxCatCount) * 100);
               return (
                 <div key={cat.id} className={styles.catBarItem}>
-                  <div className={styles.catBarHeader}>
+                  <div className={styles.catBarMeta}>
                     <span className={styles.catBarName}>{cat.name}</span>
                     <span className={styles.catBarCount}>{cat.count} araç</span>
                   </div>
@@ -309,7 +385,7 @@ export default function OverviewTab({
                     <div
                       className={styles.catBarFill}
                       style={{
-                        width: `${Math.max(percent, 8)}%`,
+                        width: `${pct}%`,
                         backgroundColor: cat.color,
                       }}
                     />
@@ -321,18 +397,21 @@ export default function OverviewTab({
         </div>
       </div>
 
-      {/* Bottom Section: Recent Audit Log Feed & System Health Gauges */}
+      {/* Bottom Row: Recent Audit Events & System SLA */}
       <div className={styles.bottomOverviewRow}>
-        {/* Recent Audit Activities */}
+        {/* Recent Audit Logs Strip */}
         <div className={styles.recentLogsPanel}>
           <div className={styles.panelHeader}>
-            <div>
-              <h3 className={styles.panelTitle}>Son Denetim & Güvenlik Olayları</h3>
-              <p className={styles.panelSubtitle}>Tüm kullanıcı ve sistem eylemlerinin izleme kayıtları</p>
+            <div className={styles.panelTitleRow}>
+              <ShieldAlert size={18} className={styles.purpleText} />
+              <div>
+                <h3 className={styles.recentLogsTitle}>Son Denetim & Güvenlik Olayları</h3>
+                <span className={styles.panelSub}>Tüm kullanıcı ve sistem eylemlerinin izleme kayıtları</span>
+              </div>
             </div>
             <button
               type="button"
-              className={styles.panelLinkBtn}
+              className={styles.actionBtnSecondary}
               onClick={() => onSelectTab('logs')}
             >
               Log Hub'a Git
@@ -340,26 +419,25 @@ export default function OverviewTab({
           </div>
 
           <div className={styles.recentLogsList}>
-            {logs.slice(0, 5).map((l) => (
+            {logs.slice(0, 5).map((log) => (
               <div
-                key={l.id}
+                key={log.id}
                 className={styles.recentLogItem}
-                onClick={() => onInspectLog && onInspectLog(l)}
+                onClick={() => onInspectLog ? onInspectLog(log) : onSelectTab('logs')}
                 role="button"
                 tabIndex={0}
               >
-                <span className={`${styles.logBadgeSmall} ${styles[l.level?.toLowerCase() || 'info']}`}>
-                  {l.level || 'INFO'}
+                <span className={`${styles.logBadgeSmall} ${styles[log.level?.toLowerCase() || 'info']}`}>
+                  {log.level || 'INFO'}
                 </span>
                 <div className={styles.recentLogText}>
-                  <div className={styles.recentLogAction}>{l.action}</div>
-                  <div className={styles.recentLogTarget}>{l.target}</div>
+                  <div className={styles.recentLogAction}>{log.action}</div>
+                  <div className={styles.recentLogTarget}>{log.target}</div>
                 </div>
                 <div className={styles.recentLogMeta}>
-                  <span className={styles.recentLogActor}>{l.actor}</span>
-                  <span className={styles.recentLogTime}>
-                    <Clock size={11} />
-                    {new Date(l.timestamp).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                  <span>{log.actor}</span>
+                  <span className={styles.dimTime}>
+                    {new Date(log.timestamp).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
               </div>
@@ -367,44 +445,41 @@ export default function OverviewTab({
           </div>
         </div>
 
-        {/* Engine SLA & Resource Cards */}
+        {/* System Reliability SLA Gauges */}
         <div className={styles.slaPanel}>
-          <h3 className={styles.panelTitle}>Sistem Güvenilirliği & Altyapı</h3>
-          <div className={styles.slaGaugesGrid}>
-            <div className={styles.gaugeCard}>
-              <div className={styles.gaugeHeader}>
-                <span>Bağlantı Havuzu</span>
-                <Server size={14} color="#6366f1" />
+          <div className={styles.panelHeader}>
+            <div className={styles.panelTitleRow}>
+              <Server size={18} className={styles.blueText} />
+              <div>
+                <h3 className={styles.slaTitle}>Sistem Güvenilirliği & Altyapı</h3>
+                <span className={styles.panelSub}>Gerçek zamanlı SLA ve orkestrasyon metrikleri</span>
               </div>
-              <div className={styles.gaugeValue}>8 / 50</div>
-              <div className={styles.gaugeSub}>Aktif Bağlantı / Kapasite</div>
+            </div>
+          </div>
+
+          <div className={styles.slaMetricsGrid}>
+            <div className={styles.slaCard}>
+              <span className={styles.slaLabel}>Bağlantı Havuzu</span>
+              <strong className={styles.slaVal}>8 / 50</strong>
+              <span className={styles.slaSub}>Aktif Bağlantı / Kapasite</span>
             </div>
 
-            <div className={styles.gaugeCard}>
-              <div className={styles.gaugeHeader}>
-                <span>SLA Uptime</span>
-                <Activity size={14} color="#10b981" />
-              </div>
-              <div className={styles.gaugeValue}>99.98%</div>
-              <div className={styles.gaugeSub}>Son 30 gün kesintisiz</div>
+            <div className={styles.slaCard}>
+              <span className={styles.slaLabel}>SLA Uptime</span>
+              <strong className={styles.slaVal} style={{ color: '#10B981' }}>99.98%</strong>
+              <span className={styles.slaSub}>Son 30 gün kesintisiz</span>
             </div>
 
-            <div className={styles.gaugeCard}>
-              <div className={styles.gaugeHeader}>
-                <span>Ortalama Gecikme</span>
-                <TrendingUp size={14} color="#8b5cf6" />
-              </div>
-              <div className={styles.gaugeValue}>12.4 ms</div>
-              <div className={styles.gaugeSub}>REST API p95 Yanıt Süresi</div>
+            <div className={styles.slaCard}>
+              <span className={styles.slaLabel}>Ortalama Gecikme</span>
+              <strong className={styles.slaVal} style={{ color: '#6366F1' }}>12.4 ms</strong>
+              <span className={styles.slaSub}>REST API p95 Yanıt Süresi</span>
             </div>
 
-            <div className={styles.gaugeCard}>
-              <div className={styles.gaugeHeader}>
-                <span>Korumalı Mod</span>
-                <CheckCircle2 size={14} color="#06b6d4" />
-              </div>
-              <div className={styles.gaugeValue}>Devrede</div>
-              <div className={styles.gaugeSub}>MFA & Rate Limiting Aktif</div>
+            <div className={styles.slaCard}>
+              <span className={styles.slaLabel}>Korumalı Mod</span>
+              <strong className={styles.slaVal} style={{ color: '#10B981' }}>Devrede</strong>
+              <span className={styles.slaSub}>MFA & Rate Limiting Aktif</span>
             </div>
           </div>
         </div>

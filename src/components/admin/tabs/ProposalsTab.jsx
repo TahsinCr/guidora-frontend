@@ -9,25 +9,41 @@ import {
   Search,
   Check,
   X,
-  MessageSquare,
-  Sparkles,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  Download,
 } from 'lucide-react';
-import { adminGetProposals, adminResolveProposal } from '@/services/adminService';
+import { adminResolveProposal } from '@/services/adminService';
+import toastService from '@/services/toast/toastService';
+import ProposalReviewModal from '../modals/ProposalReviewModal';
 import styles from '../AdminDashboardPage.module.scss';
+
+const STATUS_CHIPS = [
+  { id: 'pending', label: 'Bekleyenler' },
+  { id: 'accepted', label: 'Onaylananlar' },
+  { id: 'rejected', label: 'Reddedilenler' },
+  { id: 'all', label: 'Tüm Teklifler' },
+];
 
 export default function ProposalsTab({
   proposals = [],
   onRefreshProposals,
   onOpenTool,
 }) {
-  const [filterStatus, setFilterStatus] = useState('pending'); // 'pending' | 'accepted' | 'rejected' | 'all'
+  const safeProposals = Array.isArray(proposals) ? proposals : [];
+  const [filterStatus, setFilterStatus] = useState('pending');
   const [search, setSearch] = useState('');
   const [reviewNotes, setReviewNotes] = useState({});
   const [actionLoading, setActionLoading] = useState({});
-  const [feedback, setFeedback] = useState(null);
+  const [selectedProposal, setSelectedProposal] = useState(null);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const filteredProposals = useMemo(() => {
-    return proposals.filter((p) => {
+    return safeProposals.filter((p) => {
       if (filterStatus !== 'all' && p.status !== filterStatus) {
         return false;
       }
@@ -40,83 +56,128 @@ export default function ProposalsTab({
       }
       return true;
     });
-  }, [proposals, filterStatus, search]);
+  }, [safeProposals, filterStatus, search]);
 
-  const handleResolve = (proposalId, status) => {
-    const notes = reviewNotes[proposalId] || '';
+  // Paginated proposals
+  const paginatedProposals = useMemo(() => {
+    if (pageSize === 'all') return filteredProposals;
+    const start = (currentPage - 1) * pageSize;
+    return filteredProposals.slice(start, start + pageSize);
+  }, [filteredProposals, currentPage, pageSize]);
+
+  const totalPages = pageSize === 'all' ? 1 : Math.max(1, Math.ceil(filteredProposals.length / pageSize));
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const handleResolve = (proposalId, status, explicitNotes) => {
+    const notes = explicitNotes !== undefined ? explicitNotes : (reviewNotes[proposalId] || '');
     setActionLoading((prev) => ({ ...prev, [proposalId]: true }));
 
     setTimeout(() => {
       try {
         adminResolveProposal(proposalId, status, notes);
-        setFeedback({
-          type: status === 'accepted' ? 'success' : 'warning',
-          message: status === 'accepted'
-            ? `Teklif onaylandı ve değişiklikler kataloğa uygulandı.`
-            : `Teklif reddedildi.`,
-        });
+        if (status === 'accepted') {
+          toastService.success('Teklif onaylandı ve değişiklikler kataloğa uygulandı.');
+        } else {
+          toastService.warning('Teklif reddedildi.');
+        }
         if (onRefreshProposals) onRefreshProposals();
-        setTimeout(() => setFeedback(null), 4000);
+        if (selectedProposal?.id === proposalId) {
+          setSelectedProposal(null);
+        }
       } catch (err) {
-        alert('Teklif işlemi hatası: ' + err.message);
+        toastService.error('Teklif işlemi hatası: ' + err.message);
       } finally {
         setActionLoading((prev) => ({ ...prev, [proposalId]: false }));
       }
     }, 200);
   };
 
+  const handleExportCSV = () => {
+    if (filteredProposals.length === 0) {
+      toastService.warning('Dışa aktarılacak teklif bulunmuyor.');
+      return;
+    }
+    const headers = ['ID', 'Durum', 'Araç ID', 'Araç Adı', 'Öneren', 'Özet', 'Tarih'];
+    const rows = filteredProposals.map((p) => [
+      `"${p.id || ''}"`,
+      `"${p.status || ''}"`,
+      `"${p.toolId || ''}"`,
+      `"${(p.toolName || '').replace(/"/g, '""')}"`,
+      `"${(p.proposer || '').replace(/"/g, '""')}"`,
+      `"${(p.summary || '').replace(/"/g, '""')}"`,
+      `"${p.submittedAt || ''}"`,
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `guidora_proposals_${Date.now()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toastService.success(`${filteredProposals.length} teklif CSV olarak indirildi.`);
+  };
+
   return (
     <div className={styles.tabContent}>
-      {/* Feedback Banner */}
-      {feedback && (
-        <div className={feedback.type === 'success' ? styles.alertSuccess : styles.alertWarning}>
-          <CheckCircle2 size={16} />
-          <span>{feedback.message}</span>
-        </div>
-      )}
+      {/* Quick Status Filter Chips */}
+      <div className={styles.quickFilterChips}>
+        {STATUS_CHIPS.map((chip) => {
+          const count = chip.id === 'all'
+            ? safeProposals.length
+            : safeProposals.filter((p) => p.status === chip.id).length;
+          return (
+            <button
+              key={chip.id}
+              type="button"
+              className={`${styles.filterChip} ${filterStatus === chip.id ? styles.filterChipActive : ''}`}
+              onClick={() => {
+                setFilterStatus(chip.id);
+                setCurrentPage(1);
+              }}
+            >
+              {chip.label} ({count})
+            </button>
+          );
+        })}
+      </div>
 
-      {/* Header & Sub-Tabs Toolbar */}
+      {/* Toolbar */}
       <div className={styles.toolbar}>
-        <div className={styles.filterTabs}>
-          <button
-            type="button"
-            className={`${styles.filterTabBtn} ${filterStatus === 'pending' ? styles.active : ''}`}
-            onClick={() => setFilterStatus('pending')}
-          >
-            Bekleyenler ({proposals.filter((p) => p.status === 'pending').length})
-          </button>
-          <button
-            type="button"
-            className={`${styles.filterTabBtn} ${filterStatus === 'accepted' ? styles.active : ''}`}
-            onClick={() => setFilterStatus('accepted')}
-          >
-            Onaylananlar ({proposals.filter((p) => p.status === 'accepted').length})
-          </button>
-          <button
-            type="button"
-            className={`${styles.filterTabBtn} ${filterStatus === 'rejected' ? styles.active : ''}`}
-            onClick={() => setFilterStatus('rejected')}
-          >
-            Reddedilenler ({proposals.filter((p) => p.status === 'rejected').length})
-          </button>
-          <button
-            type="button"
-            className={`${styles.filterTabBtn} ${filterStatus === 'all' ? styles.active : ''}`}
-            onClick={() => setFilterStatus('all')}
-          >
-            Tümü ({proposals.length})
-          </button>
+        <div className={styles.toolbarFilters}>
+          <div className={styles.searchWrapper}>
+            <Search size={16} className={styles.searchIcon} />
+            <input
+              type="text"
+              className={styles.searchInput}
+              placeholder="Araç veya teklif sahibi ara..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
         </div>
 
-        <div className={styles.searchWrapper}>
-          <Search size={16} className={styles.searchIcon} />
-          <input
-            type="text"
-            className={styles.searchInput}
-            placeholder="Araç veya teklif sahibi ara..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className={styles.toolbarActions}>
+          <button
+            type="button"
+            className={styles.actionBtnOutline}
+            onClick={handleExportCSV}
+            title="CSV Dışa Aktar"
+          >
+            <Download size={14} />
+            <span>CSV Dışa Aktar</span>
+          </button>
+          <div className={styles.toolbarInfo}>
+            <span>{filteredProposals.length} teklif listeleniyor</span>
+          </div>
         </div>
       </div>
 
@@ -129,7 +190,7 @@ export default function ProposalsTab({
             <p className={styles.emptyDesc}>Bu kategoride incelenecek düzenleme teklifi bulunmamaktadır.</p>
           </div>
         ) : (
-          filteredProposals.map((prop) => (
+          paginatedProposals.map((prop) => (
             <div key={prop.id} className={styles.proposalCard}>
               {/* Proposal Header */}
               <div className={styles.proposalCardHeader}>
@@ -166,6 +227,15 @@ export default function ProposalsTab({
                     <Clock size={12} />
                     <span>{new Date(prop.submittedAt).toLocaleString('tr-TR')}</span>
                   </div>
+                  <button
+                    type="button"
+                    className={styles.actionBtnSecondary}
+                    onClick={() => setSelectedProposal(prop)}
+                    title="Detaylı İnceleme & Karar Modalı"
+                  >
+                    <Eye size={13} />
+                    <span>İncele & Karar Ver</span>
+                  </button>
                 </div>
               </div>
 
@@ -198,14 +268,14 @@ export default function ProposalsTab({
                   })}
               </div>
 
-              {/* Review Section */}
+              {/* Quick Inline Actions */}
               {prop.status === 'pending' ? (
                 <div className={styles.proposalActionRow}>
                   <div className={styles.reviewNoteInputWrapper}>
                     <input
                       type="text"
                       className={styles.reviewNoteInput}
-                      placeholder="İnceleme notu ekleyin (isteğe bağlı)..."
+                      placeholder="Hızlı inceleme notu ekleyin (isteğe bağlı)..."
                       value={reviewNotes[prop.id] || ''}
                       onChange={(e) =>
                         setReviewNotes((prev) => ({ ...prev, [prop.id]: e.target.value }))
@@ -256,6 +326,90 @@ export default function ProposalsTab({
           ))
         )}
       </div>
+
+      {/* Pagination Bar */}
+      {filteredProposals.length > 0 && (
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            <span>
+              Toplam <strong>{filteredProposals.length}</strong> tekliften <strong>{pageSize === 'all' ? filteredProposals.length : Math.min((currentPage - 1) * pageSize + 1, filteredProposals.length)}</strong> - <strong>{pageSize === 'all' ? filteredProposals.length : Math.min(currentPage * pageSize, filteredProposals.length)}</strong> arası gösteriliyor
+            </span>
+
+            <div className={styles.pageSizeSelector}>
+              <label>Sayfa Başına:</label>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  const val = e.target.value === 'all' ? 'all' : parseInt(e.target.value, 10);
+                  setPageSize(val);
+                  setCurrentPage(1);
+                }}
+                className={styles.pageSizeSelect}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value="all">Tümü</option>
+              </select>
+            </div>
+          </div>
+
+          {pageSize !== 'all' && totalPages > 1 && (
+            <div className={styles.paginationNav}>
+              <button
+                type="button"
+                className={styles.pageBtn}
+                disabled={currentPage <= 1}
+                onClick={() => handlePageChange(currentPage - 1)}
+                aria-label="Önceki Sayfa"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              {Array.from({ length: Math.min(totalPages, 7) }, (_, idx) => {
+                let pageNum = idx + 1;
+                if (totalPages > 7) {
+                  if (currentPage <= 4) pageNum = idx + 1;
+                  else if (currentPage >= totalPages - 3) pageNum = totalPages - 6 + idx;
+                  else pageNum = currentPage - 3 + idx;
+                }
+                return (
+                  <button
+                    key={pageNum}
+                    type="button"
+                    className={`${styles.pageBtn} ${currentPage === pageNum ? styles.pageBtnActive : ''}`}
+                    onClick={() => handlePageChange(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                className={styles.pageBtn}
+                disabled={currentPage >= totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+                aria-label="Sonraki Sayfa"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Proposal Review Modal */}
+      {selectedProposal && (
+        <ProposalReviewModal
+          proposal={selectedProposal}
+          isOpen={Boolean(selectedProposal)}
+          onClose={() => setSelectedProposal(null)}
+          onResolve={handleResolve}
+          onOpenTool={onOpenTool}
+          isLoading={Boolean(actionLoading[selectedProposal?.id])}
+        />
+      )}
     </div>
   );
 }

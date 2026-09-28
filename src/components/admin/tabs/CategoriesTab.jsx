@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import {
-  FolderTree,
   Plus,
   Edit2,
   Trash2,
   Globe,
   Sparkles,
-  CheckCircle2,
   Search,
+  X,
 } from 'lucide-react';
 import {
   adminAddCategory,
@@ -15,7 +14,9 @@ import {
   adminDeleteCategory,
   adminAddLog,
 } from '@/services/adminService';
+import toastService from '@/services/toast/toastService';
 import UnifiedTranslationModal from '@/components/common/UnifiedTranslationModal';
+import AdminConfirmModal from '../modals/AdminConfirmModal';
 import styles from '../AdminDashboardPage.module.scss';
 
 export default function CategoriesTab({
@@ -33,6 +34,16 @@ export default function CategoriesTab({
   // Translation Modal State
   const [transModalOpen, setTransModalOpen] = useState(false);
   const [transTarget, setTransTarget] = useState(null);
+
+  // In-App Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'danger',
+    confirmText: 'Sil',
+    onConfirm: () => {},
+  });
 
   const filteredCategories = categories.filter((c) => {
     if (search) {
@@ -64,7 +75,7 @@ export default function CategoriesTab({
   const handleSaveCategory = (e) => {
     e.preventDefault();
     if (!catName.trim()) {
-      alert('Kategori adı zorunludur.');
+      toastService.warning('Kategori adı zorunludur.');
       return;
     }
 
@@ -80,6 +91,7 @@ export default function CategoriesTab({
           entityId: editingCat.id,
           category: 'CATALOG',
         });
+        toastService.success(`"${catName}" kategorisi güncellendi.`);
       } else {
         adminAddCategory({
           name: catName.trim(),
@@ -90,32 +102,41 @@ export default function CategoriesTab({
           entityName: 'Category',
           category: 'CATALOG',
         });
+        toastService.success(`"${catName}" kategorisi oluşturuldu.`);
       }
       setModalOpen(false);
       if (onRefreshCategories) onRefreshCategories();
     } catch (err) {
-      alert('Hata: ' + err.message);
+      toastService.error('Hata: ' + err.message);
     }
   };
 
   const handleDeleteCategory = (cat) => {
     if (cat.id === 'all') {
-      alert('Kök "Tüm Araçlar" kategorisi silinemez.');
+      toastService.warning('Kök "Tüm Araçlar" kategorisi silinemez.');
       return;
     }
-    if (window.confirm(`"${cat.name}" kategorisini silmek istediğinize emin misiniz?`)) {
-      try {
-        adminDeleteCategory(cat.id);
-        adminAddLog('CATEGORY_DELETED', cat.name, 'warning', {
-          entityName: 'Category',
-          entityId: cat.id,
-          category: 'CATALOG',
-        });
-        if (onRefreshCategories) onRefreshCategories();
-      } catch (err) {
-        alert('Hata: ' + err.message);
-      }
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Kategoriyi Sil',
+      message: `"${cat.name}" kategorisini silmek istediğinize emin misiniz? Bu kategoriye bağlı araçlar etkilenebilir.`,
+      variant: 'danger',
+      confirmText: 'Kategoriyi Sil',
+      onConfirm: () => {
+        try {
+          adminDeleteCategory(cat.id);
+          adminAddLog('CATEGORY_DELETED', cat.name, 'warning', {
+            entityName: 'Category',
+            entityId: cat.id,
+            category: 'CATALOG',
+          });
+          toastService.success(`"${cat.name}" kategorisi silindi.`);
+          if (onRefreshCategories) onRefreshCategories();
+        } catch (err) {
+          toastService.error('Hata: ' + err.message);
+        }
+      },
+    });
   };
 
   // Open Translations
@@ -126,16 +147,21 @@ export default function CategoriesTab({
 
   const handleSaveTranslations = (newTranslations) => {
     if (!transTarget) return;
-    adminUpdateCategory(transTarget.id, { translations: newTranslations });
-    adminAddLog('CATEGORY_TRANSLATED', transTarget.name, 'info', {
-      entityName: 'Category',
-      entityId: transTarget.id,
-      category: 'CATALOG',
-      newValues: newTranslations,
-    });
-    setTransModalOpen(false);
-    setTransTarget(null);
-    if (onRefreshCategories) onRefreshCategories();
+    try {
+      adminUpdateCategory(transTarget.id, { translations: newTranslations });
+      adminAddLog('CATEGORY_TRANSLATED', transTarget.name, 'info', {
+        entityName: 'Category',
+        entityId: transTarget.id,
+        category: 'CATALOG',
+        newValues: newTranslations,
+      });
+      toastService.success(`"${transTarget.name}" çevirileri kaydedildi.`);
+      setTransModalOpen(false);
+      setTransTarget(null);
+      if (onRefreshCategories) onRefreshCategories();
+    } catch (err) {
+      toastService.error('Çeviri kaydetme hatası: ' + err.message);
+    }
   };
 
   return (
@@ -166,7 +192,18 @@ export default function CategoriesTab({
       {/* Categories Grid */}
       <div className={styles.categoriesGrid}>
         {filteredCategories.map((cat) => {
-          const toolCount = tools.filter((t) => t.category === cat.id).length;
+          const toolCount = tools.filter((t) => {
+            const catIdLower = String(cat.id || '').toLowerCase();
+            const catNameLower = String(cat.name || '').toLowerCase();
+            const toolCatLower = String(t.category || '').toLowerCase();
+            const toolCatIdLower = String(t.categoryId || '').toLowerCase();
+            return (
+              toolCatLower === catIdLower ||
+              toolCatLower === catNameLower ||
+              toolCatIdLower === catIdLower ||
+              toolCatIdLower === catNameLower
+            );
+          }).length;
 
           return (
             <div key={cat.id} className={styles.categoryCard}>
@@ -240,8 +277,9 @@ export default function CategoriesTab({
                 type="button"
                 className={styles.modalCloseBtn}
                 onClick={() => setModalOpen(false)}
+                aria-label="Kapat"
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
@@ -297,7 +335,7 @@ export default function CategoriesTab({
                 >
                   İptal
                 </button>
-                <button type="submit" className={styles.confirmBtn}>
+                <button type="submit" className={styles.confirmBtnPrimary}>
                   {editingCat ? 'Güncelle' : 'Oluştur'}
                 </button>
               </div>
@@ -321,6 +359,17 @@ export default function CategoriesTab({
           }}
         />
       )}
+
+      {/* In-App Confirmation Modal */}
+      <AdminConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+        confirmText={confirmModal.confirmText}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

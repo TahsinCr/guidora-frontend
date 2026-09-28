@@ -2,15 +2,14 @@ import React, { useState } from 'react';
 import {
   Tag,
   Plus,
-  Edit2,
   Trash2,
   Globe,
   Sliders,
   FolderPlus,
   Search,
+  X,
 } from 'lucide-react';
 import {
-  adminGetTagCategories,
   adminAddTag,
   adminUpdateTag,
   adminDeleteTag,
@@ -19,7 +18,9 @@ import {
   adminDeleteTagCategory,
   adminAddLog,
 } from '@/services/adminService';
+import toastService from '@/services/toast/toastService';
 import UnifiedTranslationModal from '@/components/common/UnifiedTranslationModal';
+import AdminConfirmModal from '../modals/AdminConfirmModal';
 import styles from '../AdminDashboardPage.module.scss';
 
 export default function TagsTab({
@@ -40,22 +41,33 @@ export default function TagsTab({
   const [transModalOpen, setTransModalOpen] = useState(false);
   const [transTarget, setTransTarget] = useState(null); // { item, type: 'tag' | 'tag_category' }
 
+  // In-App Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'danger',
+    confirmText: 'Sil',
+    onConfirm: () => {},
+  });
+
   // Handle Add Tag / Group
   const handleSaveTagOrGroup = (e) => {
     e.preventDefault();
     try {
       if (addMode === 'tag') {
         if (!tagName.trim()) {
-          alert('Etiket adı zorunludur.');
+          toastService.warning('Etiket adı zorunludur.');
           return;
         }
         adminAddTag(selectedGroupId, { name: tagName.trim() });
         adminAddLog('TAG_CREATED', `${tagName.trim()} (${selectedGroupId})`, 'info', {
           category: 'CATALOG',
         });
+        toastService.success(`"#${tagName.trim()}" etiketi eklendi.`);
       } else {
         if (!groupName.trim()) {
-          alert('Grup adı zorunludur.');
+          toastService.warning('Grup adı zorunludur.');
           return;
         }
         adminAddTagCategory({
@@ -65,46 +77,65 @@ export default function TagsTab({
         adminAddLog('TAG_CATEGORY_CREATED', groupName.trim(), 'success', {
           category: 'CATALOG',
         });
+        toastService.success(`"${groupName.trim()}" etiket grubu oluşturuldu.`);
       }
       setTagModalOpen(false);
       setTagName('');
       setGroupName('');
       if (onRefreshTags) onRefreshTags();
     } catch (err) {
-      alert('Hata: ' + err.message);
+      toastService.error('Hata: ' + err.message);
     }
   };
 
   const handleDeleteTag = (groupId, tagId, name) => {
-    if (window.confirm(`"${name}" etiketini silmek istediğinize emin misiniz?`)) {
-      try {
-        adminDeleteTag(groupId, tagId);
-        adminAddLog('TAG_DELETED', name, 'warning', { category: 'CATALOG' });
-        if (onRefreshTags) onRefreshTags();
-      } catch (err) {
-        alert('Hata: ' + err.message);
-      }
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Etiketi Sil',
+      message: `"#${name}" etiketini silmek istediğinize emin misiniz? Bu etiketi kullanan araçlar etkilenebilir.`,
+      variant: 'danger',
+      confirmText: 'Etiketi Sil',
+      onConfirm: () => {
+        try {
+          adminDeleteTag(groupId, tagId);
+          adminAddLog('TAG_DELETED', name, 'warning', { category: 'CATALOG' });
+          toastService.success(`"#${name}" etiketi silindi.`);
+          if (onRefreshTags) onRefreshTags();
+        } catch (err) {
+          toastService.error('Hata: ' + err.message);
+        }
+      },
+    });
   };
 
   const handleDeleteGroup = (group) => {
-    if (window.confirm(`"${group.name}" etiket grubunu ve içindeki tüm etiketleri silmek istediğinize emin misiniz?`)) {
-      try {
-        adminDeleteTagCategory(group.id);
-        adminAddLog('TAG_CATEGORY_DELETED', group.name, 'warning', { category: 'CATALOG' });
-        if (onRefreshTags) onRefreshTags();
-      } catch (err) {
-        alert('Hata: ' + err.message);
-      }
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Etiket Grubunu Sil',
+      message: `"${group.name}" etiket grubunu ve içindeki tüm etiketleri silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
+      variant: 'danger',
+      confirmText: 'Grubu Sil',
+      onConfirm: () => {
+        try {
+          adminDeleteTagCategory(group.id);
+          adminAddLog('TAG_CATEGORY_DELETED', group.name, 'warning', { category: 'CATALOG' });
+          toastService.success(`"${group.name}" grubu ve etiketleri silindi.`);
+          if (onRefreshTags) onRefreshTags();
+        } catch (err) {
+          toastService.error('Hata: ' + err.message);
+        }
+      },
+    });
   };
 
   const handleToggleSingleSelect = (group) => {
     try {
-      adminUpdateTagCategory(group.id, { isSingleSelect: !group.isSingleSelect });
+      const nextVal = !group.isSingleSelect;
+      adminUpdateTagCategory(group.id, { isSingleSelect: nextVal });
+      toastService.info(`"${group.name}" grubu ${nextVal ? 'Tekli Seçim' : 'Çoklu Seçim'} olarak güncellendi.`);
       if (onRefreshTags) onRefreshTags();
     } catch (err) {
-      alert('Hata: ' + err.message);
+      toastService.error('Hata: ' + err.message);
     }
   };
 
@@ -118,14 +149,19 @@ export default function TagsTab({
     if (!transTarget) return;
     const { item, type } = transTarget;
 
-    if (type === 'tag_category') {
-      adminUpdateTagCategory(item.id, { translations: newTranslations });
-    } else {
-      adminUpdateTag(item.groupId, item.id, { translations: newTranslations });
+    try {
+      if (type === 'tag_category') {
+        adminUpdateTagCategory(item.id, { translations: newTranslations });
+      } else {
+        adminUpdateTag(item.groupId, item.id, { translations: newTranslations });
+      }
+      toastService.success(`"${item.name}" çevirileri kaydedildi.`);
+      setTransModalOpen(false);
+      setTransTarget(null);
+      if (onRefreshTags) onRefreshTags();
+    } catch (err) {
+      toastService.error('Çeviri hatası: ' + err.message);
     }
-    setTransModalOpen(false);
-    setTransTarget(null);
-    if (onRefreshTags) onRefreshTags();
   };
 
   return (
@@ -271,8 +307,9 @@ export default function TagsTab({
                 type="button"
                 className={styles.modalCloseBtn}
                 onClick={() => setTagModalOpen(false)}
+                aria-label="Kapat"
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
@@ -343,7 +380,7 @@ export default function TagsTab({
                 >
                   İptal
                 </button>
-                <button type="submit" className={styles.confirmBtn}>
+                <button type="submit" className={styles.confirmBtnPrimary}>
                   {addMode === 'tag' ? 'Etiketi Ekle' : 'Grubu Oluştur'}
                 </button>
               </div>
@@ -367,6 +404,17 @@ export default function TagsTab({
           }}
         />
       )}
+
+      {/* In-App Confirmation Modal */}
+      <AdminConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+        confirmText={confirmModal.confirmText}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

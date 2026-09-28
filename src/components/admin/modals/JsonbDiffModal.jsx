@@ -4,12 +4,11 @@ import {
   RotateCcw,
   Copy,
   Check,
-  ShieldAlert,
   Server,
-  Terminal,
-  Activity,
   User,
 } from 'lucide-react';
+import toastService from '@/services/toast/toastService';
+import AdminConfirmModal from './AdminConfirmModal';
 import styles from '../AdminDashboardPage.module.scss';
 
 export default function JsonbDiffModal({
@@ -19,6 +18,7 @@ export default function JsonbDiffModal({
 }) {
   const [copiedTrace, setCopiedTrace] = useState(false);
   const [isReverting, setIsReverting] = useState(false);
+  const [confirmRevertOpen, setConfirmRevertOpen] = useState(false);
 
   if (!log) return null;
 
@@ -26,21 +26,21 @@ export default function JsonbDiffModal({
     if (log.traceId) {
       navigator.clipboard?.writeText(log.traceId);
       setCopiedTrace(true);
+      toastService.success('Trace ID panoya kopyalandı.');
       setTimeout(() => setCopiedTrace(false), 2000);
     }
   };
 
-  const handleRevertConfirm = () => {
-    if (window.confirm(`[${log.id}] no'lu işlem geri alınsın mı? Bu işlem varlığı önceki durumuna (oldValues) döndürecektir.`)) {
-      setIsReverting(true);
-      try {
-        onRevert(log.id);
-        onClose();
-      } catch (err) {
-        alert('Geri alma başarısız: ' + err.message);
-      } finally {
-        setIsReverting(false);
-      }
+  const handleRevertConfirmed = () => {
+    setIsReverting(true);
+    try {
+      onRevert(log.id);
+      onClose();
+    } catch (err) {
+      toastService.error('Geri alma başarısız: ' + err.message);
+    } finally {
+      setIsReverting(false);
+      setConfirmRevertOpen(false);
     }
   };
 
@@ -158,7 +158,7 @@ export default function JsonbDiffModal({
             <button
               type="button"
               className={styles.revertBtn}
-              onClick={handleRevertConfirm}
+              onClick={() => setConfirmRevertOpen(true)}
               disabled={isReverting}
               title="Bu değişikliği geri al ve önceki verilere dön"
             >
@@ -180,6 +180,17 @@ export default function JsonbDiffModal({
           </button>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <AdminConfirmModal
+        isOpen={confirmRevertOpen}
+        title="İşlemi Geri Al (Revert)"
+        message={`[${log.id}] numaralı işlemi geri almak istediğinize emin misiniz? Bu işlem varlığı önceki durumuna (oldValues) döndürecektir.`}
+        variant="warning"
+        confirmText="Geri Al"
+        onConfirm={handleRevertConfirmed}
+        onClose={() => setConfirmRevertOpen(false)}
+      />
     </div>
   );
 }

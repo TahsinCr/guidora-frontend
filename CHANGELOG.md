@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- **Admin Panel Enterprise UX & UI Overhaul (In-App Modals, Pagination, Filter Chips, Light Theme Contrast, Standalone Workspace)**:
+  - Completely eliminated all native browser dialogs (`window.alert`, `window.confirm`, `window.prompt`) across the admin console.
+  - Implemented accessible in-app confirmation modal (`AdminConfirmModal.jsx`) with keyboard `Escape` dismissal, multiple semantic color variants (`danger`, `warning`, `primary`, `info`), and asynchronous loading states.
+  - Implemented community proposal review modal (`ProposalReviewModal.jsx`) featuring side-by-side delta diffs, fast rejection reason preset pills, character counters, and action loading states.
+  - Added client-side pagination (10/25/50/All) with page size selector across all data tables (`ToolsTab`, `LogsTab`, `UsersTab`, `ReviewsTab`, `ProposalsTab`).
+  - Added instant filter chips across all tabs for rapid slicing (tool approval/pricing status, log levels, proposal review states, review star ratings, user roles).
+  - Added 1-click CSV and JSON export tools in data tabs (`ToolsTab`, `LogsTab`, `UsersTab`, `ReviewsTab`, `ProposalsTab`).
+  - Fixed category tool counting bug where `t.category` stored display names while `cat.id` stored slugs.
+  - Overhauled Light Mode contrast across the admin console, eliminating missing `--bg-main` fallback and ensuring high-contrast readable cards, tables, inputs, sidebars, modals, and badges.
+  - Dedicated full-screen admin workspace: hid public directory Header, Footer, and ScrollToTop in `App.jsx` when `?view=admin` is active.
+  - Fixed async Promise handling in `getAllReviews()`, preventing component crashes in `ReviewsTab`.
+  - Maintained 100% test suite pass rate (74 of 74 tests passing across 12 test suites) and verified Vite production build with gzip/brotli compression.
+
 - **Standardized Container Build Specifications to Lowercase `dockerfile`**:
   - Renamed root build file `Dockerfile` to lowercase `dockerfile`.
   - Renamed mock backend server build file `infra/mock-server/Dockerfile` to lowercase `dockerfile`.

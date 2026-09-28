@@ -1,32 +1,29 @@
 import React, { useState, useMemo } from 'react';
 import {
   Layers,
-  FileCode,
-  Network,
   Search,
   Copy,
   Check,
   Play,
-  CheckCircle2,
-  ExternalLink,
   ShieldCheck,
   Code,
   Database,
   RefreshCw,
   Sparkles,
   ArrowRight,
-  Info,
 } from 'lucide-react';
 import {
   adminGetEntitySchemas,
   adminGetApiEndpoints,
   adminGetSystemHealth,
 } from '@/services/adminService';
+import toastService from '@/services/toast/toastService';
 import styles from '../AdminDashboardPage.module.scss';
 
 export default function SchemaTab({ tools = [], categories = [] }) {
   const [subTab, setSubTab] = useState('entities'); // 'entities' | 'endpoints' | 'architecture'
   const [selectedEntityKey, setSelectedEntityKey] = useState('products');
+  const [fieldSearch, setFieldSearch] = useState('');
   const [endpointSearch, setEndpointSearch] = useState('');
   const [methodFilter, setMethodFilter] = useState('ALL');
   const [copiedPayload, setCopiedPayload] = useState(false);
@@ -38,6 +35,17 @@ export default function SchemaTab({ tools = [], categories = [] }) {
   const systemHealth = useMemo(() => adminGetSystemHealth(), []);
 
   const selectedEntity = schemas[selectedEntityKey] || schemas.products;
+
+  const filteredFields = useMemo(() => {
+    if (!fieldSearch) return selectedEntity.fields || [];
+    const q = fieldSearch.toLowerCase();
+    return (selectedEntity.fields || []).filter(
+      (f) =>
+        f.name.toLowerCase().includes(q) ||
+        f.type.toLowerCase().includes(q) ||
+        (f.description || '').toLowerCase().includes(q)
+    );
+  }, [selectedEntity, fieldSearch]);
 
   const filteredEndpoints = useMemo(() => {
     return endpoints.filter((ep) => {
@@ -52,7 +60,14 @@ export default function SchemaTab({ tools = [], categories = [] }) {
   const handleCopyPayload = (payload) => {
     navigator.clipboard?.writeText(JSON.stringify(payload, null, 2));
     setCopiedPayload(true);
+    toastService.success('JSON şablonu panoya kopyalandı.');
     setTimeout(() => setCopiedPayload(false), 2000);
+  };
+
+  const handleCopySimulated = () => {
+    if (!simulatedResponse) return;
+    navigator.clipboard?.writeText(JSON.stringify(simulatedResponse.data, null, 2));
+    toastService.success('Simüle edilmiş yanıt panoya kopyalandı.');
   };
 
   const handleSimulateApi = (endpoint) => {
@@ -63,6 +78,7 @@ export default function SchemaTab({ tools = [], categories = [] }) {
       latencyMs: Math.floor(6 + Math.random() * 8),
       timestamp: new Date().toISOString(),
     });
+    toastService.info(`${endpoint.method} ${endpoint.path} simüle edildi.`);
   };
 
   return (
@@ -145,7 +161,10 @@ export default function SchemaTab({ tools = [], categories = [] }) {
                   key={key}
                   type="button"
                   className={`${styles.schemaEntityItem} ${isActive ? styles.active : ''}`}
-                  onClick={() => setSelectedEntityKey(key)}
+                  onClick={() => {
+                    setSelectedEntityKey(key);
+                    setFieldSearch('');
+                  }}
                 >
                   <div className={styles.entityItemMain}>
                     <div className={styles.entityItemName}>{ent.name}</div>
@@ -186,6 +205,18 @@ export default function SchemaTab({ tools = [], categories = [] }) {
                   ))}
                 </div>
               )}
+
+              {/* Field Search */}
+              <div className={styles.searchWrapper} style={{ marginTop: '0.75rem', maxWidth: '320px' }}>
+                <Search size={14} className={styles.searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Bu varlıkta alan ara..."
+                  value={fieldSearch}
+                  onChange={(e) => setFieldSearch(e.target.value)}
+                  className={styles.searchInput}
+                />
+              </div>
             </div>
 
             {/* Field Table */}
@@ -201,36 +232,44 @@ export default function SchemaTab({ tools = [], categories = [] }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedEntity.fields.map((f, i) => (
-                    <tr key={i}>
-                      <td className={styles.monoCell}>
-                        <strong>{f.name}</strong>
-                      </td>
-                      <td>
-                        <span className={styles.typeBadge}>{f.type}</span>
-                      </td>
-                      <td>
-                        <span className={f.required ? styles.requiredBadge : styles.optionalBadge}>
-                          {f.required ? 'Zorunlu' : 'Opsiyonel'}
-                        </span>
-                      </td>
-                      <td>
-                        {f.isPrimaryKey && <span className={styles.pkBadge}>PRIMARY KEY</span>}
-                        {f.isForeignKey && <span className={styles.fkBadge}>FOREIGN KEY</span>}
-                        {f.isUnique && <span className={styles.uniBadge}>UNIQUE</span>}
-                        {f.isIndexed && <span className={styles.indexBadge}>INDEXED</span>}
-                        {!f.isPrimaryKey && !f.isForeignKey && !f.isUnique && !f.isIndexed && (
-                          <span className={styles.dimText}>-</span>
-                        )}
-                      </td>
-                      <td>
-                        <div className={styles.fieldDesc}>{f.description}</div>
-                        {f.example && (
-                          <div className={styles.fieldExample}>Örn: <code>{f.example}</code></div>
-                        )}
+                  {filteredFields.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className={styles.emptyTableTd}>
+                        "{fieldSearch}" aramasına uyan alan bulunamadı.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredFields.map((f, i) => (
+                      <tr key={i}>
+                        <td className={styles.monoCell}>
+                          <strong>{f.name}</strong>
+                        </td>
+                        <td>
+                          <span className={styles.typeBadge}>{f.type}</span>
+                        </td>
+                        <td>
+                          <span className={f.required ? styles.requiredBadge : styles.optionalBadge}>
+                            {f.required ? 'Zorunlu' : 'Opsiyonel'}
+                          </span>
+                        </td>
+                        <td>
+                          {f.isPrimaryKey && <span className={styles.pkBadge}>PRIMARY KEY</span>}
+                          {f.isForeignKey && <span className={styles.fkBadge}>FOREIGN KEY</span>}
+                          {f.isUnique && <span className={styles.uniBadge}>UNIQUE</span>}
+                          {f.isIndexed && <span className={styles.indexBadge}>INDEXED</span>}
+                          {!f.isPrimaryKey && !f.isForeignKey && !f.isUnique && !f.isIndexed && (
+                            <span className={styles.dimText}>-</span>
+                          )}
+                        </td>
+                        <td>
+                          <div className={styles.fieldDesc}>{f.description}</div>
+                          {f.example && (
+                            <div className={styles.fieldExample}>Örn: <code>{f.example}</code></div>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -331,9 +370,21 @@ export default function SchemaTab({ tools = [], categories = [] }) {
                               Gecikme: {simulatedResponse.latencyMs}ms
                             </span>
                           </div>
-                          <span className={styles.simulatedTime}>
-                            {simulatedResponse.timestamp.slice(11, 19)}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span className={styles.simulatedTime}>
+                              {simulatedResponse.timestamp.slice(11, 19)}
+                            </span>
+                            <button
+                              type="button"
+                              className={styles.copyJsonBtn}
+                              style={{ padding: '2px 8px', fontSize: '11px' }}
+                              onClick={handleCopySimulated}
+                              title="Yanıtı Kopyala"
+                            >
+                              <Copy size={11} />
+                              <span>Kopyala</span>
+                            </button>
+                          </div>
                         </div>
                         <pre className={styles.simulatedCode}>
                           {JSON.stringify(simulatedResponse.data, null, 2)}

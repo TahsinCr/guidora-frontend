@@ -10,6 +10,7 @@ import {
   Shield,
   Activity,
 } from 'lucide-react';
+import toastService from '@/services/toast/toastService';
 import styles from './AdminDashboardPage.module.scss';
 
 const TAB_TITLES = {
@@ -49,7 +50,7 @@ export default function AdminHeader({
         try {
           onImportData(event.target.result);
         } catch (err) {
-          alert('Dosya okuma hatası: ' + err.message);
+          toastService.error('Dosya okuma hatası: ' + err.message);
         }
       };
       reader.readAsText(file);

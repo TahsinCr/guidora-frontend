@@ -7,11 +7,24 @@ import {
   ExternalLink,
   User,
   Clock,
-  ThumbsUp,
+  Download,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { deleteReview } from '@/services/toolsService';
 import { adminAddLog } from '@/services/adminService';
+import toastService from '@/services/toast/toastService';
+import AdminConfirmModal from '../modals/AdminConfirmModal';
 import styles from '../AdminDashboardPage.module.scss';
+
+const RATING_CHIPS = [
+  { id: 'all', label: 'Tüm Yorumlar' },
+  { id: '5', label: '★★★★★ (5 Yıldız)' },
+  { id: '4', label: '★★★★☆ (4 Yıldız)' },
+  { id: '3', label: '★★★☆☆ (3 Yıldız)' },
+  { id: '2', label: '★★☆☆☆ (2 Yıldız)' },
+  { id: '1', label: '★☆☆☆☆ (1 Yıldız)' },
+];
 
 export default function ReviewsTab({
   reviews = [],
@@ -19,12 +32,27 @@ export default function ReviewsTab({
   onRefreshReviews,
   onOpenTool,
 }) {
+  const safeReviews = Array.isArray(reviews) ? reviews : [];
   const [search, setSearch] = useState('');
-  const [ratingFilter, setRatingFilter] = useState('all');
+  const [activeChip, setActiveChip] = useState('all');
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // In-App Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'danger',
+    confirmText: 'Sil',
+    onConfirm: () => {},
+  });
 
   const filteredReviews = useMemo(() => {
-    return reviews.filter((r) => {
-      if (ratingFilter !== 'all' && r.rating !== parseInt(ratingFilter, 10)) {
+    return safeReviews.filter((r) => {
+      if (activeChip !== 'all' && Number(r.rating) !== parseInt(activeChip, 10)) {
         return false;
       }
       if (search) {
@@ -36,24 +64,92 @@ export default function ReviewsTab({
       }
       return true;
     });
-  }, [reviews, ratingFilter, search]);
+  }, [safeReviews, activeChip, search]);
+
+  // Paginated reviews
+  const paginatedReviews = useMemo(() => {
+    if (pageSize === 'all') return filteredReviews;
+    const start = (currentPage - 1) * pageSize;
+    return filteredReviews.slice(start, start + pageSize);
+  }, [filteredReviews, currentPage, pageSize]);
+
+  const totalPages = pageSize === 'all' ? 1 : Math.max(1, Math.ceil(filteredReviews.length / pageSize));
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   const handleDeleteReview = (rev) => {
-    if (window.confirm(`"${rev.userName}" kullanıcısının yorumunu silmek istediğinize emin misiniz?`)) {
-      try {
-        deleteReview(rev.toolId, rev.id);
-        adminAddLog('REVIEW_DELETED', `${rev.toolName || rev.toolId} (${rev.userName})`, 'warning', {
-          category: 'GOVERNANCE',
-        });
-        if (onRefreshReviews) onRefreshReviews();
-      } catch (err) {
-        alert('Yorum silme hatası: ' + err.message);
-      }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Yorumu Sil',
+      message: `"${rev.userName || 'Kullanıcı'}" tarafından yazılan değerlendirmeyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
+      variant: 'danger',
+      confirmText: 'Yorumu Sil',
+      onConfirm: () => {
+        try {
+          deleteReview(rev.toolId, rev.id);
+          adminAddLog('REVIEW_DELETED', `${rev.toolName || rev.toolId} (${rev.userName})`, 'warning', {
+            category: 'GOVERNANCE',
+          });
+          toastService.success('Yorum başarıyla silindi.');
+          if (onRefreshReviews) onRefreshReviews();
+        } catch (err) {
+          toastService.error('Yorum silme hatası: ' + err.message);
+        }
+      },
+    });
+  };
+
+  const handleExportCSV = () => {
+    if (filteredReviews.length === 0) {
+      toastService.warning('Dışa aktarılacak değerlendirme bulunmuyor.');
+      return;
     }
+    const headers = ['ID', 'Kullanıcı', 'Araç ID', 'Araç Adı', 'Puan', 'Yorum', 'Tarih'];
+    const rows = filteredReviews.map((r) => [
+      `"${r.id || ''}"`,
+      `"${(r.userName || '').replace(/"/g, '""')}"`,
+      `"${r.toolId || ''}"`,
+      `"${(r.toolName || '').replace(/"/g, '""')}"`,
+      r.rating || 5,
+      `"${(r.text || r.comment || '').replace(/"/g, '""')}"`,
+      `"${r.createdAt || ''}"`,
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `guidora_reviews_${Date.now()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toastService.success(`${filteredReviews.length} değerlendirme CSV olarak indirildi.`);
   };
 
   return (
     <div className={styles.tabContent}>
+      {/* Quick Filter Chips */}
+      <div className={styles.quickFilterChips}>
+        {RATING_CHIPS.map((chip) => (
+          <button
+            key={chip.id}
+            type="button"
+            className={`${styles.filterChip} ${activeChip === chip.id ? styles.filterChipActive : ''}`}
+            onClick={() => {
+              setActiveChip(chip.id);
+              setCurrentPage(1);
+            }}
+          >
+            {chip.label}
+          </button>
+        ))}
+      </div>
+
       {/* Toolbar */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarFilters}>
@@ -64,29 +160,28 @@ export default function ReviewsTab({
               className={styles.searchInput}
               placeholder="Yorum içeriği, kullanıcı veya araç adı ara..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
             />
-          </div>
-
-          <div className={styles.selectWrapper}>
-            <select
-              className={styles.adminSelect}
-              value={ratingFilter}
-              onChange={(e) => setRatingFilter(e.target.value)}
-              aria-label="Puana Göre Filtrele"
-            >
-              <option value="all">Tüm Puanlar</option>
-              <option value="5">★★★★★ 5 Yıldız</option>
-              <option value="4">★★★★☆ 4 Yıldız</option>
-              <option value="3">★★★☆☆ 3 Yıldız</option>
-              <option value="2">★★☆☆☆ 2 Yıldız</option>
-              <option value="1">★☆☆☆☆ 1 Yıldız</option>
-            </select>
           </div>
         </div>
 
-        <div className={styles.toolbarInfo}>
-          <span>{filteredReviews.length} değerlendirme listeleniyor</span>
+        <div className={styles.toolbarActions}>
+          <button
+            type="button"
+            className={styles.actionBtnOutline}
+            onClick={handleExportCSV}
+            title="CSV Dışa Aktar"
+          >
+            <Download size={14} />
+            <span>CSV Dışa Aktar</span>
+          </button>
+
+          <div className={styles.toolbarInfo}>
+            <span>{filteredReviews.length} değerlendirme listeleniyor</span>
+          </div>
         </div>
       </div>
 
@@ -99,7 +194,7 @@ export default function ReviewsTab({
             <p className={styles.emptyDesc}>Kriterlere uyan kullanıcı yorumu veya değerlendirmesi bulunmuyor.</p>
           </div>
         ) : (
-          filteredReviews.map((rev) => (
+          paginatedReviews.map((rev) => (
             <div key={rev.id} className={styles.reviewCard}>
               <div className={styles.reviewCardHeader}>
                 <div className={styles.reviewUserBlock}>
@@ -160,6 +255,89 @@ export default function ReviewsTab({
           ))
         )}
       </div>
+
+      {/* Pagination Bar */}
+      {filteredReviews.length > 0 && (
+        <div className={styles.paginationBar}>
+          <div className={styles.paginationInfo}>
+            <span>
+              Toplam <strong>{filteredReviews.length}</strong> yorumdan <strong>{pageSize === 'all' ? filteredReviews.length : Math.min((currentPage - 1) * pageSize + 1, filteredReviews.length)}</strong> - <strong>{pageSize === 'all' ? filteredReviews.length : Math.min(currentPage * pageSize, filteredReviews.length)}</strong> arası gösteriliyor
+            </span>
+
+            <div className={styles.pageSizeSelector}>
+              <label>Sayfa Başına:</label>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  const val = e.target.value === 'all' ? 'all' : parseInt(e.target.value, 10);
+                  setPageSize(val);
+                  setCurrentPage(1);
+                }}
+                className={styles.pageSizeSelect}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value="all">Tümü</option>
+              </select>
+            </div>
+          </div>
+
+          {pageSize !== 'all' && totalPages > 1 && (
+            <div className={styles.paginationNav}>
+              <button
+                type="button"
+                className={styles.pageBtn}
+                disabled={currentPage <= 1}
+                onClick={() => handlePageChange(currentPage - 1)}
+                aria-label="Önceki Sayfa"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              {Array.from({ length: Math.min(totalPages, 7) }, (_, idx) => {
+                let pageNum = idx + 1;
+                if (totalPages > 7) {
+                  if (currentPage <= 4) pageNum = idx + 1;
+                  else if (currentPage >= totalPages - 3) pageNum = totalPages - 6 + idx;
+                  else pageNum = currentPage - 3 + idx;
+                }
+                return (
+                  <button
+                    key={pageNum}
+                    type="button"
+                    className={`${styles.pageBtn} ${currentPage === pageNum ? styles.pageBtnActive : ''}`}
+                    onClick={() => handlePageChange(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                className={styles.pageBtn}
+                disabled={currentPage >= totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+                aria-label="Sonraki Sayfa"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* In-App Confirmation Modal */}
+      <AdminConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+        confirmText={confirmModal.confirmText}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

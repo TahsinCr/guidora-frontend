@@ -502,24 +502,26 @@ export default function App() {
 
   return (
     <div className="app-container">
-      <Header
-        currentUser={currentUser}
-        onResetSearch={handleResetFilters}
-        activeTool={activeToolData}
-        onBackToDirectory={handleCloseTool}
-        onSelectCategory={(catId) => {
-          handleCloseTool();
-          handleSelectTopCategory(catId);
-        }}
-        onSubmitTool={handleOpenSubmit}
-        onOpenProfile={handleOpenProfile}
-        onOpenAdmin={handleOpenAdmin}
-        onOpenNotifications={handleOpenNotifications}
-        onOpenAuth={handleOpenAuth}
-        onOpenSettings={handleOpenSettings}
-        onUserChange={(updatedUser) => setCurrentUser(updatedUser)}
-        isNavigating={isNavigating}
-      />
+      {!isAdminView && (
+        <Header
+          currentUser={currentUser}
+          onResetSearch={handleResetFilters}
+          activeTool={activeToolData}
+          onBackToDirectory={handleCloseTool}
+          onSelectCategory={(catId) => {
+            handleCloseTool();
+            handleSelectTopCategory(catId);
+          }}
+          onSubmitTool={handleOpenSubmit}
+          onOpenProfile={handleOpenProfile}
+          onOpenAdmin={handleOpenAdmin}
+          onOpenNotifications={handleOpenNotifications}
+          onOpenAuth={handleOpenAuth}
+          onOpenSettings={handleOpenSettings}
+          onUserChange={(updatedUser) => setCurrentUser(updatedUser)}
+          isNavigating={isNavigating}
+        />
+      )}
 
       <main className="main-content">
         <Suspense fallback={null}>
@@ -596,9 +598,9 @@ export default function App() {
         </Suspense>
       </main>
 
-      <ScrollToTop />
+      {!isAdminView && <ScrollToTop />}
 
-      {!isInitialLoading && <Footer />}
+      {!isInitialLoading && !isAdminView && <Footer />}
 
       {/* Auth Modal (Login / Register / Welcome) */}
       <Suspense fallback={null}>

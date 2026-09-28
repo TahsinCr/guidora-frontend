@@ -2,42 +2,65 @@ import React, { useState, useMemo } from 'react';
 import {
   FileText,
   Search,
-  Filter,
   Download,
   Trash2,
   Eye,
   RotateCcw,
   CheckCircle2,
   AlertTriangle,
-  Shield,
-  Server,
-  Terminal,
-  Activity,
-  User,
   Clock,
+  User,
+  Copy,
+  Check,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import {
-  adminGetLogs,
-  adminAddLog,
   adminClearLogs,
   adminRevertAuditLog,
 } from '@/services/adminService';
+import toastService from '@/services/toast/toastService';
 import JsonbDiffModal from '../modals/JsonbDiffModal';
+import AdminConfirmModal from '../modals/AdminConfirmModal';
 import styles from '../AdminDashboardPage.module.scss';
+
+const LEVEL_CHIPS = [
+  { id: 'ALL', label: 'Tüm Seviyeler' },
+  { id: 'CRITICAL', label: 'CRITICAL' },
+  { id: 'ERROR', label: 'ERROR' },
+  { id: 'WARN', label: 'WARN' },
+  { id: 'AUDIT', label: 'AUDIT' },
+  { id: 'INFO', label: 'INFO' },
+];
 
 export default function LogsTab({
   logs = [],
   onRefreshLogs,
 }) {
+  const safeLogs = Array.isArray(logs) ? logs : [];
   const [levelFilter, setLevelFilter] = useState('ALL');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [inspectingLog, setInspectingLog] = useState(null);
-  const [feedback, setFeedback] = useState(null);
+  const [copiedTraceId, setCopiedTraceId] = useState(null);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // In-App Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'danger',
+    confirmText: 'Onayla',
+    onConfirm: () => {},
+  });
 
   // Filter logs
   const filteredLogs = useMemo(() => {
-    return logs.filter((log) => {
+    return safeLogs.filter((log) => {
       if (levelFilter !== 'ALL' && log.level !== levelFilter) {
         return false;
       }
@@ -57,25 +80,49 @@ export default function LogsTab({
       }
       return true;
     });
-  }, [logs, levelFilter, categoryFilter, searchTerm]);
+  }, [safeLogs, levelFilter, categoryFilter, searchTerm]);
+
+  // Paginated logs
+  const paginatedLogs = useMemo(() => {
+    if (pageSize === 'all') return filteredLogs;
+    const start = (currentPage - 1) * pageSize;
+    return filteredLogs.slice(start, start + pageSize);
+  }, [filteredLogs, currentPage, pageSize]);
+
+  const totalPages = pageSize === 'all' ? 1 : Math.max(1, Math.ceil(filteredLogs.length / pageSize));
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   // Handle Audit Revert
   const handleRevertLog = (logId) => {
-    try {
-      const res = adminRevertAuditLog(logId);
-      setFeedback({
-        type: 'success',
-        message: `Değişiklik başarıyla geri alındı (xmin senkronize edildi). Yeni denetim kaydı oluşturuldu.`,
-      });
-      if (onRefreshLogs) onRefreshLogs();
-      setTimeout(() => setFeedback(null), 5000);
-    } catch (err) {
-      alert('Geri alma başarısız: ' + err.message);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Değişikliği Geri Al (Revert)',
+      message: `[${logId}] numaralı denetim kaydını geri almak istediğinize emin misiniz? Varlık önceki değerlerine (oldValues) döndürülecek ve yeni bir AUDIT kaydı yazılacaktır.`,
+      variant: 'warning',
+      confirmText: 'Geri Al',
+      onConfirm: () => {
+        try {
+          adminRevertAuditLog(logId);
+          toastService.success('Değişiklik başarıyla geri alındı (xmin senkronize edildi).');
+          if (onRefreshLogs) onRefreshLogs();
+        } catch (err) {
+          toastService.error('Geri alma başarısız: ' + err.message);
+        }
+      },
+    });
   };
 
   // Export to JSON
   const handleExportJson = () => {
+    if (!filteredLogs.length) {
+      toastService.warning('Dışa aktarılacak log kaydı bulunmuyor.');
+      return;
+    }
     const jsonStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(filteredLogs, null, 2));
     const dlAnchor = document.createElement('a');
     dlAnchor.setAttribute('href', jsonStr);
@@ -83,47 +130,78 @@ export default function LogsTab({
     document.body.appendChild(dlAnchor);
     dlAnchor.click();
     document.body.removeChild(dlAnchor);
+    toastService.success(`${filteredLogs.length} denetim kaydı JSON olarak indirildi.`);
   };
 
   // Export to CSV
   const handleExportCsv = () => {
+    if (!filteredLogs.length) {
+      toastService.warning('Dışa aktarılacak log kaydı bulunmuyor.');
+      return;
+    }
     const cols = ['id', 'level', 'category', 'action', 'target', 'actor', 'actorRole', 'actorIp', 'traceId', 'xmin', 'timestamp'];
     const header = cols.join(',');
     const rows = filteredLogs.map((l) =>
       cols.map((c) => JSON.stringify(l[c] ?? '')).join(',')
     );
-    const csvContent = 'data:text/csv;charset=utf-8,' + [header, ...rows].join('\n');
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = '\uFEFF' + [header, ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `guidora_audit_logs_${Date.now()}.csv`);
+    link.href = URL.createObjectURL(blob);
+    link.download = `guidora_audit_logs_${Date.now()}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    toastService.success(`${filteredLogs.length} denetim kaydı CSV olarak indirildi.`);
   };
 
   // Clear Logs
   const handleClearLogs = () => {
-    if (window.confirm('Tüm denetim kayıtları temizlensin mi? Bu işlem geri alınamaz.')) {
-      adminClearLogs();
-      if (onRefreshLogs) onRefreshLogs();
-      setFeedback({
-        type: 'info',
-        message: 'Denetim kayıtları temizlendi.',
-      });
-      setTimeout(() => setFeedback(null), 4000);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Tüm Denetim Loglarını Temizle',
+      message: 'Tüm denetim kayıtları sistemden silinecektir. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?',
+      variant: 'danger',
+      confirmText: 'Logları Temizle',
+      onConfirm: () => {
+        try {
+          adminClearLogs();
+          if (onRefreshLogs) onRefreshLogs();
+          toastService.success('Tüm denetim kayıtları temizlendi.');
+        } catch (err) {
+          toastService.error('Logları temizleme hatası: ' + err.message);
+        }
+      },
+    });
+  };
+
+  // Copy Trace ID
+  const handleCopyTrace = (traceId) => {
+    if (!traceId) return;
+    navigator.clipboard?.writeText(traceId);
+    setCopiedTraceId(traceId);
+    toastService.success(`Trace ID kopyalandı: ${traceId.slice(0, 12)}...`);
+    setTimeout(() => setCopiedTraceId(null), 2500);
   };
 
   return (
     <div className={styles.tabContent}>
-      {/* Feedback Banner */}
-      {feedback && (
-        <div className={feedback.type === 'success' ? styles.alertSuccess : styles.alertInfo}>
-          <CheckCircle2 size={16} />
-          <span>{feedback.message}</span>
-        </div>
-      )}
+      {/* Quick Level Filter Chips */}
+      <div className={styles.quickFilterChips}>
+        {LEVEL_CHIPS.map((chip) => (
+          <button
+            key={chip.id}
+            type="button"
+            className={`${styles.filterChip} ${levelFilter === chip.id ? styles.filterChipActive : ''}`}
+            onClick={() => {
+              setLevelFilter(chip.id);
+              setCurrentPage(1);
+            }}
+          >
+            {chip.label}
+          </button>
+        ))}
+      </div>
 
       {/* Multi-Channel Filters Toolbar */}
       <div className={styles.toolbar}>
@@ -136,25 +214,11 @@ export default function LogsTab({
               className={styles.searchInput}
               placeholder="Eylem, hedef, aktör, IP veya Trace ID ara..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
             />
-          </div>
-
-          {/* Level Filter */}
-          <div className={styles.selectWrapper}>
-            <select
-              className={styles.adminSelect}
-              value={levelFilter}
-              onChange={(e) => setLevelFilter(e.target.value)}
-              aria-label="Log Seviyesi Filtrele"
-            >
-              <option value="ALL">Tüm Seviyeler</option>
-              <option value="CRITICAL">CRITICAL (Kritik)</option>
-              <option value="ERROR">ERROR (Hata)</option>
-              <option value="WARN">WARN (Uyarı)</option>
-              <option value="AUDIT">AUDIT (Denetim)</option>
-              <option value="INFO">INFO (Bilgi)</option>
-            </select>
           </div>
 
           {/* Category Filter */}
@@ -162,7 +226,10 @@ export default function LogsTab({
             <select
               className={styles.adminSelect}
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
+              onChange={(e) => {
+                setCategoryFilter(e.target.value);
+                setCurrentPage(1);
+              }}
               aria-label="Log Kategorisi Filtrele"
             >
               <option value="ALL">Tüm Kategoriler</option>
@@ -204,7 +271,7 @@ export default function LogsTab({
             type="button"
             className={styles.actionBtnDangerOutline}
             onClick={handleClearLogs}
-            disabled={!logs.length}
+            disabled={!safeLogs.length}
             title="Tüm Logları Temizle"
           >
             <Trash2 size={14} />
@@ -215,7 +282,7 @@ export default function LogsTab({
 
       {/* Log Count Strip */}
       <div className={styles.logsMetaStrip}>
-        <span>Toplam <strong>{filteredLogs.length}</strong> denetim kaydı listeleniyor (Toplam: {logs.length})</span>
+        <span>Toplam <strong>{filteredLogs.length}</strong> denetim kaydı listeleniyor (Toplam: {safeLogs.length})</span>
         <span className={styles.appendOnlyHint}>PostgreSQL 18 Append-Only Audit Stream & OpenTelemetry W3C Tracing</span>
       </div>
 
@@ -231,7 +298,7 @@ export default function LogsTab({
                 <th>Eylem & Hedef Nesne</th>
                 <th>Aktör (Kullanıcı / Sistem)</th>
                 <th>İstemci IP</th>
-                <th>xmin</th>
+                <th>Trace / xmin</th>
                 <th style={{ textAlign: 'right' }}>İşlemler</th>
               </tr>
             </thead>
@@ -243,7 +310,7 @@ export default function LogsTab({
                   </td>
                 </tr>
               ) : (
-                filteredLogs.map((log) => (
+                paginatedLogs.map((log) => (
                   <tr key={log.id} className={styles.logRow}>
                     <td>
                       <span className={`${styles.logLevelBadge} ${styles[log.level?.toLowerCase() || 'info']}`}>
@@ -278,7 +345,21 @@ export default function LogsTab({
                       <code className={styles.ipCode}>{log.actorIp || '127.0.0.1'}</code>
                     </td>
                     <td>
-                      <span className={styles.xminPill}>{log.xmin || '49201'}</span>
+                      <div className={styles.traceCell}>
+                        {log.traceId ? (
+                          <button
+                            type="button"
+                            className={styles.traceCopyBtn}
+                            onClick={() => handleCopyTrace(log.traceId)}
+                            title={`Trace ID: ${log.traceId} (Kopyalamak için tıkla)`}
+                          >
+                            {copiedTraceId === log.traceId ? <Check size={11} color="#10b981" /> : <Copy size={11} />}
+                            <span>{log.traceId.slice(0, 8)}...</span>
+                          </button>
+                        ) : (
+                          <span className={styles.xminPill}>xmin: {log.xmin || '49201'}</span>
+                        )}
+                      </div>
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <div className={styles.rowActionsRight}>
@@ -310,6 +391,78 @@ export default function LogsTab({
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Bar */}
+        {filteredLogs.length > 0 && (
+          <div className={styles.paginationBar}>
+            <div className={styles.paginationInfo}>
+              <span>
+                Toplam <strong>{filteredLogs.length}</strong> kayıttan <strong>{pageSize === 'all' ? filteredLogs.length : Math.min((currentPage - 1) * pageSize + 1, filteredLogs.length)}</strong> - <strong>{pageSize === 'all' ? filteredLogs.length : Math.min(currentPage * pageSize, filteredLogs.length)}</strong> arası gösteriliyor
+              </span>
+
+              <div className={styles.pageSizeSelector}>
+                <label>Sayfa Başına:</label>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    const val = e.target.value === 'all' ? 'all' : parseInt(e.target.value, 10);
+                    setPageSize(val);
+                    setCurrentPage(1);
+                  }}
+                  className={styles.pageSizeSelect}
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value="all">Tümü</option>
+                </select>
+              </div>
+            </div>
+
+            {pageSize !== 'all' && totalPages > 1 && (
+              <div className={styles.paginationNav}>
+                <button
+                  type="button"
+                  className={styles.pageBtn}
+                  disabled={currentPage <= 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  aria-label="Önceki Sayfa"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, idx) => {
+                  let pageNum = idx + 1;
+                  if (totalPages > 7) {
+                    if (currentPage <= 4) pageNum = idx + 1;
+                    else if (currentPage >= totalPages - 3) pageNum = totalPages - 6 + idx;
+                    else pageNum = currentPage - 3 + idx;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      type="button"
+                      className={`${styles.pageBtn} ${currentPage === pageNum ? styles.pageBtnActive : ''}`}
+                      onClick={() => handlePageChange(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                <button
+                  type="button"
+                  className={styles.pageBtn}
+                  disabled={currentPage >= totalPages}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  aria-label="Sonraki Sayfa"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* JSONB Diff Inspection Modal */}
@@ -320,6 +473,17 @@ export default function LogsTab({
           onRevert={handleRevertLog}
         />
       )}
+
+      {/* In-App Confirmation Modal */}
+      <AdminConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+        confirmText={confirmModal.confirmText}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }
