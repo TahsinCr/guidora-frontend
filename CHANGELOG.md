@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Unified In-Process Dev Mock Server & Bootstrap Admin Environment Integration**:
+  - Implemented `infra/mock-server/mockHandler.js` providing an integrated, zero-dependency mock API handler shared seamlessly between Vite dev server middleware, standalone Node.js server, and Docker containers.
+  - Eliminated `[vite] http proxy error ... ECONNREFUSED` during local development (`npm run dev`) by handling `/api/*` and `/health/*` endpoints in-process when `VITE_USE_MOCK=true` (the default).
+  - Added graceful 502 Bad Gateway JSON error interceptor to Vite proxy when developing against real backend (`VITE_USE_MOCK=false`).
+  - Added `"mock": "node infra/mock-server/server.mjs"` and `"dev:real": "VITE_USE_MOCK=false vite"` scripts to `package.json`.
+  - Added test suite in `tests/infra/mockHandler.test.js` expanding total test coverage to 34 passing tests.
+  - Integrated bootstrap administrator credentials driven by `.env` (`MOCK_ADMIN_USERNAME`, `MOCK_ADMIN_EMAIL`, `MOCK_ADMIN_PASSWORD`), matching backend `BOOTSTRAP_ADMIN_*` settings so developers and QA can authenticate with the exact same credentials in both mock and real backend.
+  - Removed temporary demo buttons from UI: cleanly purged `10s Test: ON/OFF` button from `Header.jsx`, purged `handleFillDemoAdmin` and hardcoded demo credentials from `AuthModal.jsx`, and normalized input placeholders.
+
 - **Automated Enterprise Test Suite (Vitest & Happy-DOM)**:
   - Configured high-performance `vitest` test suite in `tests/` directory with dedicated npm scripts (`npm test`, `npm run test:watch`) executing 27 critical integration and contract tests in <500ms.
   - Implemented `httpClient.test.js`: verifies in-memory access token injection, `credentials: 'include'` headers, transparent 401 token refresh with mutex queue concurrency locking, 429 rate-limiting parsing `Retry-After`, and .NET 10 validation exception mapping.

@@ -5,10 +5,10 @@ const ORGANIZATIONS_KEY = 'guidora_organizations';
 // Initial Mock Users
 export const MOCK_USERS = [
   {
-    id: 'usr_tahsin_01',
+    id: 'usr_admin_01',
     name: 'Tahsin Cr',
-    username: 'TahsinCr',
-    email: 'tahsincrs@gmail.com',
+    username: import.meta.env?.VITE_MOCK_ADMIN_USERNAME || 'tahsincr',
+    email: import.meta.env?.VITE_MOCK_ADMIN_EMAIL || 'tahsincrs@gmail.com',
     role: 'admin', // 'admin' | 'moderator' | 'creator' | 'member'
     avatar: 'TC',
     title: 'Lead AI Engineer & Product Architect',

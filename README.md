@@ -145,8 +145,9 @@ To ensure rapid First Contentful Paint (FCP), smooth scrolling (60 FPS), and low
 7. **Vendor Chunk Isolation**:
    - Heavy 3rd-party libraries (`react`, `react-dom`, `lucide-react`, `marked`, `dompurify`) are partitioned into dedicated vendor chunks in `vite.config.js`, maximizing long-term browser cache retention.
 
-8. **Temporary QA Demo Delay Tool (`Header.jsx`, `demoDelay.js`)**:
-   - A dedicated navbar toggle (`10s Test: ON/OFF`) allows testing and observing initial loaders by injecting an artificial 10-second sleep into async catalog fetching.
+8. **Integrated In-Process Mock API Engine (`mockHandler.js`, `vite.config.js`)**:
+   - Built-in Vite dev middleware intercepts `/api/*` and `/health/*` routes in-process during local development (`npm run dev`), eliminating `ECONNREFUSED` proxy errors without requiring separate terminal processes.
+   - Configurable via `.env` (`VITE_USE_MOCK=true`, `MOCK_ADMIN_*` credentials). When ready to connect to the real .NET backend, run `npm run dev:real` or set `VITE_USE_MOCK=false`.
 
 ### Security Architecture & Hardening
 
@@ -205,7 +206,14 @@ npm install
 ### Development Server
 
 ```bash
+# Start frontend with built-in zero-proxy-error mock API (default)
 npm run dev
+
+# Start frontend proxying to real .NET 10 WebAPI backend at VITE_BACKEND_URL
+npm run dev:real
+
+# Run standalone mock API server on port 8080
+npm run mock
 ```
 
 The application will start locally at `http://127.0.0.1:5173/`.
@@ -230,7 +238,7 @@ npm test
 npm run test:watch
 ```
 
-Executes 27 automated tests covering in-memory token security, silent 401 refresh with mutex concurrency locks, circuit breaker state transitions, graceful maintenance draining, and rate limiting in <500ms via Vitest and Happy-DOM.
+Executes 34 automated tests covering in-memory token security, silent 401 refresh with mutex concurrency locks, mock API contract handling, circuit breaker state transitions, graceful maintenance draining, and rate limiting in <500ms via Vitest and Happy-DOM.
 
 ### Configuration Architecture
 
@@ -238,6 +246,8 @@ Guidora implements a dual-layer configuration strategy separating build-time con
 
 1. **Build-Time (`.env`, `.env.example`)**:
    - `VITE_API_BASE_URL`: Base URL or relative path (`/api`) for backend communication.
+   - `VITE_USE_MOCK`: Set to `true` (default) for seamless in-process mock API or `false` for live backend proxy.
+   - `MOCK_ADMIN_*` / `VITE_MOCK_ADMIN_*`: Administrator credentials matching backend `BOOTSTRAP_ADMIN_*`.
    - `VITE_ALLOW_MOCK_FALLBACK`: Set to `false` in production to ensure genuine server failure visibility.
    - `VITE_DROP_CONSOLE`: Strips debug logs from production bundles.
 

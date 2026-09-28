@@ -5,17 +5,23 @@ import { clearAccessToken } from './api/tokenManager';
 const AUTH_USER_KEY = 'guidora_current_user';
 const PASSWORDS_KEY = 'guidora_user_passwords';
 
-// Seed default password for TahsinCr
+const MOCK_ADMIN_EMAIL = (import.meta.env?.VITE_MOCK_ADMIN_EMAIL || 'tahsincrs@gmail.com').toLowerCase().trim();
+const MOCK_ADMIN_PASSWORD = (import.meta.env?.VITE_MOCK_ADMIN_PASSWORD || '9PS1CgoOmsBIj5O9V7SQfDZMIibHvI4Q').trim();
+const MOCK_ADMIN_USERNAME = (import.meta.env?.VITE_MOCK_ADMIN_USERNAME || 'tahsincr').trim();
+
+// Seed default password for mock admin
 function getStoredPasswords() {
   try {
     const raw = localStorage.getItem(PASSWORDS_KEY);
     return raw ? JSON.parse(raw) : {
-      'tahsin@guidora.io': 'TahsinCr',
-      'tahsincrs@gmail.com': 'TahsinCr',
-      'TahsinCr': 'TahsinCr',
+      [MOCK_ADMIN_EMAIL]: MOCK_ADMIN_PASSWORD,
+      [MOCK_ADMIN_USERNAME]: MOCK_ADMIN_PASSWORD,
     };
   } catch (e) {
-    return { 'TahsinCr': 'TahsinCr' };
+    return {
+      [MOCK_ADMIN_EMAIL]: MOCK_ADMIN_PASSWORD,
+      [MOCK_ADMIN_USERNAME]: MOCK_ADMIN_PASSWORD,
+    };
   }
 }
 
@@ -72,19 +78,19 @@ export async function login({ usernameOrEmail, password, rememberMe = false }) {
     u.name.toLowerCase() === cleanInput.toLowerCase()
   );
 
-  const isTahsinMatch = 
-    (cleanInput.toLowerCase() === 'tahsincr' || cleanInput.toLowerCase() === 'tahsincrs@gmail.com' || cleanInput.toLowerCase() === 'tahsin@guidora.io') &&
-    (cleanPass === (passwords['TahsinCr'] || 'TahsinCr'));
+  const isAdminMatch = 
+    (cleanInput.toLowerCase() === MOCK_ADMIN_USERNAME.toLowerCase() || cleanInput.toLowerCase() === MOCK_ADMIN_EMAIL.toLowerCase()) &&
+    (cleanPass === (passwords[MOCK_ADMIN_EMAIL] || passwords[MOCK_ADMIN_USERNAME] || MOCK_ADMIN_PASSWORD));
 
-  if (!isTahsinMatch && (!user || passwords[user.email] !== cleanPass)) {
+  if (!isAdminMatch && (!user || passwords[user.email] !== cleanPass)) {
     throw new Error('Geçersiz kullanıcı adı veya şifre.');
   }
 
   const loggedInUser = user || {
-    id: 'usr_tahsin_01',
+    id: 'usr_admin_01',
     name: 'Tahsin Cr',
-    username: 'TahsinCr',
-    email: 'tahsincrs@gmail.com',
+    username: MOCK_ADMIN_USERNAME,
+    email: MOCK_ADMIN_EMAIL,
     role: 'admin',
     avatar: 'TC',
     title: 'Lead AI Engineer & Product Architect',
@@ -211,7 +217,7 @@ export function changePassword(oldPassword, newPassword) {
   if (!user) throw new Error('Oturum açmış kullanıcı bulunamadı.');
 
   const passwords = getStoredPasswords();
-  const currentSavedPass = passwords[user.email] || passwords[user.username] || 'TahsinCr';
+  const currentSavedPass = passwords[user.email] || passwords[user.username] || MOCK_ADMIN_PASSWORD;
 
   if (oldPassword !== currentSavedPass) {
     throw new Error('Mevcut şifreniz hatalı.');
@@ -219,7 +225,6 @@ export function changePassword(oldPassword, newPassword) {
 
   passwords[user.email] = newPassword;
   if (user.username) passwords[user.username] = newPassword;
-  passwords['TahsinCr'] = newPassword; // keep updated for main user
   localStorage.setItem(PASSWORDS_KEY, JSON.stringify(passwords));
 
   return true;

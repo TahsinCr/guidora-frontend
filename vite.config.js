@@ -3,6 +3,35 @@ import react from '@vitejs/plugin-react';
 import compression from 'vite-plugin-compression';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 import path from 'path';
+import { createMockApiHandler } from './infra/mock-server/mockHandler.js';
+
+function guidoraMockPlugin(env) {
+  const useMock = env.VITE_USE_MOCK !== 'false';
+  if (!useMock) return null;
+
+  const mockHandler = createMockApiHandler({
+    adminUsername: env.MOCK_ADMIN_USERNAME || env.VITE_MOCK_ADMIN_USERNAME || env.BOOTSTRAP_ADMIN_USERNAME,
+    adminEmail: env.MOCK_ADMIN_EMAIL || env.VITE_MOCK_ADMIN_EMAIL || env.BOOTSTRAP_ADMIN_EMAIL,
+    adminPassword: env.MOCK_ADMIN_PASSWORD || env.VITE_MOCK_ADMIN_PASSWORD || env.BOOTSTRAP_ADMIN_PASSWORD,
+  });
+
+  return {
+    name: 'vite-plugin-guidora-mock-api',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        try {
+          const handled = await mockHandler(req, res);
+          if (!handled) {
+            next();
+          }
+        } catch (err) {
+          console.error('[Guidora Mock Middleware Error]:', err);
+          next();
+        }
+      });
+    },
+  };
+}
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -10,6 +39,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
+      guidoraMockPlugin(env),
     // High-performance image optimization (WebP, PNG, JPEG, SVG)
     ViteImageOptimizer({
       png: { quality: 85 },
@@ -61,6 +91,23 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       proxy: {
         '/api': {
+          target: env.VITE_BACKEND_URL || 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+          configure: (proxy) => {
+            proxy.on('error', (err, req, res) => {
+              if (res.writeHead && !res.headersSent) {
+                res.writeHead(502, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                  success: false,
+                  message: 'Backend API servisine ulaşılamadı (502 Bad Gateway).',
+                  code: 'ECONNREFUSED',
+                }));
+              }
+            });
+          },
+        },
+        '/health': {
           target: env.VITE_BACKEND_URL || 'http://localhost:8080',
           changeOrigin: true,
           secure: false,

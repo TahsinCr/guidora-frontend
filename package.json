@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:real": "VITE_USE_MOCK=false vite",
+    "mock": "node infra/mock-server/server.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",

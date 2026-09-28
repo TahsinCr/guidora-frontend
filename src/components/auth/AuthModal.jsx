@@ -46,13 +46,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode
 
   if (!isOpen) return null;
 
-  // Auto fill demo admin credentials
-  const handleFillDemoAdmin = () => {
-    setLoginInput('TahsinCr');
-    setLoginPassword('TahsinCr');
-    setError('');
-  };
-
   const handleLoginSubmit = (e) => {
     e.preventDefault();
     setError('');
@@ -289,13 +282,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode
                   <span>{t('auth.signInBtn', 'Giriş Yap (Sign In)')}</span>
                 </button>
               </div>
-
-              <div className={styles.formFooter}>
-                <span>{t('auth.adminQuickHint', 'Demo / Admin test hesabı:')}</span>
-                <button type="button" onClick={() => { handleFillDemoAdmin(); setMode('login'); }}>
-                  TahsinCr
-                </button>
-              </div>
             </div>
           )}
 
@@ -312,14 +298,6 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode
                 <p className={styles.subtitle}>{t('auth.signInSubtitle', 'Enter your credentials to access your account')}</p>
               </div>
 
-              {/* Demo Quick Fill Box */}
-              <div className={styles.demoQuickFill}>
-                <span>{t('auth.adminTest', 'Admin test:')} <strong>TahsinCr / TahsinCr</strong></span>
-                <button type="button" onClick={handleFillDemoAdmin}>
-                  {t('auth.quickFill', 'Quick Fill')}
-                </button>
-              </div>
-
               <form onSubmit={handleLoginSubmit}>
                 <div className={styles.inputGroup}>
                   <label>
@@ -329,7 +307,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode
                   <div className={styles.inputFieldWrap}>
                     <input
                       type="text"
-                      placeholder={t('auth.usernamePlaceholder', 'e.g. TahsinCr or tahsincrs@gmail.com')}
+                      placeholder={t('auth.usernamePlaceholder', 'e.g. admin@guidora.io or username')}
                       value={loginInput}
                       onChange={(e) => setLoginInput(e.target.value)}
                       required

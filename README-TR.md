@@ -145,8 +145,9 @@ Hızlı İlk İçerikli Boyama (FCP), akıcı kaydırma (60 FPS) ve düşük ağ
 7. **Satıcı (Vendor) Parça Ayrıştırması**:
    - Ağır harici kütüphaneler (`react`, `react-dom`, `lucide-react`, `marked`, `dompurify`) `vite.config.js` içinde bağımsız vendor chunk'larına ayrılmış, uzun süreli tarayıcı önbelleklemesi (HTTP cache) maksimize edilmiştir.
 
-8. **Geçici QA & Demo Gecikme Aracı (`Header.jsx`, `demoDelay.js`)**:
-   - Header çubuğuna eklenen `10s Test: ON/OFF` butonu ile asenkron katalog çekme servisine yapay 10 saniyelik gecikme eklenerek ilk açılış yükleyicisinin rahatça incelenmesi sağlanır.
+8. **Entegre Süreç İçi Mock API Motoru (`mockHandler.js`, `vite.config.js`)**:
+   - Yerel geliştirme esnasında (`npm run dev`) Vite dev sunucusu ara katmanı `/api/*` ve `/health/*` isteklerini doğrudan süreç içinde karşılar; harici bir servis başlatmaya gerek kalmaksızın `ECONNREFUSED` vekil sunucu hatalarını kesin olarak önler.
+   - `.env` üzerinden yapılandırılabilir (`VITE_USE_MOCK=true`, `MOCK_ADMIN_*` kimlik bilgileri). Gerçek .NET backend'e bağlanılacağı zaman `npm run dev:real` çalıştırılabilir veya `VITE_USE_MOCK=false` yapılabilir.
 
 ### Güvenlik Mimarisi ve Koruma Katmanları
 
@@ -205,7 +206,14 @@ npm install
 ### Geliştirme Sunucusu
 
 ```bash
+# Frontend'i dahili süreç içi mock API ile başlatın (varsayılan, sıfır vekil hatası)
 npm run dev
+
+# Frontend'i VITE_BACKEND_URL adresindeki gerçek .NET 10 WebAPI'ye yönlendirerek başlatın
+npm run dev:real
+
+# Bağımsız Node.js mock API sunucusunu 8080 portunda çalıştırın
+npm run mock
 ```
 
 Uygulama yerel ortamda `http://127.0.0.1:5173/` adresinde çalışmaya başlar.
@@ -230,7 +238,7 @@ npm test
 npm run test:watch
 ```
 
-Vitest ve Happy-DOM kullanarak bellek içi token güvenliği, mutex kilitli sessiz 401 oturum yenileme, devre kesici durum geçişleri, yarım kalan isteklerin korunması ve hız sınırı denetimlerini kapsayan 27 kritik testi <500ms içinde yürütür.
+Vitest ve Happy-DOM kullanarak bellek içi token güvenliği, mutex kilitli sessiz 401 oturum yenileme, mock API sözleşmeleri, devre kesici durum geçişleri, yarım kalan isteklerin korunması ve hız sınırı denetimlerini kapsayan 34 kritik testi <500ms içinde yürütür.
 
 ### Çift Katmanlı Konfigürasyon Mimarisi
 
@@ -238,6 +246,8 @@ Guidora, derleme zamanı sabitlerini operasyonel çalışma zamanı parametreler
 
 1. **Derleme Zamanı (`.env`, `.env.example`)**:
    - `VITE_API_BASE_URL`: Backend API taban yolu (`/api`).
+   - `VITE_USE_MOCK`: Yerel mock API motoru için `true` (varsayılan), gerçek backend yönlendirmesi için `false`.
+   - `MOCK_ADMIN_*` / `VITE_MOCK_ADMIN_*`: Backend `BOOTSTRAP_ADMIN_*` ile uyumlu yönetici kimlik bilgileri.
    - `VITE_ALLOW_MOCK_FALLBACK`: Canlıda gerçek hataları görebilmek için `false`.
    - `VITE_DROP_CONSOLE`: Üretim paketlerinde konsol loglarını temizler.
 
