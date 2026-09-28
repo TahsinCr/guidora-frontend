@@ -220,6 +220,19 @@ The compiled, production-ready static assets will be output to the `dist/` direc
 - **Sharp & SVGO Asset Optimization**: Lossless SVG and compressed WebP/PNG/JPEG optimization (yielding ~57% asset size reduction).
 - **Dual Pre-Compression (Brotli & Gzip)**: Generating `.br` and `.gz` files for production reverse proxies (Nginx, Caddy, Cloudflare) for instant cold loads.
 
+### Configuration Architecture
+
+Guidora implements a dual-layer configuration strategy separating build-time constants from runtime operational parameters:
+
+1. **Build-Time (`.env`, `.env.production`)**:
+   - `VITE_API_BASE_URL`: Base URL or relative path (`/api`) for backend communication.
+   - `VITE_ALLOW_MOCK_FALLBACK`: Set to `false` in production to ensure genuine server failure visibility.
+   - `VITE_DROP_CONSOLE`: Strips debug logs from production bundles.
+
+2. **Runtime (`public/config.json`)**:
+   - Deployed alongside static assets; can be modified directly on server / Docker volume mounts without rebuilding JavaScript chunks.
+   - Configures network timeouts (default 8s, upload 25s), retry policies, circuit breaker thresholds, and maintenance mode.
+
 ## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.

@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Guidora Runtime Configuration",
+  "app": {
+    "siteName": "Guidora",
+    "supportEmail": "support@guidora.io",
+    "defaultLocale": "tr",
+    "availableLocales": ["tr", "en", "ru"]
+  },
+  "backend": {
+    "healthCheckEndpoint": "/health/live",
+    "healthReadyEndpoint": "/health/ready",
+    "apiPrefix": "/api"
+  },
+  "network": {
+    "timeouts": {
+      "defaultMs": 8000,
+      "uploadMs": 25000,
+      "authMs": 6000,
+      "healthCheckMs": 3000
+    },
+    "retry": {
+      "maxRetries": 2,
+      "backoffBaseMs": 1000,
+      "retryableStatusCodes": [408, 429, 500, 502, 503, 504]
+    },
+    "rateLimiting": {
+      "respectRetryAfter": true,
+      "knownLimits": {
+        "loginPerMinute": 10,
+        "registerPerHour": 5,
+        "refreshPerMinute": 30
+      }
+    }
+  },
+  "circuitBreaker": {
+    "enabled": true,
+    "failureThreshold": 3,
+    "recoveryTimeoutMs": 10000,
+    "probeIntervalMs": 5000
+  },
+  "maintenance": {
+    "active": false,
+    "title": "Planlı Bakım Çalışması",
+    "message": "Sistemlerimizi sizlere daha iyi bir deneyim sunabilmek için güncelliyoruz. Lütfen kısa bir süre sonra tekrar ziyaret ediniz.",
+    "estimatedEndTime": null,
+    "bypassRoles": ["admin", "superadmin"]
+  },
+  "features": {
+    "toolSubmission": {
+      "enabled": true,
+      "requiresEmailVerification": false,
+      "allowGithubImport": true
+    },
+    "communityReviews": {
+      "enabled": true,
+      "minAccountAgeDays": 7,
+      "requiresEmailVerification": true
+    },
+    "communityVerificationVoting": {
+      "enabled": true,
+      "voteThreshold": 30,
+      "requiresEmailVerification": true
+    },
+    "compareMode": true
+  }
+}

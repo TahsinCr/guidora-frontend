@@ -220,6 +220,19 @@ Derlenmiş ve optimize edilmiş statik dosyalar `dist/` klasörüne aktarılır.
 - **Sharp & SVGO Görsel Optimizasyonu**: Kayıpsız SVG ve sıkıştırılmış WebP/PNG/JPEG optimizasyonu (yaklaşık %57 dosya boyutu tasarrufu).
 - **Çift Ön Sıkıştırma (Brotli & Gzip)**: Canlı ortam ters vekil sunucuları (Nginx, Caddy, Cloudflare vb.) için anlık yükleme sağlayan `.br` ve `.gz` statik çıktıları.
 
+### Çift Katmanlı Konfigürasyon Mimarisi
+
+Guidora, derleme zamanı sabitlerini operasyonel çalışma zamanı parametrelerinden ayıran çift katmanlı bir yapılandırma modeli kullanır:
+
+1. **Derleme Zamanı (`.env`, `.env.production`)**:
+   - `VITE_API_BASE_URL`: Backend API taban yolu (`/api`).
+   - `VITE_ALLOW_MOCK_FALLBACK`: Canlıda gerçek hataları görebilmek için `false`.
+   - `VITE_DROP_CONSOLE`: Üretim paketlerinde konsol loglarını temizler.
+
+2. **Çalışma Zamanı (`public/config.json`)**:
+   - Statik dosyalarla birlikte dağıtılır; Docker container'ı yeniden derlemeden sunucu üzerinden anında düzenlenebilir.
+   - Ağ zaman aşımları (varsayılan 8s, yükleme 25s), yeniden deneme kuralları, devre kesici (circuit breaker) eşikleri ve bakım modunu yönetir.
+
 ## Lisans
 
 Bu proje MIT Lisansı ile lisanslanmıştır — ayrıntılar için [LICENSE](LICENSE) dosyasına bakabilirsiniz.

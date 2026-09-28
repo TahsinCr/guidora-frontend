@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Enterprise Dual Configuration Architecture (`.env` & `public/config.json`)**:
+  - Implemented immutable build-time environment layer (`.env.example`, `.env.production`, `.env.development`) for core infrastructure constants and build flags.
+  - Implemented zero-rebuild runtime configuration (`public/config.json`) enabling on-the-fly tuning of network timeouts, rate limit thresholds, circuit breakers, and maintenance mode directly in Docker/Nginx without compiling code.
+  - Created `configService.js` singleton with safe immutable defaults (`safeDefaults.js`), `deepFreeze` anti-tamper security, schema validation fallback, and reactive subscription hooks.
+  - Equipped `httpClient.js` with dynamic `AbortController` timeout guards derived directly from the runtime configuration engine (8s default, 25s upload).
 - **Enterprise .NET 10 WebAPI Integration & TanStack Query Infrastructure**:
   - Integrated `@tanstack/react-query` v5 with dedicated `query-vendor` rollup chunk, zero-friction caching (`staleTime: 5m`, `gcTime: 15m`), and optimistic UI readiness.
   - Implemented secure `src/services/api/httpClient.js` with `credentials: 'include'` for HttpOnly `guidora_refresh` cookie transmission and in-memory access token storage (zero disk leakage, complete XSS defense).

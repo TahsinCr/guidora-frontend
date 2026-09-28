@@ -1,4 +1,5 @@
 import { getAccessToken, setAccessToken, clearAccessToken } from './tokenManager';
+import { getConfig } from '../config/configService';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -29,10 +30,15 @@ function onRefreshFailed(error) {
  * Features:
  * - Credentials: 'include' ensures HttpOnly `guidora_refresh` cookie is dispatched.
  * - Injects in-memory Access Token into Authorization header.
+ * - Dynamic timeout enforcement via AbortController powered by config.json.
  * - Automatic silent refresh on 401 with concurrency locking.
  * - Sanitizes error responses according to .NET 10 WebAPI structure.
  */
 export async function apiRequest(endpoint, options = {}) {
+  const runtimeConfig = getConfig();
+  const defaultTimeout = runtimeConfig?.network?.timeouts?.defaultMs || 8000;
+  const timeoutMs = options.timeoutMs || defaultTimeout;
+
   const url = `${BASE_URL.replace(/\/+$/, '')}/${endpoint.replace(/^\/+/, '')}`;
   
   const headers = new Headers(options.headers || {});
@@ -46,14 +52,24 @@ export async function apiRequest(endpoint, options = {}) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
+  // Setup AbortController for timeout guard
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   const config = {
     ...options,
     headers,
+    signal: options.signal || controller.signal,
     credentials: 'include', // Crucial for HttpOnly cookies
   };
 
   try {
-    let response = await fetch(url, config);
+    let response;
+    try {
+      response = await fetch(url, config);
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     // If 401 Unauthorized, attempt transparent silent refresh
     // Note: Do not attempt refresh on auth endpoints themselves to avoid infinite recursion
@@ -118,6 +134,9 @@ export async function apiRequest(endpoint, options = {}) {
 
     return await parseApiResponse(response);
   } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new ApiError(`İstek zaman aşımına uğradı (${timeoutMs}ms). Sunucu yanıt vermedi.`, 408, null);
+    }
     if (err.name === 'TypeError' && err.message.includes('fetch')) {
       // Network failure / server offline
       throw new ApiError('Sunucuya erişilemiyor veya ağ bağlantısı koptu.', 0, null);
