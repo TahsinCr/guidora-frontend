@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
+  adminGetEntitySchemas,
+  adminGetApiEndpoints,
+  adminGetSystemHealth,
   adminGetDatabaseStats,
-  adminTriggerVacuum,
   adminGetTableSchema,
   adminGetMigrations,
   adminExecuteQuery,
@@ -16,63 +18,115 @@ import {
   adminResetToDefaults,
 } from '@/services/adminService';
 
-describe('Admin Service & Database Management', () => {
+describe('Admin Service — Domain Entities, REST API Contracts & Platform Governance', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.restoreAllMocks();
   });
 
-  describe('PostgreSQL 18 Database Management', () => {
-    it('returns comprehensive database stats with live table metrics', () => {
-      const stats = adminGetDatabaseStats([
+  describe('Domain Entity Schemas & Architecture (Backend-Agnostic)', () => {
+    it('returns all 8 core domain models with field definitions and relationships', () => {
+      const schemas = adminGetEntitySchemas();
+      expect(typeof schemas).toBe('object');
+      const entities = Object.values(schemas);
+      expect(entities.length).toBe(8);
+
+      const entityIds = entities.map((e) => e.id);
+      expect(entityIds).toContain('products');
+      expect(entityIds).toContain('categories');
+      expect(entityIds).toContain('tags');
+      expect(entityIds).toContain('users');
+      expect(entityIds).toContain('product_edit_proposals');
+      expect(entityIds).toContain('reviews');
+      expect(entityIds).toContain('reports');
+      expect(entityIds).toContain('audit_logs');
+
+      // Verify product entity schema
+      const productEntity = schemas.products;
+      expect(productEntity).toBeDefined();
+      expect(productEntity.fields.length).toBeGreaterThanOrEqual(10);
+      expect(productEntity.relationships.length).toBeGreaterThanOrEqual(3);
+      expect(productEntity.samplePayload).toBeDefined();
+
+      const pkField = productEntity.fields.find((f) => f.isPrimaryKey);
+      expect(pkField).toBeDefined();
+      expect(pkField.name).toBe('id');
+      expect(pkField.type).toBe('uuid');
+    });
+
+    it('returns schema for a specific entity using adminGetTableSchema', () => {
+      const schema = adminGetTableSchema('products');
+      expect(Array.isArray(schema)).toBe(true);
+      expect(schema.length).toBeGreaterThan(5);
+
+      const idCol = schema.find((c) => c.column === 'id');
+      expect(idCol).toBeDefined();
+      expect(idCol.key).toBe('PK');
+      expect(idCol.nullable).toBe(false);
+
+      const nameCol = schema.find((c) => c.column === 'name');
+      expect(nameCol).toBeDefined();
+      expect(nameCol.type).toBe('varchar(200)');
+    });
+
+    it('returns comprehensive database & entity stats with live entity counts', () => {
+      const mockTools = [
         { id: 't-1', name: 'Tool 1', category: 'generative-art' },
         { id: 't-2', name: 'Tool 2', category: 'developer-tools' },
-      ], [{ id: 'all' }, { id: 'dev' }], [{ id: 'u-1' }]);
+      ];
+      const mockCategories = [{ id: 'all' }, { id: 'dev' }];
+      const mockUsers = [{ id: 'u-1' }];
 
-      expect(stats.databaseName).toBe('guidora_production_pg18');
-      expect(stats.serverVersion).toContain('PostgreSQL 18');
+      const stats = adminGetDatabaseStats(mockTools, mockCategories, mockUsers);
+      expect(stats.databaseName).toBe('guidora_production_schema');
+      expect(stats.serverVersion).toContain('Backend-Agnostic Entity Layer v2.0');
       expect(stats.cacheHitRatio).toBe('99.4%');
-      expect(stats.tables.length).toBeGreaterThanOrEqual(8);
+      expect(stats.tables.length).toBe(8);
 
       const productsTable = stats.tables.find((t) => t.name === 'products');
       expect(productsTable).toBeDefined();
       expect(productsTable.rowCount).toBe(2);
-      expect(productsTable.engine).toContain('PostgreSQL 18');
+      expect(productsTable.engine).toContain('REST Entity Model');
     });
 
-    it('triggers VACUUM ANALYZE on a table, resets dead tuples, and records audit log', () => {
-      const result = adminTriggerVacuum('products');
-      expect(result.deadTuples).toBe(0);
-      expect(result.lastVacuum).toBe('Just now');
-
-      const logs = adminGetLogs();
-      const vacuumLog = logs.find((l) => l.action === 'DATABASE_VACUUM_EXECUTED');
-      expect(vacuumLog).toBeDefined();
-      expect(vacuumLog.category).toBe('DATABASE');
-    });
-
-    it('returns PostgreSQL column schema for products table including GIN index and xmin token', () => {
-      const schema = adminGetTableSchema('products');
-      expect(Array.isArray(schema)).toBe(true);
-
-      const idCol = schema.find((c) => c.column === 'id');
-      expect(idCol.type).toBe('uuid');
-      expect(idCol.key).toBe('PK');
-
-      const xminCol = schema.find((c) => c.column === 'xmin');
-      expect(xminCol).toBeDefined();
-      expect(xminCol.type).toBe('xid');
-
-      const searchVectorCol = schema.find((c) => c.column === 'search_vector');
-      expect(searchVectorCol).toBeDefined();
-      expect(searchVectorCol.type).toBe('tsvector');
-    });
-
-    it('returns applied EF Core 10 migrations history', () => {
+    it('returns schema evolution timeline milestones', () => {
       const migrations = adminGetMigrations();
-      expect(migrations.length).toBeGreaterThanOrEqual(5);
-      expect(migrations[0].productVersion).toContain('Microsoft.EntityFrameworkCore.PostgreSQL');
+      expect(migrations.length).toBeGreaterThanOrEqual(4);
       expect(migrations[0].status).toBe('APPLIED');
+      expect(migrations[0].description).toBeDefined();
+    });
+  });
+
+  describe('REST API Contracts & System Health', () => {
+    it('returns 12 standard REST API endpoint contracts across modules', () => {
+      const endpoints = adminGetApiEndpoints();
+      expect(Array.isArray(endpoints)).toBe(true);
+      expect(endpoints.length).toBe(12);
+
+      const methods = new Set(endpoints.map((e) => e.method));
+      expect(methods.has('GET')).toBe(true);
+      expect(methods.has('POST')).toBe(true);
+      expect(methods.has('PUT')).toBe(true);
+      expect(methods.has('DELETE')).toBe(true);
+
+      const getProducts = endpoints.find((e) => e.path === '/api/products' && e.method === 'GET');
+      expect(getProducts).toBeDefined();
+      expect(getProducts.authLevel).toBe('Public');
+      expect(getProducts.queryParams.length).toBeGreaterThanOrEqual(4);
+      expect(getProducts.sampleResponse).toBeDefined();
+
+      const createProduct = endpoints.find((e) => e.path === '/api/products' && e.method === 'POST');
+      expect(createProduct).toBeDefined();
+      expect(createProduct.authLevel).toBe('Member / Admin');
+      expect(createProduct.requestBodySchema).toBeDefined();
+    });
+
+    it('returns system health with circuit breaker and API latency metrics', () => {
+      const health = adminGetSystemHealth();
+      expect(health.apiStatus).toBe('HEALTHY');
+      expect(health.latencyMs).toBeGreaterThan(0);
+      expect(health.circuitBreaker).toBe('CLOSED');
+      expect(health.cacheHitRatio).toBe('99.4%');
     });
 
     it('safely executes SELECT queries against products in Query Explorer', () => {
@@ -127,6 +181,21 @@ describe('Admin Service & Database Management', () => {
       expect(logs[0].traceId).toBeDefined();
       expect(logs[0].level).toBeDefined();
       expect(logs[0].category).toBeDefined();
+    });
+
+    it('records a new audit log successfully', () => {
+      const logs = adminAddLog(
+        'TOOL_VERIFIED_MANUALLY',
+        'tool_neurogen',
+        'info',
+        { actor: 'Admin User', category: 'GOVERNANCE' }
+      );
+
+      expect(Array.isArray(logs)).toBe(true);
+      const newLog = logs[0];
+      expect(newLog.action).toBe('TOOL_VERIFIED_MANUALLY');
+      expect(newLog.id).toBeDefined();
+      expect(newLog.traceId).toContain('trace-');
     });
 
     it('reverts audit log entry if oldValues exist and records a revert log', () => {

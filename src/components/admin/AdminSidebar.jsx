@@ -2,6 +2,7 @@ import React from 'react';
 import {
   LayoutDashboard,
   Database,
+  Layers,
   FileText,
   Wrench,
   GitPullRequest,
@@ -36,7 +37,7 @@ export default function AdminSidebar({
       title: 'Platform & İzleme',
       items: [
         { id: 'overview', label: 'Genel Bakış', icon: LayoutDashboard },
-        { id: 'database', label: 'Veritabanı (PG18)', icon: Database, badge: badges.tables || 10, badgeVariant: 'accent' },
+        { id: 'schema', label: 'Veri Modeli & API', icon: Layers, badge: badges.schema || 8, badgeVariant: 'accent' },
         { id: 'logs', label: 'Denetim Logları', icon: FileText, badge: badges.criticalLogs > 0 ? `${badges.criticalLogs} Alert` : null, badgeVariant: 'danger' },
       ],
     },
@@ -90,7 +91,7 @@ export default function AdminSidebar({
             {!isCollapsed && (
               <div className={styles.brandInfo}>
                 <div className={styles.brandTitle}>Guidora Admin</div>
-                <div className={styles.brandVersion}>v2.0 PG18 Hub</div>
+                <div className={styles.brandVersion}>Yönetim Konsolu</div>
               </div>
             )}
           </div>

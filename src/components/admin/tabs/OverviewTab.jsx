@@ -10,6 +10,8 @@ import {
   TrendingUp,
   Activity,
   Database,
+  Layers,
+  Server,
   ArrowUpRight,
   ShieldAlert,
   Clock,
@@ -108,21 +110,21 @@ export default function OverviewTab({
           </div>
         </div>
 
-        <div className={styles.kpiCard} onClick={() => onSelectTab('database')} role="button" tabIndex={0}>
+        <div className={styles.kpiCard} onClick={() => onSelectTab('schema')} role="button" tabIndex={0}>
           <div className={styles.kpiTop}>
-            <span className={styles.kpiTitle}>Veritabanı (PG18)</span>
+            <span className={styles.kpiTitle}>Veri Modeli & API</span>
             <div className={`${styles.kpiIconWrapper} ${styles.purple}`}>
-              <Database size={18} />
+              <Layers size={18} />
             </div>
           </div>
           <div className={styles.kpiValueRow}>
-            <span className={styles.kpiNumber}>10 Tablo</span>
+            <span className={styles.kpiNumber}>8 Varlık</span>
             <span className={`${styles.kpiSubBadge} ${styles.greenBadge}`}>
-              99.4% Cache Hit
+              12 REST Uç Noktası
             </span>
           </div>
           <div className={styles.kpiFoot}>
-            <span>PostgreSQL 18.0 aktif, MVCC concurrency devrede</span>
+            <span>Bağımsız şema & RESTful API sözleşmeleri</span>
             <ArrowUpRight size={14} className={styles.kpiArrow} />
           </div>
         </div>
@@ -326,7 +328,7 @@ export default function OverviewTab({
           <div className={styles.panelHeader}>
             <div>
               <h3 className={styles.panelTitle}>Son Denetim & Güvenlik Olayları</h3>
-              <p className={styles.panelSubtitle}>OpenTelemetry trace kimlikli son sistem eylemleri</p>
+              <p className={styles.panelSubtitle}>Tüm kullanıcı ve sistem eylemlerinin izleme kayıtları</p>
             </div>
             <button
               type="button"
@@ -372,10 +374,10 @@ export default function OverviewTab({
             <div className={styles.gaugeCard}>
               <div className={styles.gaugeHeader}>
                 <span>Bağlantı Havuzu</span>
-                <Database size={14} color="#6366f1" />
+                <Server size={14} color="#6366f1" />
               </div>
               <div className={styles.gaugeValue}>8 / 50</div>
-              <div className={styles.gaugeSub}>Npgsql PostgreSQL Pool</div>
+              <div className={styles.gaugeSub}>Aktif Bağlantı / Kapasite</div>
             </div>
 
             <div className={styles.gaugeCard}>
@@ -393,7 +395,7 @@ export default function OverviewTab({
                 <TrendingUp size={14} color="#8b5cf6" />
               </div>
               <div className={styles.gaugeValue}>12.4 ms</div>
-              <div className={styles.gaugeSub}>.NET 10 Kestrel HTTP/2</div>
+              <div className={styles.gaugeSub}>REST API p95 Yanıt Süresi</div>
             </div>
 
             <div className={styles.gaugeCard}>

@@ -339,7 +339,6 @@ const INITIAL_AUDIT_LOGS = [
     userAgent: 'Go-http-client/2.0',
     traceId: 'trace-guidora-8f12a9e3',
     timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-    xmin: 49201,
     badge: 'error',
     oldValues: null,
     newValues: {
@@ -365,7 +364,6 @@ const INITIAL_AUDIT_LOGS = [
     userAgent: 'Mozilla/5.0 (X11; Linux x86_64) GuidoraAdmin/2.0',
     traceId: 'trace-guidora-b472c1a8',
     timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-    xmin: 49202,
     badge: 'success',
     oldValues: {
       verified: { admin: false, audited: false, featured: false },
@@ -379,27 +377,25 @@ const INITIAL_AUDIT_LOGS = [
   },
   {
     id: 'log-103',
-    action: 'AUTOVACUUM_ANALYZE',
-    entityName: 'DatabaseTable',
-    entityId: 'products',
-    target: 'public.products (PostgreSQL 18)',
+    action: 'CACHE_WARMUP_COMPLETED',
+    entityName: 'CacheCluster',
+    entityId: 'catalog-cache-v1',
+    target: 'Catalog Edge Cache',
     level: 'INFO',
-    category: 'DATABASE',
-    actor: 'PostgreSQL AutoVacuum Worker',
-    actorEmail: 'postgres@internal.cluster',
+    category: 'SYSTEM',
+    actor: 'System Cache Worker',
+    actorEmail: 'system@internal.cluster',
     actorRole: 'system',
     actorIp: '127.0.0.1',
-    userAgent: 'PostgreSQL 18.0 (Debian 18.0-1.pgdg120+1)',
-    traceId: 'trace-guidora-db-0041',
+    userAgent: 'GuidoraCacheWorker/1.0',
+    traceId: 'trace-guidora-cache-0041',
     timestamp: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
-    xmin: 49203,
     badge: 'info',
     oldValues: null,
     newValues: {
-      table: 'products',
-      deadTuplesPurged: 18,
-      pagesModified: 4,
-      executionDurationMs: 14.8,
+      keysPreloaded: 184,
+      hitRatio: '99.4%',
+      warmupDurationMs: 14.8,
     },
   },
   {
@@ -417,7 +413,6 @@ const INITIAL_AUDIT_LOGS = [
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
     traceId: 'trace-guidora-c99201f4',
     timestamp: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
-    xmin: 49204,
     badge: 'warning',
     oldValues: {
       status: 'pending',
@@ -444,7 +439,6 @@ const INITIAL_AUDIT_LOGS = [
     userAgent: 'Mozilla/5.0 (X11; Linux x86_64)',
     traceId: 'trace-guidora-e18230aa',
     timestamp: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
-    xmin: 49205,
     badge: 'success',
     oldValues: null,
     newValues: {
@@ -457,8 +451,8 @@ const INITIAL_AUDIT_LOGS = [
     id: 'log-106',
     action: 'CIRCUIT_BREAKER_PROBE_SUCCESS',
     entityName: 'CircuitBreaker',
-    entityId: 'cb-dotnet-api',
-    target: 'Guidora API /api/health/live',
+    entityId: 'cb-api-cluster',
+    target: 'Guidora API /health/live',
     level: 'INFO',
     category: 'SYSTEM',
     actor: 'CircuitBreaker Watcher',
@@ -468,7 +462,6 @@ const INITIAL_AUDIT_LOGS = [
     userAgent: 'Guidora-HealthProbe/1.0',
     traceId: 'trace-guidora-cb-0012',
     timestamp: new Date(Date.now() - 1000 * 60 * 320).toISOString(),
-    xmin: 49206,
     badge: 'info',
     oldValues: { state: 'HALF_OPEN', consecutiveFailures: 5 },
     newValues: { state: 'CLOSED', consecutiveFailures: 0, latencyMs: 8 },
@@ -519,7 +512,6 @@ export function adminAddLog(action, target, badge = 'info', extraMeta = {}) {
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'GuidoraCore/1.0',
     traceId: `trace-guidora-${Math.random().toString(36).substring(2, 10)}`,
     timestamp: new Date().toISOString(),
-    xmin: Math.floor(49200 + Math.random() * 500),
     badge,
     oldValues: extraMeta.oldValues || null,
     newValues: extraMeta.newValues || { summary: action, target },
@@ -572,7 +564,6 @@ export function adminRevertAuditLog(logId) {
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'GuidoraCore/1.0',
     traceId: `trace-guidora-rev-${Math.random().toString(36).substring(2, 10)}`,
     timestamp: new Date().toISOString(),
-    xmin: targetLog.xmin ? targetLog.xmin + 1 : 49999,
     badge: 'warning',
     oldValues: targetLog.newValues,
     newValues: targetLog.oldValues,
@@ -729,330 +720,529 @@ export function adminGetStats(allTools = [], allUsers = []) {
   };
 }
 
-// --- High-Level PostgreSQL 18 Database Management ---
-const VACUUM_STATUS_KEY = 'guidora_db_vacuum_status';
+// --- Backend-Agnostic Domain Entity Schemas & REST API Contracts ---
+
+export function adminGetEntitySchemas() {
+  return {
+    products: {
+      id: 'products',
+      name: 'Product / ToolItem',
+      pluralName: 'Yapay Zeka Araçları',
+      description: 'Guidora platformundaki tüm doğrulanmış ve listelenmiş yapay zeka araçlarının temel veri modeli.',
+      icon: 'Wrench',
+      category: 'Katalog',
+      fields: [
+        { name: 'id', type: 'uuid', required: true, isPrimaryKey: true, isUnique: true, isIndexed: true, description: 'Benzersiz araç slug veya kimlik belirteci', example: 'neurogen-studio' },
+        { name: 'slug', type: 'varchar(150)', required: true, isPrimaryKey: false, isUnique: true, isIndexed: true, description: 'URL dostu benzersiz slug', example: 'neurogen-studio' },
+        { name: 'name', type: 'varchar(200)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Aracın resmi pazar adı', example: 'NeuroGen Studio' },
+        { name: 'tagline', type: 'varchar(300)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Kısa slogan veya tek cümlelik özet', example: 'Next-gen generative AI canvas' },
+        { name: 'description', type: 'text', required: false, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Detaylı tanıtım ve README içeriği', example: 'Deep neural network powered creative studio...' },
+        { name: 'category_id', type: 'varchar(50)', required: true, isPrimaryKey: false, isForeignKey: true, isIndexed: true, description: 'Bağlı olduğu kategori slug kimliği', example: 'generative-art' },
+        { name: 'pricing', type: 'varchar(80)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Fiyatlandırma etiketi', example: 'Freemium' },
+        { name: 'rating', type: 'numeric(3,2)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Kullanıcı ortalama puanı (0.0 - 5.0)', example: '4.85' },
+        { name: 'views_count', type: 'integer', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Toplam görüntülenme sayısı', example: '12400' },
+        { name: 'is_verified', type: 'boolean', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Doğrulama durumu', example: 'true' },
+        { name: 'metadata', type: 'jsonb', required: false, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Esnek JSON meta verileri', example: '{"platform": ["Web", "API"]}' },
+        { name: 'search_vector', type: 'tsvector', required: false, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Hızlı tam metin arama vektörü', example: 'GENERATED ALWAYS' },
+        { name: 'created_at', type: 'timestamptz', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Kayıt oluşturulma zaman damgası', example: '2026-01-15T00:00:00Z' },
+        { name: 'updated_at', type: 'timestamptz', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Son güncelleme zaman damgası', example: '2026-09-28T12:00:00Z' },
+      ],
+      relationships: [
+        { targetEntity: 'categories', type: 'N:1', foreignKey: 'category_id', description: 'Her araç tek bir ana kategoriye aittir.' },
+        { targetEntity: 'reviews', type: '1:N', foreignKey: 'tool_id', description: 'Bir araç birden fazla kullanıcı değerlendirmesine sahip olabilir.' },
+        { targetEntity: 'proposals', type: '1:N', foreignKey: 'product_id', description: 'Bir araç için birden fazla düzenleme teklifi verilebilir.' },
+      ],
+      samplePayload: {
+        id: 'neurogen-studio',
+        slug: 'neurogen-studio',
+        name: 'NeuroGen Studio',
+        tagline: 'Next-gen generative AI canvas',
+        category_id: 'generative-art',
+        pricing: 'Freemium',
+        rating: 4.85,
+        views_count: 12400,
+        is_verified: true,
+      },
+    },
+    categories: {
+      id: 'categories',
+      name: 'Category',
+      pluralName: 'Kategoriler',
+      description: 'Araç kataloğunun birincil taksonomi ağacı ve vitrin gruplaması.',
+      icon: 'FolderTree',
+      category: 'Katalog',
+      fields: [
+        { name: 'id', type: 'varchar(50)', required: true, isPrimaryKey: true, isUnique: true, isIndexed: true, description: 'Kategori benzersiz slug belirteci', example: 'generative-art' },
+        { name: 'name', type: 'varchar(100)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Görünen kategori başlığı', example: 'Generative Art' },
+        { name: 'color', type: 'varchar(30)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Arayüz aksan rengi', example: '#8A38F5' },
+        { name: 'icon', type: 'varchar(50)', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'İkon bileşeni adı', example: 'Sparkles' },
+        { name: 'translations', type: 'jsonb', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'TR, EN, RU çevirileri', example: '{"tr": "Üretici Sanat", "ru": "Генеративное искусство"}' },
+        { name: 'is_popular', type: 'boolean', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Ana sayfa öne çıkan vitrin rozeti', example: 'true' },
+        { name: 'display_order', type: 'integer', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Görünüm sıralaması', example: '1' },
+      ],
+      relationships: [
+        { targetEntity: 'products', type: '1:N', foreignKey: 'category_id', description: 'Bir kategori altında yüzlerce araç listelenir.' },
+      ],
+      samplePayload: {
+        id: 'generative-art',
+        name: 'Generative Art',
+        color: '#8A38F5',
+        icon: 'Sparkles',
+        is_popular: true,
+        display_order: 1,
+      },
+    },
+    tags: {
+      id: 'tags',
+      name: 'Tag & Taxonomy',
+      pluralName: 'Etiket Grupları',
+      description: 'Çok boyutlu filtreleme sağlayan hiyerarşik taksonomi ve etiket modelleri.',
+      icon: 'Tag',
+      category: 'Katalog',
+      fields: [
+        { name: 'id', type: 'varchar(60)', required: true, isPrimaryKey: true, isUnique: true, isIndexed: true, description: 'Etiket kimliği', example: 'tag_freemium' },
+        { name: 'name', type: 'varchar(80)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Görünen etiket adı', example: 'Freemium' },
+        { name: 'tag_category_id', type: 'varchar(50)', required: true, isPrimaryKey: false, isForeignKey: true, isIndexed: true, description: 'Bağlı olduğu etiket grubu', example: 'pricing_model' },
+        { name: 'is_single_select', type: 'boolean', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Grup içinde tek seçim kuralı', example: 'true' },
+      ],
+      relationships: [
+        { targetEntity: 'products', type: 'M:N', foreignKey: 'tags', description: 'Araçlar ve etiketler çoktan çoğa ilişkilidir.' },
+      ],
+      samplePayload: {
+        id: 'tag_freemium',
+        name: 'Freemium',
+        tag_category_id: 'pricing_model',
+        is_single_select: true,
+      },
+    },
+    users: {
+      id: 'users',
+      name: 'User / Identity',
+      pluralName: 'Kullanıcı Hesapları',
+      description: 'Kimlik doğrulama, oturum yönetimi ve rol bazlı erişim modeli.',
+      icon: 'Users',
+      category: 'Topluluk',
+      fields: [
+        { name: 'id', type: 'uuid', required: true, isPrimaryKey: true, isUnique: true, isIndexed: true, description: 'Kullanıcı benzersiz kimliği', example: 'usr_admin_01' },
+        { name: 'email', type: 'varchar(255)', required: true, isPrimaryKey: false, isUnique: true, isIndexed: true, description: 'Doğrulanmış e-posta adresi', example: 'tahsincrs@gmail.com' },
+        { name: 'username', type: 'varchar(60)', required: true, isPrimaryKey: false, isUnique: true, isIndexed: true, description: 'Benzersiz kullanıcı takma adı', example: 'tahsincr' },
+        { name: 'role', type: 'varchar(30)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'admin | moderator | creator | member', example: 'admin' },
+        { name: 'is_banned', type: 'boolean', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Engellenme durumu', example: 'false' },
+        { name: 'reputation', type: 'integer', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Topluluk itibar puanı', example: '980' },
+        { name: 'created_at', type: 'timestamptz', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Kayıt tarihi', example: '2024-09-01T00:00:00Z' },
+      ],
+      relationships: [
+        { targetEntity: 'reviews', type: '1:N', foreignKey: 'user_id', description: 'Kullanıcının yazdığı incelemeler.' },
+        { targetEntity: 'proposals', type: '1:N', foreignKey: 'proposer_id', description: 'Kullanıcının sunduğu araç düzenleme teklifleri.' },
+        { targetEntity: 'audit_logs', type: '1:N', foreignKey: 'actor_name', description: 'Kullanıcının gerçekleştirdiği yönetimsel eylemler.' },
+      ],
+      samplePayload: {
+        id: 'usr_admin_01',
+        username: 'tahsincr',
+        email: 'tahsincrs@gmail.com',
+        role: 'admin',
+        reputation: 980,
+      },
+    },
+    product_edit_proposals: {
+      id: 'product_edit_proposals',
+      name: 'ProductEditProposal',
+      pluralName: 'Düzenleme Teklifleri',
+      description: 'Topluluk ve oluşturucuların önerdiği değişikliklerin onay kuyruğu modeli.',
+      icon: 'GitPullRequest',
+      category: 'Topluluk',
+      fields: [
+        { name: 'id', type: 'uuid', required: true, isPrimaryKey: true, isUnique: true, isIndexed: true, description: 'Teklif kimliği', example: 'prop-101' },
+        { name: 'product_id', type: 'uuid', required: true, isPrimaryKey: false, isForeignKey: true, isIndexed: true, description: 'İlgili araç slug kimliği', example: 'cursor-editor' },
+        { name: 'proposer_id', type: 'uuid', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Teklifi sunan kullanıcı kimliği', example: 'usr_dev_03' },
+        { name: 'status', type: 'varchar(20)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Pending | Approved | Rejected', example: 'Pending' },
+        { name: 'delta_changes', type: 'jsonb', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: '{ field: { old, new } } fark nesnesi', example: '{"pricing": {"old": "$20", "new": "$16"}}' },
+        { name: 'review_notes', type: 'text', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Moderatör değerlendirme notu', example: 'Fiyatlandırma doğrulandı.' },
+        { name: 'created_at', type: 'timestamptz', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Gönderim zamanı', example: '2026-09-28T18:00:00Z' },
+      ],
+      relationships: [
+        { targetEntity: 'products', type: 'N:1', foreignKey: 'product_id', description: 'Teklif belirli bir aracı hedefler.' },
+      ],
+      samplePayload: {
+        id: 'prop-101',
+        product_id: 'cursor-editor',
+        status: 'Pending',
+        delta_changes: { pricing: { old: '$20/mo', new: '$16/mo (Annual)' } },
+      },
+    },
+    reviews: {
+      id: 'reviews',
+      name: 'Review',
+      pluralName: 'Kullanıcı Değerlendirmeleri',
+      description: 'Doğrulanmış kullanıcıların araçlar için yazdığı yıldız puanları ve detaylı incelemeler.',
+      icon: 'MessageSquare',
+      category: 'Topluluk',
+      fields: [
+        { name: 'id', type: 'uuid', required: true, isPrimaryKey: true, isUnique: true, isIndexed: true, description: 'Değerlendirme kimliği', example: 'rev-301' },
+        { name: 'tool_id', type: 'varchar(150)', required: true, isPrimaryKey: false, isForeignKey: true, isIndexed: true, description: 'İncelemenin ait olduğu araç slug kimliği', example: 'neurogen-studio' },
+        { name: 'user_id', type: 'varchar(100)', required: true, isPrimaryKey: false, isForeignKey: true, isIndexed: true, description: 'Yorumu yazan kullanıcının kimliği', example: 'usr_alex_02' },
+        { name: 'author_name', type: 'varchar(120)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Yazar adı', example: 'Alex V.' },
+        { name: 'rating', type: 'integer', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Verilen yıldız puanı (1 - 5)', example: '5' },
+        { name: 'comment', type: 'text', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'İnceleme metni', example: 'Harika bir platform, latency süresi inanılmaz iyi.' },
+        { name: 'helpful_count', type: 'integer', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Faydalı bulan kullanıcı sayısı', example: '14' },
+        { name: 'created_at', type: 'timestamptz', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Oluşturulma zamanı', example: '2026-09-27T10:00:00Z' },
+      ],
+      relationships: [
+        { targetEntity: 'products', type: 'N:1', foreignKey: 'tool_id', description: 'İncelemenin bağlı olduğu yapay zeka aracı.' },
+        { targetEntity: 'users', type: 'N:1', foreignKey: 'user_id', description: 'İncelemeyi yazan kullanıcı.' },
+      ],
+      samplePayload: {
+        id: 'rev-301',
+        tool_id: 'neurogen-studio',
+        author_name: 'Alex V.',
+        rating: 5,
+        comment: 'Harika bir platform, latency süresi inanılmaz iyi.',
+        helpful_count: 14,
+      },
+    },
+    reports: {
+      id: 'reports',
+      name: 'Report',
+      pluralName: 'Kullanıcı Şikayetleri',
+      description: 'Hatalı linkler, telif hakkı veya yanıltıcı bilgiler için iletilen moderasyon bildirimleri.',
+      icon: 'AlertTriangle',
+      category: 'Moderasyon',
+      fields: [
+        { name: 'id', type: 'uuid', required: true, isPrimaryKey: true, isUnique: true, isIndexed: true, description: 'Şikayet raporu kimliği', example: 'rep-401' },
+        { name: 'tool_id', type: 'varchar(150)', required: true, isPrimaryKey: false, isForeignKey: true, isIndexed: true, description: 'Şikayet edilen araç kimliği', example: 'neurogen-studio' },
+        { name: 'reason', type: 'varchar(100)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Şikayet kategorisi / nedeni', example: 'broken_link' },
+        { name: 'details', type: 'text', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Kullanıcının eklediği detaylar', example: 'Web sitesi linki 404 dönüyor.' },
+        { name: 'reporter_email', type: 'varchar(255)', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Bildirim yapan kişinin e-postası', example: 'user@example.com' },
+        { name: 'status', type: 'varchar(30)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'pending | resolved | dismissed', example: 'pending' },
+        { name: 'created_at', type: 'timestamptz', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Bildirim zamanı', example: '2026-09-28T08:30:00Z' },
+      ],
+      relationships: [
+        { targetEntity: 'products', type: 'N:1', foreignKey: 'tool_id', description: 'Şikayete konu olan araç.' },
+      ],
+      samplePayload: {
+        id: 'rep-401',
+        tool_id: 'neurogen-studio',
+        reason: 'broken_link',
+        details: 'Web sitesi linki 404 dönüyor.',
+        status: 'pending',
+      },
+    },
+    audit_logs: {
+      id: 'audit_logs',
+      name: 'AuditLog',
+      pluralName: 'Denetim Günlüğü',
+      description: 'Tüm yönetimsel işlemlerin ve veri değişikliklerinin değişmez olay kaydı.',
+      icon: 'FileText',
+      category: 'Sistem',
+      fields: [
+        { name: 'id', type: 'bigserial', required: true, isPrimaryKey: true, isUnique: true, isIndexed: true, description: 'Kayıt kimliği', example: 'log-101' },
+        { name: 'action', type: 'varchar(100)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Gerçekleştirilen eylem tipi', example: 'PRODUCT_STATUS_VERIFIED' },
+        { name: 'entity_name', type: 'varchar(80)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Hedef varlık adı', example: 'Product' },
+        { name: 'entity_id', type: 'varchar(100)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Hedef varlık kimliği', example: 'neurogen-studio' },
+        { name: 'level', type: 'varchar(20)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'INFO | AUDIT | WARN | ERROR', example: 'AUDIT' },
+        { name: 'actor_name', type: 'varchar(100)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Eylemi yapan kişi / servis', example: 'Tahsin Cr' },
+        { name: 'trace_id', type: 'varchar(64)', required: false, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'OpenTelemetry dağıtık izleme kimliği', example: 'trace-guidora-b472c1a8' },
+        { name: 'old_values', type: 'jsonb', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Önceki durum delta nesnesi', example: '{"verified": false}' },
+        { name: 'new_values', type: 'jsonb', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Yeni durum delta nesnesi', example: '{"verified": true}' },
+        { name: 'created_at', type: 'timestamptz', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'İşlem zaman damgası', example: '2026-09-28T18:00:00Z' },
+      ],
+      relationships: [
+        { targetEntity: 'users', type: 'N:1', foreignKey: 'actor_name', description: 'Eylemi yapan kullanıcı.' },
+      ],
+      samplePayload: {
+        id: 'log-101',
+        action: 'PRODUCT_STATUS_VERIFIED',
+        entity_name: 'Product',
+        entity_id: 'neurogen-studio',
+        actor_name: 'Tahsin Cr',
+        level: 'AUDIT',
+      },
+    },
+  };
+}
+
+export function adminGetApiEndpoints() {
+  return [
+    {
+      method: 'GET',
+      path: '/api/products',
+      summary: 'Katalog Araç Listesi & Filtreleme',
+      description: 'Arama terimi, kategori slug, etiketler ve sayfalamayla araç listesini döndürür.',
+      authLevel: 'Public',
+      queryParams: [
+        { name: 'search', type: 'string', required: false, description: 'Arama anahtar kelimesi' },
+        { name: 'category', type: 'string', required: false, description: 'Kategori slug filtresi' },
+        { name: 'sort', type: 'string', required: false, description: 'relevance | highest-rated | newest' },
+        { name: 'page', type: 'integer', required: false, description: 'Sayfa numarası (varsayılan: 1)' },
+        { name: 'limit', type: 'integer', required: false, description: 'Sayfa başı kayıt (varsayılan: 12)' },
+      ],
+      responseCodes: ['200 OK', '400 Bad Request'],
+      sampleResponse: {
+        items: [{ id: 'neurogen-studio', name: 'NeuroGen Studio', rating: 4.85, category: 'generative-art' }],
+        total: 24,
+        page: 1,
+        limit: 12,
+        hasMore: true,
+      },
+    },
+    {
+      method: 'GET',
+      path: '/api/products/:id',
+      summary: 'Araç Detayı',
+      description: 'Slug veya numericId ile belirtilen aracın tüm detaylarını, incelemelerini ve ilişkilerini getirir.',
+      authLevel: 'Public',
+      queryParams: [],
+      responseCodes: ['200 OK', '404 Not Found'],
+      sampleResponse: {
+        id: 'neurogen-studio',
+        name: 'NeuroGen Studio',
+        tagline: 'Next-gen generative AI canvas',
+        category: 'generative-art',
+        pricing: 'Freemium',
+        rating: 4.85,
+      },
+    },
+    {
+      method: 'POST',
+      path: '/api/products',
+      summary: 'Yeni Araç Oluştur / Gönder',
+      description: 'Topluluk veya yönetici tarafından yeni bir yapay zeka aracını kataloğa ekler.',
+      authLevel: 'Member / Admin',
+      requestBodySchema: {
+        name: 'string (required)',
+        slug: 'string (optional)',
+        tagline: 'string (required)',
+        description: 'string',
+        website: 'string (URL, required)',
+        categoryIds: 'number[]',
+        tagIds: 'number[]',
+      },
+      responseCodes: ['201 Created', '400 Bad Request', '401 Unauthorized'],
+      sampleResponse: {
+        success: true,
+        message: 'Araç başarıyla kaydedildi.',
+        data: { id: 'quantum-forge', name: 'Quantum Forge AI' },
+      },
+    },
+    {
+      method: 'PUT',
+      path: '/api/products/:id',
+      summary: 'Araç Bilgilerini Güncelle',
+      description: 'Yönetici veya araç sahibi tarafından meta verileri, fiyatlandırmayı ve doğrulamayı günceller.',
+      authLevel: 'Admin / Creator',
+      responseCodes: ['200 OK', '400 Bad Request', '403 Forbidden', '404 Not Found'],
+      sampleResponse: { success: true, message: 'Araç güncellendi.' },
+    },
+    {
+      method: 'DELETE',
+      path: '/api/products/:id',
+      summary: 'Aracı Arşivle / Sil (Soft Delete)',
+      description: 'Aracı aktif katalogdan kaldırır ve arşiv statüsüne taşır.',
+      authLevel: 'Admin',
+      responseCodes: ['200 OK', '403 Forbidden', '404 Not Found'],
+      sampleResponse: { success: true, message: 'Araç arşivlendi.' },
+    },
+    {
+      method: 'GET',
+      path: '/api/categories',
+      summary: 'Taksonomi Kategorileri',
+      description: 'Tüm kategorileri, renk paletlerini, çevirilerini ve popülerlik durumlarını listeler.',
+      authLevel: 'Public',
+      responseCodes: ['200 OK'],
+      sampleResponse: [
+        { id: 'generative-art', name: 'Generative Art', color: '#8A38F5', isPopular: true },
+        { id: 'developer-tools', name: 'Developer Tools', color: '#3B82F6', isPopular: true },
+      ],
+    },
+    {
+      method: 'POST',
+      path: '/api/auth/login',
+      summary: 'Kullanıcı Oturum Açma (JWT)',
+      description: 'E-posta/kullanıcı adı ve şifreyle doğrular; memory access token ve HttpOnly refresh çerezi döndürür.',
+      authLevel: 'Public',
+      requestBodySchema: {
+        email: 'string (required)',
+        password: 'string (required)',
+        rememberMe: 'boolean',
+      },
+      responseCodes: ['200 OK', '400 Validation Error', '401 Unauthorized'],
+      sampleResponse: {
+        success: true,
+        data: {
+          accessToken: { token: 'jwt.token.string', expiration: '2026-09-28T21:00:00Z', role: 'admin' },
+          user: { id: 'usr_admin_01', username: 'tahsincr', role: 'admin' },
+        },
+      },
+    },
+    {
+      method: 'POST',
+      path: '/api/auth/refresh',
+      summary: 'Sessiz Token Yenileme',
+      description: 'Tarayıcıdaki HttpOnly çerezi okuyarak yeni bir kısa ömürlü access token üretir.',
+      authLevel: 'Public (Cookie-based)',
+      responseCodes: ['200 OK', '401 Unauthorized'],
+      sampleResponse: {
+        success: true,
+        data: { accessToken: { token: 'new.jwt.token' } },
+      },
+    },
+    {
+      method: 'POST',
+      path: '/api/auth/logout',
+      summary: 'Oturumu Kapat',
+      description: 'Yenileme çerezini temizler ve oturum tokenını geçersiz kılar.',
+      authLevel: 'Public',
+      responseCodes: ['200 OK'],
+      sampleResponse: { success: true },
+    },
+    {
+      method: 'GET',
+      path: '/api/proposals',
+      summary: 'Topluluk Değişiklik Teklifleri',
+      description: 'Onay bekleyen araç düzenleme tekliflerini alan bazlı delta değişiklikleriyle döndürür.',
+      authLevel: 'Moderator / Admin',
+      responseCodes: ['200 OK', '403 Forbidden'],
+      sampleResponse: [{ id: 'prop-101', toolId: 'cursor-editor', status: 'pending' }],
+    },
+    {
+      method: 'PUT',
+      path: '/api/proposals/:id/approve',
+      summary: 'Teklifi Onayla & Kataloğa Uygula',
+      description: 'Teklifteki delta değişikliklerini atomik olarak hedef araca yansıtır ve durumu onaylandı yapar.',
+      authLevel: 'Admin',
+      responseCodes: ['200 OK', '400 Bad Request', '404 Not Found'],
+      sampleResponse: { success: true, message: 'Teklif onaylandı ve araca uygulandı.' },
+    },
+    {
+      method: 'GET',
+      path: '/health/live',
+      summary: 'Liveness Sağlık Kontrolü',
+      description: 'Sistemin ayakta olduğunu ve HTTP trafiği kabul ettiğini doğrular.',
+      authLevel: 'Public',
+      responseCodes: ['200 OK Healthy'],
+      sampleResponse: { status: 'Healthy', timestamp: '2026-09-28T18:00:00Z' },
+    },
+  ];
+}
+
+export function adminGetSystemHealth() {
+  return {
+    apiStatus: 'HEALTHY',
+    latencyMs: 8,
+    uptime: '99.98%',
+    activeSessions: 124,
+    rateLimitQuota: '99.8%',
+    circuitBreaker: 'CLOSED',
+    cacheHitRatio: '99.4%',
+    architecture: 'RESTful Contract-First',
+  };
+}
 
 export function adminGetDatabaseStats(allTools = [], allCategories = [], allUsers = []) {
+  const schemas = adminGetEntitySchemas();
   const toolsCount = allTools.length || 24;
   const categoriesCount = allCategories.length || 8;
   const usersCount = allUsers.length || 4;
   const logsCount = adminGetLogs().length;
   const proposalsCount = adminGetProposals().length;
-  const reportsCount = adminGetReports().length;
-  const orgsCount = getOrganizations().length;
-  const tagCatsCount = adminGetTagCategories().length;
 
-  let customVacuum = {};
-  try {
-    customVacuum = JSON.parse(localStorage.getItem(VACUUM_STATUS_KEY) || '{}');
-  } catch (e) {}
-
-  const tables = [
-    {
-      name: 'products',
-      schema: 'public',
-      engine: 'PostgreSQL 18.0 / Heap',
-      rowCount: toolsCount,
-      tableSizeBytes: toolsCount * 78000 + 409600,
-      tableSize: `${((toolsCount * 78000 + 409600) / 1024 / 1024).toFixed(2)} MB`,
-      indexSize: '416 KB',
-      totalSize: `${((toolsCount * 78000 + 409600 + 425984) / 1024 / 1024).toFixed(2)} MB`,
-      deadTuples: customVacuum.products?.deadTuples ?? 6,
-      lastVacuum: customVacuum.products?.lastVacuum ?? '18m ago',
-      indexesCount: 4,
-      status: 'HEALTHY',
-    },
-    {
-      name: 'categories',
-      schema: 'public',
-      engine: 'PostgreSQL 18.0 / Heap',
-      rowCount: categoriesCount,
-      tableSizeBytes: categoriesCount * 8192 + 32768,
-      tableSize: `${Math.round((categoriesCount * 8192 + 32768) / 1024)} KB`,
-      indexSize: '32 KB',
-      totalSize: `${Math.round((categoriesCount * 8192 + 65536) / 1024)} KB`,
-      deadTuples: customVacuum.categories?.deadTuples ?? 0,
-      lastVacuum: customVacuum.categories?.lastVacuum ?? '1h ago',
-      indexesCount: 2,
-      status: 'OPTIMAL',
-    },
-    {
-      name: 'category_taxonomies',
-      schema: 'public',
-      engine: 'PostgreSQL 18.0 / Heap',
-      rowCount: tagCatsCount,
-      tableSizeBytes: 131072,
-      tableSize: '128 KB',
-      indexSize: '64 KB',
-      totalSize: '192 KB',
-      deadTuples: customVacuum.category_taxonomies?.deadTuples ?? 1,
-      lastVacuum: customVacuum.category_taxonomies?.lastVacuum ?? '2h ago',
-      indexesCount: 3,
-      status: 'OPTIMAL',
-    },
-    {
-      name: 'product_edit_proposals',
-      schema: 'public',
-      engine: 'PostgreSQL 18.0 / Heap',
-      rowCount: proposalsCount,
-      tableSizeBytes: 262144,
-      tableSize: '256 KB',
-      indexSize: '80 KB',
-      totalSize: '336 KB',
-      deadTuples: customVacuum.product_edit_proposals?.deadTuples ?? 2,
-      lastVacuum: customVacuum.product_edit_proposals?.lastVacuum ?? '35m ago',
-      indexesCount: 3,
-      status: 'HEALTHY',
-    },
-    {
-      name: 'audit_logs',
-      schema: 'public',
-      engine: 'PostgreSQL 18.0 / Heap (Append-only)',
-      rowCount: logsCount,
-      tableSizeBytes: logsCount * 32000 + 1048576,
-      tableSize: `${((logsCount * 32000 + 1048576) / 1024 / 1024).toFixed(2)} MB`,
-      indexSize: '1.24 MB',
-      totalSize: `${((logsCount * 32000 + 1048576 + 1300000) / 1024 / 1024).toFixed(2)} MB`,
-      deadTuples: customVacuum.audit_logs?.deadTuples ?? 0,
-      lastVacuum: customVacuum.audit_logs?.lastVacuum ?? '12m ago',
-      indexesCount: 5,
-      status: 'OPTIMAL',
-    },
-    {
-      name: 'users',
-      schema: 'public',
-      engine: 'PostgreSQL 18.0 / Heap',
-      rowCount: usersCount,
-      tableSizeBytes: 327680,
-      tableSize: '320 KB',
-      indexSize: '128 KB',
-      totalSize: '448 KB',
-      deadTuples: customVacuum.users?.deadTuples ?? 0,
-      lastVacuum: customVacuum.users?.lastVacuum ?? '45m ago',
-      indexesCount: 3,
-      status: 'OPTIMAL',
-    },
-    {
-      name: 'roles',
-      schema: 'public',
-      engine: 'PostgreSQL 18.0 / Heap',
-      rowCount: 4,
-      tableSizeBytes: 16384,
-      tableSize: '16 KB',
-      indexSize: '16 KB',
-      totalSize: '32 KB',
-      deadTuples: 0,
-      lastVacuum: '3d ago',
-      indexesCount: 2,
-      status: 'STATIC',
-    },
-    {
-      name: 'comments',
-      schema: 'public',
-      engine: 'PostgreSQL 18.0 / Heap',
-      rowCount: 12,
-      tableSizeBytes: 524288,
-      tableSize: '512 KB',
-      indexSize: '160 KB',
-      totalSize: '672 KB',
-      deadTuples: customVacuum.comments?.deadTuples ?? 3,
-      lastVacuum: customVacuum.comments?.lastVacuum ?? '1h ago',
-      indexesCount: 3,
-      status: 'HEALTHY',
-    },
-    {
-      name: 'organizations',
-      schema: 'public',
-      engine: 'PostgreSQL 18.0 / Heap',
-      rowCount: orgsCount,
-      tableSizeBytes: 147456,
-      tableSize: '144 KB',
-      indexSize: '48 KB',
-      totalSize: '192 KB',
-      deadTuples: customVacuum.organizations?.deadTuples ?? 0,
-      lastVacuum: customVacuum.organizations?.lastVacuum ?? '2h ago',
-      indexesCount: 2,
-      status: 'OPTIMAL',
-    },
-    {
-      name: '__ef_migrations_history',
-      schema: 'public',
-      engine: 'PostgreSQL 18.0 / EF Core',
-      rowCount: 6,
-      tableSizeBytes: 32768,
-      tableSize: '32 KB',
-      indexSize: '16 KB',
-      totalSize: '48 KB',
-      deadTuples: 0,
-      lastVacuum: '4d ago',
-      indexesCount: 1,
-      status: 'LOCKED',
-    },
+  const entities = [
+    { name: 'products', modelName: 'ToolItem', count: toolsCount, fieldsCount: schemas.products.fields.length, status: 'HEALTHY' },
+    { name: 'categories', modelName: 'Category', count: categoriesCount, fieldsCount: schemas.categories.fields.length, status: 'OPTIMAL' },
+    { name: 'tags', modelName: 'Tag', count: 32, fieldsCount: schemas.tags.fields.length, status: 'OPTIMAL' },
+    { name: 'users', modelName: 'User', count: usersCount, fieldsCount: schemas.users.fields.length, status: 'OPTIMAL' },
+    { name: 'proposals', modelName: 'ProductEditProposal', count: proposalsCount, fieldsCount: schemas.product_edit_proposals.fields.length, status: 'HEALTHY' },
+    { name: 'reviews', modelName: 'Review', count: 128, fieldsCount: schemas.reviews.fields.length, status: 'OPTIMAL' },
+    { name: 'reports', modelName: 'Report', count: 12, fieldsCount: schemas.reports.fields.length, status: 'HEALTHY' },
+    { name: 'audit_logs', modelName: 'AuditLog', count: logsCount, fieldsCount: schemas.audit_logs.fields.length, status: 'OPTIMAL' },
   ];
 
   return {
-    databaseName: 'guidora_production_pg18',
-    serverVersion: 'PostgreSQL 18.0 on x86_64-pc-linux-gnu (Compiled Sept 2026)',
-    connectionPool: {
-      active: 8,
-      idle: 12,
-      max: 50,
-      utilizationPercent: 16,
-    },
+    databaseName: 'guidora_production_schema',
+    serverVersion: 'Backend-Agnostic Entity Layer v2.0',
+    architecture: 'RESTful Entity Architecture',
+    apiStatus: 'HEALTHY',
     cacheHitRatio: '99.4%',
-    tablesTotalCount: tables.length,
-    totalSizeBytes: tables.reduce((acc, t) => acc + t.tableSizeBytes, 0),
-    tables,
+    tablesTotalCount: entities.length,
+    entitiesTotalCount: entities.length,
+    entities,
+    // Preserve tables alias for test compatibility
+    tables: entities.map((e) => ({
+      name: e.name,
+      rowCount: e.count,
+      engine: 'REST Entity Model',
+      status: e.status,
+    })),
   };
 }
 
 export function adminTriggerVacuum(tableName) {
-  let customVacuum = {};
-  try {
-    customVacuum = JSON.parse(localStorage.getItem(VACUUM_STATUS_KEY) || '{}');
-  } catch (e) {}
-
-  customVacuum[tableName] = {
-    deadTuples: 0,
-    lastVacuum: 'Just now',
-    vacuumedAt: new Date().toISOString(),
-  };
-
-  localStorage.setItem(VACUUM_STATUS_KEY, JSON.stringify(customVacuum));
-
   adminAddLog(
-    'DATABASE_VACUUM_EXECUTED',
-    `VACUUM (VERBOSE, ANALYZE) on ${tableName}`,
+    'ENTITY_CACHE_PURGED',
+    `Cache purged for entity ${tableName}`,
     'info',
     {
-      entityName: 'DatabaseTable',
-      entityId: tableName,
-      category: 'DATABASE',
-      newValues: { command: `VACUUM ANALYZE ${tableName};`, status: 'SUCCESS' },
+      entityName: tableName,
+      category: 'SYSTEM',
+      newValues: { status: 'SUCCESS' },
     }
   );
-
-  return customVacuum[tableName];
+  return {
+    deadTuples: 0,
+    lastVacuum: 'Just now',
+  };
 }
 
 export function adminGetTableSchema(tableName) {
-  const schemas = {
-    products: [
-      { column: 'id', type: 'uuid', nullable: false, key: 'PK', default: 'gen_random_uuid()' },
-      { column: 'slug', type: 'varchar(150)', nullable: false, key: 'UNI', default: null, index: 'ix_products_slug (B-Tree)' },
-      { column: 'name', type: 'varchar(200)', nullable: false, key: '', default: null },
-      { column: 'tagline', type: 'varchar(300)', nullable: false, key: '', default: null },
-      { column: 'description', type: 'text', nullable: true, key: '', default: null },
-      { column: 'category_id', type: 'varchar(50)', nullable: false, key: 'FK', default: null, index: 'ix_products_category_id' },
-      { column: 'pricing', type: 'varchar(80)', nullable: false, key: '', default: "'Free'" },
-      { column: 'rating', type: 'numeric(3,2)', nullable: false, key: '', default: '0.00' },
-      { column: 'views_count', type: 'integer', nullable: false, key: '', default: '0' },
-      { column: 'is_verified', type: 'boolean', nullable: false, key: '', default: 'false' },
-      { column: 'metadata', type: 'jsonb', nullable: true, key: '', default: "'{}'::jsonb", index: 'ix_products_metadata_gin (GIN)' },
-      { column: 'search_vector', type: 'tsvector', nullable: true, key: '', default: 'GENERATED ALWAYS', index: 'ix_products_search_vector (GIN)' },
-      { column: 'xmin', type: 'xid', nullable: false, key: 'SYS', default: 'SYSTEM', note: 'PostgreSQL Row Version for Concurrency' },
-      { column: 'created_at', type: 'timestamptz', nullable: false, key: '', default: 'clock_timestamp()' },
-      { column: 'updated_at', type: 'timestamptz', nullable: false, key: '', default: 'clock_timestamp()' },
-    ],
-    categories: [
-      { column: 'id', type: 'varchar(50)', nullable: false, key: 'PK', default: null },
-      { column: 'name', type: 'varchar(100)', nullable: false, key: '', default: null },
-      { column: 'color', type: 'varchar(30)', nullable: false, key: '', default: "'#8A38F5'" },
-      { column: 'icon', type: 'varchar(50)', nullable: true, key: '', default: null },
-      { column: 'translations', type: 'jsonb', nullable: true, key: '', default: "'{}'::jsonb" },
-      { column: 'is_popular', type: 'boolean', nullable: false, key: '', default: 'false' },
-      { column: 'display_order', type: 'integer', nullable: false, key: '', default: '0' },
-      { column: 'xmin', type: 'xid', nullable: false, key: 'SYS', default: 'SYSTEM' },
-    ],
-    product_edit_proposals: [
-      { column: 'id', type: 'uuid', nullable: false, key: 'PK', default: 'gen_random_uuid()' },
-      { column: 'product_id', type: 'uuid', nullable: false, key: 'FK', default: null, index: 'ix_proposals_product_id' },
-      { column: 'proposer_id', type: 'uuid', nullable: false, key: 'FK', default: null },
-      { column: 'status', type: 'varchar(20)', nullable: false, key: '', default: "'Pending'", index: 'ix_proposals_status' },
-      { column: 'delta_changes', type: 'jsonb', nullable: false, key: '', default: null },
-      { column: 'review_notes', type: 'text', nullable: true, key: '', default: null },
-      { column: 'reviewed_by_id', type: 'uuid', nullable: true, key: 'FK', default: null },
-      { column: 'created_at', type: 'timestamptz', nullable: false, key: '', default: 'clock_timestamp()' },
-      { column: 'reviewed_at', type: 'timestamptz', nullable: true, key: '', default: null },
-    ],
-    audit_logs: [
-      { column: 'id', type: 'bigserial', nullable: false, key: 'PK', default: null },
-      { column: 'action', type: 'varchar(100)', nullable: false, key: '', default: null, index: 'ix_audit_logs_action' },
-      { column: 'entity_name', type: 'varchar(80)', nullable: false, key: '', default: null },
-      { column: 'entity_id', type: 'varchar(100)', nullable: true, key: '', default: null },
-      { column: 'level', type: 'varchar(20)', nullable: false, key: '', default: "'INFO'", index: 'ix_audit_logs_level' },
-      { column: 'category', type: 'varchar(30)', nullable: false, key: '', default: "'SYSTEM'" },
-      { column: 'actor_name', type: 'varchar(100)', nullable: false, key: '', default: null },
-      { column: 'actor_email', type: 'varchar(150)', nullable: true, key: '', default: null },
-      { column: 'actor_ip', type: 'inet', nullable: true, key: '', default: null },
-      { column: 'trace_id', type: 'varchar(64)', nullable: false, key: '', default: null, index: 'ix_audit_logs_trace_id' },
-      { column: 'old_values', type: 'jsonb', nullable: true, key: '', default: null },
-      { column: 'new_values', type: 'jsonb', nullable: true, key: '', default: null },
-      { column: 'created_at', type: 'timestamptz', nullable: false, key: '', default: 'clock_timestamp()', index: 'ix_audit_logs_created_at (BRIN)' },
-    ],
-    users: [
-      { column: 'id', type: 'uuid', nullable: false, key: 'PK', default: 'gen_random_uuid()' },
-      { column: 'email', type: 'varchar(255)', nullable: false, key: 'UNI', default: null, index: 'ix_users_email (B-Tree)' },
-      { column: 'username', type: 'varchar(60)', nullable: false, key: 'UNI', default: null, index: 'ix_users_username (B-Tree)' },
-      { column: 'password_hash', type: 'varchar(255)', nullable: false, key: '', default: null },
-      { column: 'role', type: 'varchar(30)', nullable: false, key: '', default: "'member'" },
-      { column: 'is_banned', type: 'boolean', nullable: false, key: '', default: 'false' },
-      { column: 'reputation', type: 'integer', nullable: false, key: '', default: '100' },
-      { column: 'created_at', type: 'timestamptz', nullable: false, key: '', default: 'clock_timestamp()' },
-    ],
-  };
-
-  return schemas[tableName] || [
+  const schemas = adminGetEntitySchemas();
+  const entity = schemas[tableName] || Object.values(schemas).find((s) => s.id === tableName);
+  if (entity) {
+    return entity.fields.map((f) => ({
+      column: f.name,
+      type: f.type,
+      nullable: !f.required,
+      key: f.isPrimaryKey ? 'PK' : f.isForeignKey ? 'FK' : f.isUnique ? 'UNI' : '',
+      default: f.isPrimaryKey ? 'UUID / Auto' : null,
+      description: f.description,
+      note: f.description,
+    }));
+  }
+  return [
     { column: 'id', type: 'uuid', nullable: false, key: 'PK', default: 'gen_random_uuid()' },
     { column: 'name', type: 'varchar(255)', nullable: false, key: '', default: null },
     { column: 'created_at', type: 'timestamptz', nullable: false, key: '', default: 'clock_timestamp()' },
   ];
 }
 
-// --- EF Core Migrations Timeline ---
 export function adminGetMigrations() {
   return [
     {
-      migrationId: '20260920084512_InitialCreate',
-      productVersion: 'Microsoft.EntityFrameworkCore.PostgreSQL 10.0.0',
+      migrationId: '20260920_InitialSchema',
+      productVersion: 'Guidora Schema v1.0',
       appliedAt: '2026-09-20 08:45:12 UTC',
       status: 'APPLIED',
-      description: 'Initial schema setup: Products, Categories, Users, Roles, Comments',
+      description: 'Initial domain schema: Products, Categories, Users, Roles, Comments',
     },
     {
-      migrationId: '20260922113000_AddProductEditProposals',
-      productVersion: 'Microsoft.EntityFrameworkCore.PostgreSQL 10.0.0',
+      migrationId: '20260922_ProductEditProposals',
+      productVersion: 'Guidora Schema v1.1',
       appliedAt: '2026-09-22 11:30:00 UTC',
       status: 'APPLIED',
-      description: 'Added ProductEditProposals table with JSONB delta storage & review workflows',
+      description: 'Added ProductEditProposals table with JSON delta storage & review workflows',
     },
     {
-      migrationId: '20260924141520_AddFullTextSearchTsVector',
-      productVersion: 'Microsoft.EntityFrameworkCore.PostgreSQL 10.0.0',
-      appliedAt: '2026-09-24 14:15:20 UTC',
-      status: 'APPLIED',
-      description: 'Generated tsvector SearchVector column with PostgreSQL GIN index on products',
-    },
-    {
-      migrationId: '20260925091244_AddAuditConcurrencyXmin',
-      productVersion: 'Microsoft.EntityFrameworkCore.PostgreSQL 10.0.0',
-      appliedAt: '2026-09-25 09:12:44 UTC',
-      status: 'APPLIED',
-      description: 'Configured xmin shadow property for optimistic concurrency token & Audit revert',
-    },
-    {
-      migrationId: '20260927160533_AddCategoryTaxonomyHierarchy',
-      productVersion: 'Microsoft.EntityFrameworkCore.PostgreSQL 10.0.0',
+      migrationId: '20260924_CategoryTaxonomyHierarchy',
+      productVersion: 'Guidora Schema v1.2',
       appliedAt: '2026-09-27 16:05:33 UTC',
       status: 'APPLIED',
-      description: 'Hierarchical category taxonomies and multi-lingual translation JSONB columns',
+      description: 'Hierarchical category taxonomies and multi-lingual translation models',
     },
     {
-      migrationId: '20260928172000_BootstrapAdminUniqueIndexFix',
-      productVersion: 'Microsoft.EntityFrameworkCore.PostgreSQL 10.0.0',
+      migrationId: '20260928_BootstrapAdminUnifiedIdentity',
+      productVersion: 'Guidora Schema v2.0',
       appliedAt: '2026-09-28 17:20:00 UTC',
       status: 'APPLIED',
-      description: 'PostgreSQL advisory locks & deterministic unique index for BootstrapAdminManager',
+      description: 'Decoupled single admin environment variable architecture and backend-agnostic contracts',
     },
   ];
 }
@@ -1239,7 +1429,6 @@ export function adminResetToDefaults() {
   localStorage.removeItem('guidora_all_users');
   localStorage.removeItem('guidora_custom_tools');
   localStorage.removeItem(ADMIN_LOGS_KEY);
-  localStorage.removeItem(VACUUM_STATUS_KEY);
   return true;
 }
 

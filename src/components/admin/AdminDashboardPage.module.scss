@@ -2425,6 +2425,662 @@
   text-decoration: underline;
 }
 
+// Schema & API Explorer Styles
+.schemaLayout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+  align-items: start;
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.schemaEntityList {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.schemaEntityHeader {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding: 6px 10px;
+}
+
+.schemaEntityItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-main, #e2e8f0);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  &.active {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.35);
+    color: #ffffff;
+  }
+}
+
+.entityItemMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.entityItemName {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.entityItemSub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.entityFieldCount {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+}
+
+.schemaDetailPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.entityHeaderCard {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.entityMetaRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.entityTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+}
+
+.entityDesc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 650px;
+}
+
+.copyJsonBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-main, #e2e8f0);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+  }
+}
+
+.relationRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.relationLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.relationBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: rgba(147, 51, 234, 0.12);
+  border: 1px solid rgba(147, 51, 234, 0.25);
+  color: #c084fc;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.pkBadge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(234, 179, 8, 0.15);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  color: #fde047;
+  font-size: 10px;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.fkBadge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+  font-size: 10px;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.uniBadge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+  font-size: 10px;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.indexBadge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  color: #c4b5fd;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.typeBadge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.requiredBadge {
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.optionalBadge {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.monoCell {
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.fieldDesc {
+  font-size: 12px;
+  color: var(--text-main, #e2e8f0);
+}
+
+.fieldExample {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+
+  code {
+    background: rgba(255, 255, 255, 0.06);
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: #93c5fd;
+  }
+}
+
+.jsonPreviewBox {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.jsonPreviewHeader {
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.jsonCodeBlock {
+  padding: 14px;
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #a5f3fc;
+  overflow-x: auto;
+  max-height: 280px;
+}
+
+// REST Endpoints Tab
+.endpointsWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.endpointCardList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.endpointCard {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+}
+
+.endpointCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.endpointPathBlock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.methodBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+
+  &.get {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+  &.post {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+  &.put {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+  &.delete {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+}
+
+.endpointPath {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+  font-family: monospace;
+}
+
+.endpointMetaRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.authBadge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+}
+
+.simulateBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 6px;
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  color: #a5b4fc;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.35);
+    color: #ffffff;
+  }
+}
+
+.endpointBody {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.endpointSummary {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.endpointDesc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.paramSection {
+  margin-top: 4px;
+}
+
+.paramTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.paramPills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.paramPill {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--text-muted);
+
+  code {
+    color: #93c5fd;
+    font-weight: 600;
+  }
+}
+
+.simulatedBox {
+  margin-top: 10px;
+  border-radius: 8px;
+  background: rgba(10, 15, 30, 0.85);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  overflow: hidden;
+}
+
+.simulatedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.simulatedStatusRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusCodeBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.simulatedLatency {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.simulatedTime {
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--text-muted);
+}
+
+.simulatedCode {
+  padding: 12px;
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #67e8f9;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+// Architecture Tab
+.architectureWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.archCard {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.08));
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.archTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.archSub {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 800px;
+  margin: 0;
+}
+
+.archFlowDiagram {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  gap: 16px;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+
+.archNode {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+}
+
+.archNodeHeader {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.archNodeDesc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.archNodeTags {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 4px;
+
+  span {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #93c5fd;
+  }
+}
+
+.archConnector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.archConnectorLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #a5b4fc;
+  font-family: monospace;
+  text-align: center;
+}
+
+.archConnectorLine {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  border-radius: 2px;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    border-top: 2px solid #a855f7;
+    border-right: 2px solid #a855f7;
+    transform: rotate(45deg);
+  }
+}
+
+.invariantsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.invariantCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  gap: 14px;
+}
+
+.invariantIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.invariantTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0 0 4px 0;
+}
+
+.invariantDesc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
 // Media Query Layout Adapters
 @media (max-width: 900px) {
   .sidebar {
@@ -2439,3 +3095,4 @@
     margin-left: 0;
   }
 }
+

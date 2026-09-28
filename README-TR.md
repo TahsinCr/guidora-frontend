@@ -238,16 +238,16 @@ npm test
 npm run test:watch
 ```
 
-Vitest ve Happy-DOM kullanarak bellek içi token güvenliği, mutex kilitli sessiz 401 oturum yenileme, mock API sözleşmeleri, devre kesici durum geçişleri, veritabanı şema ve SQL gezgini doğrulamaları, denetim günlüğü geri alma ve hız sınırı denetimlerini kapsayan **47 kritik testi** <500ms içinde yürütür.
+Vitest ve Happy-DOM kullanarak bellek içi token güvenliği, mutex kilitli sessiz 401 oturum yenileme, mock API sözleşmeleri, devre kesici durum geçişleri, veri mimarisi ve REST API sözleşme doğrulamaları, denetim günlüğü geri alma ve hız sınırı denetimlerini kapsayan **74 kritik testi** <700ms içinde yürütür.
 
-### Kurumsal Yönetici Çalışma Alanı & PostgreSQL 18 Yönetimi
+### Kurumsal Yönetici Çalışma Alanı & Veri Mimarisi Gezgini
 
 Guidora, sistem yöneticileri ve içerik moderatörleri için sıfırdan tasarlanmış profesyonel bir yönetim çalışma alanı (`AdminDashboardPage`) sunar:
 
 - **Küçültülüp Büyültülebilen Kenar Çubuğu (Collapsible Sidebar)**: Klasik kurumsal arayüz prensiplerine uygun, tam genişlik (260px) ve kompakt simge (76px) arasında akıcı geçiş yapabilen, `localStorage` ile durumunu hatırlayan ve `Ctrl+B` / `Cmd+B` kısayoluyla kontrol edilebilen sol panel (`AdminSidebar.jsx`).
 - **Analitik & İnteraktif SVG Grafikleri**: 14 günlük API istek hacmi ve p95 gecikme sürelerini yumuşak eğrilerle görselleştiren interaktif SVG alanı grafiği (`OverviewTab.jsx`), kategoriye göre araç dağılım çubukları ve SLA metrikleri.
-- **PostgreSQL 18 Veritabanı & Şema Yönetimi**: `products`, `categories`, `audit_logs`, `product_edit_proposals` dahil 10 ana tablonun satır sayıları, disk boyutları ve ölü demet (dead tuples) durumları, tek tıkla `VACUUM (VERBOSE, ANALYZE)` çalıştırma, EF Core 10 migration zaman çizelgesi ve güvenli salt-okunur (SELECT) SQL Sorgu Gezgini (`DatabaseTab.jsx`).
-- **Üst Seviye Denetim Günlüğü & JSONB Diff**: Çok kanallı filtreleme, OpenTelemetry W3C trace kimlikleri ve istemci IP denetimi, yan yana `oldValues` vs `newValues` renkli fark gösterimi (`JsonbDiffModal.jsx`) ve PostgreSQL `xmin` eşzamanlılık korumalı tek tıkla değişiklik geri alma (`Audit.Revert`).
+- **Backend'den Bağımsız Veri Modeli & REST API Gezgini**: `Product/ToolItem`, `Category`, `Tag`, `User`, `Proposal`, `Review`, `Report`, `AuditLog` dahil 8 temel varlık modelinin alan tipleri, ilişkileri, örnek JSON yükleri ve 12 standart REST API uç noktasını (`GET`, `POST`, `PUT`, `DELETE`) anlık simülasyonla test edebilen entegre sözleşme gezgini (`SchemaTab.jsx`).
+- **Üst Seviye Denetim Günlüğü & JSONB Diff**: Çok kanallı filtreleme, OpenTelemetry W3C trace kimlikleri ve istemci IP denetimi, yan yana `oldValues` vs `newValues` renkli fark gösterimi (`JsonbDiffModal.jsx`) ve tek tıkla eylem geri alma (`Audit.Revert`).
 - **Topluluk Teklif Sırası & Moderasyon**: Kullanıcıların önerdiği araç düzenlemelerini alan bazlı farklarla inceleme, tek tıkla kataloğa uygulama (`ProposalsTab.jsx`), kullanıcı şikayetleri ve inceleme moderasyonu.
 
 ### Çift Katmanlı Konfigürasyon Mimarisi

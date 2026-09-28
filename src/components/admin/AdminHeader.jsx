@@ -13,18 +13,19 @@ import {
 import styles from './AdminDashboardPage.module.scss';
 
 const TAB_TITLES = {
-  overview: { title: 'Genel Bakış & Analitik', breadcrumb: 'Platform / Overview' },
-  database: { title: 'PostgreSQL 18 Veritabanı & Şema', breadcrumb: 'Platform / Database (PG18)' },
-  logs: { title: 'Denetim & Sistem Logları', breadcrumb: 'Platform / Audit Logs' },
-  tools: { title: 'Araç Kataloğu Yönetimi', breadcrumb: 'Yönetişim / Tools' },
-  proposals: { title: 'Topluluk Düzenleme Teklifleri', breadcrumb: 'Yönetişim / Proposals Queue' },
-  categories: { title: 'Kategori Taksonomisi', breadcrumb: 'Yönetişim / Categories' },
-  tags: { title: 'Etiket Grupları & Sınıflandırma', breadcrumb: 'Yönetişim / Tags' },
-  users: { title: 'Kullanıcı Hesapları & Rol İzinleri', breadcrumb: 'Topluluk / Users & Roles' },
-  organizations: { title: 'Yapay Zeka Kuruluşları & Doğrulama', breadcrumb: 'Topluluk / Organizations' },
-  reports: { title: 'Kullanıcı Şikayetleri & Moderasyon', breadcrumb: 'Güvenlik / Reports' },
-  reviews: { title: 'Topluluk İncelemeleri & Yorumlar', breadcrumb: 'Topluluk / Reviews' },
-  system: { title: 'Sistem Yapılandırması & Bakım', breadcrumb: 'Altyapı / System' },
+  overview: { title: 'Genel Bakış & Analitik', breadcrumb: 'Platform / Genel Bakış' },
+  schema: { title: 'Veri Modeli & REST API Tasarımı', breadcrumb: 'Platform / Veri Modeli & API' },
+  database: { title: 'Veri Modeli & REST API Tasarımı', breadcrumb: 'Platform / Veri Modeli & API' },
+  logs: { title: 'Denetim & Sistem Logları', breadcrumb: 'Platform / Denetim Logları' },
+  tools: { title: 'Araç Kataloğu Yönetimi', breadcrumb: 'Yönetişim / Araçlar' },
+  proposals: { title: 'Topluluk Düzenleme Teklifleri', breadcrumb: 'Yönetişim / Teklif Kuyruğu' },
+  categories: { title: 'Kategori Taksonomisi', breadcrumb: 'Yönetişim / Kategoriler' },
+  tags: { title: 'Etiket Grupları & Sınıflandırma', breadcrumb: 'Yönetişim / Etiketler' },
+  users: { title: 'Kullanıcı Hesapları & Rol İzinleri', breadcrumb: 'Topluluk / Kullanıcılar & Roller' },
+  organizations: { title: 'Yapay Zeka Kuruluşları & Doğrulama', breadcrumb: 'Topluluk / Kuruluşlar' },
+  reports: { title: 'Kullanıcı Şikayetleri & Moderasyon', breadcrumb: 'Güvenlik / Şikayetler' },
+  reviews: { title: 'Topluluk İncelemeleri & Yorumlar', breadcrumb: 'Topluluk / Değerlendirmeler' },
+  system: { title: 'Sistem Yapılandırması & Bakım', breadcrumb: 'Altyapı / Sistem' },
 };
 
 export default function AdminHeader({
@@ -34,7 +35,7 @@ export default function AdminHeader({
   onGlobalSearchChange,
   onExportData,
   onImportData,
-  dbStatus = { isOnline: true, latencyMs: 8, engine: 'PostgreSQL 18.0' },
+  dbStatus = { isOnline: true, latencyMs: 8, status: 'ONLINE' },
   currentUser,
 }) {
   const fileInputRef = useRef(null);
@@ -77,15 +78,15 @@ export default function AdminHeader({
 
       {/* Center: Live Platform Status Indicators */}
       <div className={styles.headerCenter}>
-        <div className={styles.statusPill} title="PostgreSQL 18 Veritabanı Kümesi">
+        <div className={styles.statusPill} title="REST API ve Servis Katmanı Sağlığı">
           <span className={`${styles.statusDot} ${dbStatus.isOnline ? styles.online : styles.offline}`} />
-          <Database size={13} className={styles.statusPillIcon} />
-          <span className={styles.statusPillText}>PG18: {dbStatus.isOnline ? `ONLINE (${dbStatus.latencyMs}ms)` : 'OFFLINE'}</span>
+          <Activity size={13} className={styles.statusPillIcon} />
+          <span className={styles.statusPillText}>API: {dbStatus.isOnline ? `AKTİF (${dbStatus.latencyMs || 8}ms)` : 'DEVRE DIŞI'}</span>
         </div>
 
         <div className={styles.statusPill} title="Circuit Breaker Durumu">
           <span className={`${styles.statusDot} ${styles.online}`} />
-          <Activity size={13} className={styles.statusPillIcon} />
+          <CheckCircle2 size={13} className={styles.statusPillIcon} />
           <span className={styles.statusPillText}>Circuit: CLOSED</span>
         </div>
 

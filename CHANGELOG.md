@@ -8,22 +8,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Backend-Agnostic Admin Workspace & REST API Explorer (`SchemaTab.jsx`)**:
+  - Decoupled the Admin Panel completely from specific backend and database implementations (PostgreSQL 18, EF Core migrations, VACUUM commands, and dead tuples), ensuring the frontend remains 100% compatible whether the backend is powered by .NET, Java (Spring Boot), Go, or Node.js.
+  - Replaced the relational engine tab with `SchemaTab.jsx`, featuring three interactive views:
+    1. **Alan Şemaları & Varlık Modeli (`entities`)**: Interactive explorer for 8 core domain models (`Product/ToolItem`, `Category`, `Tag`, `User`, `ProductEditProposal`, `Review`, `Report`, `AuditLog`) displaying field types, required flags, primary/foreign key badges, relationships diagram, and formatted JSON payload previews with one-click copy.
+    2. **REST API Sözleşmeleri (`endpoints`)**: Searchable directory of 12 standard REST API contracts (`/api/products`, `/api/auth/*`, `/api/proposals/*`, `/health/live`) detailing HTTP methods (`GET`, `POST`, `PUT`, `DELETE`), authorization levels (`Public`, `Member`, `Admin`), query parameters, request schemas, status codes, and an interactive live test simulator.
+    3. **Sistem Mimarisi (`architecture`)**: Architectural blueprint mapping the React SPA to RESTful contracts, stateless JWT authentication, and backend-agnostic data storage.
+  - Modernized `AdminSidebar.jsx`: renamed tab to `Veri Modeli & API` with `Layers` icon and `8` entity badge, updated branding subtitle to `Yönetim Konsolu`, and reorganized navigation into 3 clean groups.
+  - Updated `AdminHeader.jsx`: replaced vendor-specific `PG18: ONLINE` pill with generic `API: AKTİF (8ms)` status pill and updated breadcrumb titles.
+  - Refactored `OverviewTab.jsx`: replaced database engine KPI and SLA cards with backend-agnostic entity architecture, REST API metrics, and connection capacity indicators.
+  - Updated `tests/services/adminService.test.js` to comprehensively test entity schemas, field definitions, relationships, REST API endpoints, query explorer, proposals, and audit logs — achieving **74 passing tests** across 12 test suites.
+
 - **Single Administrator Environment Variable & Backend-Agnostic Client Decoupling**:
   - Eliminated duplicate `VITE_MOCK_ADMIN_*` variables in `.env` and `.env.example`, consolidating strictly to a single `MOCK_ADMIN_*` definition (`MOCK_ADMIN_USERNAME`, `MOCK_ADMIN_EMAIL`, `MOCK_ADMIN_PASSWORD`).
   - Completely decoupled frontend bundle (`src/services/authService.js`, `src/services/userService.js`) from mock passwords or client-side authentication checks; purged passwords dictionary and plain-text storage from `localStorage`.
   - Upgraded authentication flow (`authService.js` and `AuthModal.jsx`) to be 100% backend-agnostic: the client sends credentials to `/api/auth/login` and receives the authenticated user session directly from the server response whether running against Vite's in-process mock engine, standalone Docker container, or real .NET 10 WebAPI.
   - Aligned server configurations (`infra/mock-server/mockHandler.js`, `vite.config.js`, `docker-compose.yml`) to seamlessly support both `MOCK_ADMIN_*` and .NET backend's `BOOTSTRAP_ADMIN_*`.
 
-- **Enterprise Collapsible Admin Workspace & PostgreSQL 18 Management Architecture**:
+- **Enterprise Collapsible Admin Workspace & Management Architecture**:
   - Completely re-architected `AdminDashboardPage.jsx` into a modular, enterprise-grade admin workspace adhering to Guidora's cyber slate and dark glassmorphism design system.
   - Implemented classic collapsible left navigation sidebar (`AdminSidebar.jsx`) with smooth width transition (260px expanded $\leftrightarrow$ 76px compact), persistent localStorage state (`guidora_admin_sidebar_collapsed`), keyboard shortcut (`Ctrl+B` / `Cmd+B`), categorical sections, real-time badge counters, and off-canvas mobile drawer.
-  - Created top workspace header (`AdminHeader.jsx`) equipped with active tab breadcrumbs, real-time live cluster status pills (`PG18: ONLINE 8ms`, `Circuit: CLOSED`, `Cache: 99.4%`), quick global search, and platform JSON backup export/import controls.
+  - Created top workspace header (`AdminHeader.jsx`) equipped with active tab breadcrumbs, real-time live platform status pills (`API: AKTİF 8ms`, `Circuit: CLOSED`, `Cache: 99.4%`), quick global search, and platform JSON backup export/import controls.
   - Built interactive SVG traffic and latency analytics chart (`OverviewTab.jsx`) plotting 14-day requests and p95 latency curves with gradient fill, data nodes, and interactive hover tooltip, alongside category distribution bars and system SLA gauges.
-  - Implemented dedicated PostgreSQL 18 database management tab (`DatabaseTab.jsx`) inspecting 10 core tables with storage sizes, index overhead, dead tuple counts, on-demand `VACUUM (VERBOSE, ANALYZE)` execution, interactive EF Core 10 migrations timeline (`__EFMigrationsHistory`), and safe read-only SQL Query Explorer (`adminExecuteQuery`) with preset queries, execution duration benchmarks, and CSV export.
-  - Implemented multi-channel audit log hub (`LogsTab.jsx`) with level and category filters, free-text search across actor IP and OpenTelemetry trace IDs, and deep inspection modal (`JsonbDiffModal.jsx`) featuring side-by-side JSONB diff highlighting and automated audit rollback (`adminRevertAuditLog`) with PostgreSQL `xmin` concurrency validation.
+  - Implemented multi-channel audit log hub (`LogsTab.jsx`) with level and category filters, free-text search across actor IP and OpenTelemetry trace IDs, and deep inspection modal (`JsonbDiffModal.jsx`) featuring side-by-side JSONB diff highlighting and automated audit rollback (`adminRevertAuditLog`).
   - Implemented governance review queue (`ProposalsTab.jsx`) for community `ProductEditProposals` featuring side-by-side field delta comparison and one-click catalog integration.
   - Implemented comprehensive moderation and administration tabs: `ToolsTab.jsx` with batch operations and inline `ToolStudioForm` editing, `CategoriesTab.jsx` with color swatches and `UnifiedTranslationModal`, `TagsTab.jsx` with taxonomy group hierarchy, `UsersTab.jsx` with role switching and initial password reveal, `OrganizationsTab.jsx`, `ReportsTab.jsx`, `ReviewsTab.jsx`, and `SystemTab.jsx` with maintenance mode scheduling and cache purging.
-  - Added full test suite in `tests/services/adminService.test.js` covering database statistics, VACUUM execution, column schemas, EF Core migrations, SQL query runner safety, proposal queues, audit reversion, and time series metrics, expanding test coverage to **47 passing tests**.
 
 - **Unified In-Process Dev Mock Server & Bootstrap Admin Environment Integration**:
   - Implemented `infra/mock-server/mockHandler.js` providing an integrated, zero-dependency mock API handler shared seamlessly between Vite dev server middleware, standalone Node.js server, and Docker containers.

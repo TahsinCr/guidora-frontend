@@ -20,7 +20,7 @@ import AdminHeader from './AdminHeader';
 
 // Admin Tabs
 import OverviewTab from './tabs/OverviewTab';
-import DatabaseTab from './tabs/DatabaseTab';
+import SchemaTab from './tabs/SchemaTab';
 import LogsTab from './tabs/LogsTab';
 import ToolsTab from './tabs/ToolsTab';
 import ProposalsTab from './tabs/ProposalsTab';
@@ -162,7 +162,8 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
     const criticalL = logs.filter((l) => l.level === 'CRITICAL').length;
 
     return {
-      tables: 10,
+      schema: 8,
+      tables: 8,
       toolsCount: tools.length,
       categoriesCount: categories.length - 1,
       usersCount: users.length,
@@ -246,11 +247,10 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
             />
           )}
 
-          {activeTab === 'database' && (
-            <DatabaseTab
+          {(activeTab === 'schema' || activeTab === 'database') && (
+            <SchemaTab
               tools={tools}
               categories={categories}
-              users={users}
             />
           )}
 
