@@ -286,7 +286,7 @@ docker compose down
 ```
 
 > **Gelecekteki Monorepo / Backend Entegrasyonu Notu**:
-> Ön yüz ve gerçek `.NET 10 WebAPI` projeleri tek bir repoda veya aynı sunucu ortamında birleştirildiğinde, `docker-compose.yml` içerisindeki `backend` servisini gerçek backend Dockerfile veya imajına yönlendirmeniz yeterlidir. Nginx dahili proxy'si (`http://backend:8080/api/`) ve istemci rotaları, ön yüz kodunda hiçbir değişiklik gerektirmeden sorunsuz şekilde gerçek servise bağlanacaktır.
+> Ön yüz ve gerçek `.NET 10 WebAPI` projeleri tek bir repoda veya aynı sunucu ortamında birleştirildiğinde, `docker-compose.yml` içerisindeki `backend` servisini gerçek backend dockerfile veya imajına yönlendirmeniz yeterlidir. Nginx dahili proxy'si (`http://backend:8080/api/`) ve istemci rotaları, ön yüz kodunda hiçbir değişiklik gerektirmeden sorunsuz şekilde gerçek servise bağlanacaktır.
 
 ## Lisans
 

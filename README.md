@@ -286,7 +286,7 @@ docker compose down
 ```
 
 > **Note for Future Monorepo / Backend Integration**:
-> When combining this frontend with the real `.NET 10 WebAPI` repository, simply update the `backend` service definition in `docker-compose.yml` to point to the backend's Dockerfile or image. Nginx's internal proxy (`http://backend:8080/api/`) and the client routing will connect seamlessly without any frontend code modifications.
+> When combining this frontend with the real `.NET 10 WebAPI` repository, simply update the `backend` service definition in `docker-compose.yml` to point to the backend's dockerfile or image. Nginx's internal proxy (`http://backend:8080/api/`) and the client routing will connect seamlessly without any frontend code modifications.
 
 ## License
 

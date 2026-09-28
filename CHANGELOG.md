@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Standardized Container Build Specifications to Lowercase `dockerfile`**:
+  - Renamed root build file `Dockerfile` to lowercase `dockerfile`.
+  - Renamed mock backend server build file `infra/mock-server/Dockerfile` to lowercase `dockerfile`.
+  - Aligned service build configurations in `docker-compose.yml` (`frontend.build.dockerfile: dockerfile` and `backend.build.dockerfile: dockerfile`).
+  - Updated documentation references across `README.md` and `README-TR.md`.
+
 ### Added
 
 - **Backend-Agnostic Admin Workspace & REST API Explorer (`SchemaTab.jsx`)**:
