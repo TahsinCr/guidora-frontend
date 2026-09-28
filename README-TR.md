@@ -233,18 +233,28 @@ Guidora, derleme zamanı sabitlerini operasyonel çalışma zamanı parametreler
    - Statik dosyalarla birlikte dağıtılır; Docker container'ı yeniden derlemeden sunucu üzerinden anında düzenlenebilir.
    - Ağ zaman aşımları (varsayılan 8s, yükleme 25s), yeniden deneme kuralları, devre kesici (circuit breaker) eşikleri ve bakım modunu yönetir.
 
-### Canlı Ortam Docker Dağıtımı
+### Bağımsız Docker ve Canlı Ortam Dağıtımı
 
-Çok aşamalı (multi-stage) derleme mimarisi, optimize edilmiş Nginx çalışma ortamı (<30 MB) ve sıfır-CORS ters vekil sunucu desteği ile hazır Docker altyapısı:
+Çok aşamalı (multi-stage) derleme mimarisi, optimize edilmiş Nginx çalışma ortamı (<30 MB), sıfır-CORS ters vekil sunucu desteği ve bağımsız yerel testler için hazır demo mock backend altyapısı:
 
 ```bash
-# Ön yüz konteynerini bağımsız derleyin ve çalıştırın
-docker build -t guidora-frontend .
-docker run -d -p 80:80 --name guidora-ui guidora-frontend
+# 1. Ortam değişkenlerini hazırlayın (varsayılanlar: FRONTEND_PORT=80, MOCK_API_PORT=8080)
+cp .env.example .env
 
-# Ya da tüm sistemi (Ön yüz + .NET 10 API + PostgreSQL + Redis) tek komutla ayağa kaldırın
+# 2. Bağımsız ön yüz ve entegre demo mock backend konteynerlerini ayağa kaldırın
 docker compose up -d --build
+
+# 3. Tarayıcıdan erişin
+# Ön Yüz: http://localhost (veya belirlediğiniz FRONTEND_PORT)
+# Mock Backend Sağlık Kontrolü: http://localhost:8080/health/live (veya MOCK_API_PORT)
+
+# 4. Logları inceleme veya durdurma
+docker compose logs -f
+docker compose down
 ```
+
+> **Gelecekteki Monorepo / Backend Entegrasyonu Notu**:
+> Ön yüz ve gerçek `.NET 10 WebAPI` projeleri tek bir repoda veya aynı sunucu ortamında birleştirildiğinde, `docker-compose.yml` içerisindeki `backend` servisini gerçek backend Dockerfile veya imajına yönlendirmeniz yeterlidir. Nginx dahili proxy'si (`http://backend:8080/api/`) ve istemci rotaları, ön yüz kodunda hiçbir değişiklik gerektirmeden sorunsuz şekilde gerçek servise bağlanacaktır.
 
 ## Lisans
 

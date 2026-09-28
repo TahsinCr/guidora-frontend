@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Isolated Standalone Docker Compose & Demo Mock Backend**:
+  - Decoupled `docker-compose.yml` to run the frontend repository in complete isolation without requiring the separate .NET backend repository on disk.
+  - Implemented lightweight zero-dependency Node 22 Alpine mock API server container (`infra/mock-server/`) emulating core .NET 10 WebAPI contracts (`/health/live`, `/api/auth/*`, `/api/categories`, `/api/products`).
+  - Configured Nginx internal proxy (`http://backend:8080/api/`) and host port mappings (`FRONTEND_PORT=80`, `MOCK_API_PORT=8080`) through `.env.example` and `.env`.
+  - Mounts `public/config.json` directly from the host into `/usr/share/nginx/html/config.json:ro`, allowing on-the-fly runtime configuration changes without container rebuilds.
+  - Ready for future zero-code monorepo reunification by simply replacing the mock backend service with the real .NET container.
 - **Automatic Browser-Based Theme & Language Detection**:
   - Implemented automatic initial theme detection in `ThemeContext.jsx` using `window.matchMedia('(prefers-color-scheme: light)')`. If the user hasn't explicitly chosen a theme, it adapts to their OS/browser dark/light mode and listens to real-time system theme changes.
   - Implemented automatic initial language detection in `LanguageContext.jsx` parsing `navigator.languages` and `navigator.language` to seamlessly match Turkish (`tr`), Russian (`ru`), or English (`en`) without disrupting stored user overrides.
