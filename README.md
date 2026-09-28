@@ -224,7 +224,7 @@ The compiled, production-ready static assets will be output to the `dist/` direc
 
 Guidora implements a dual-layer configuration strategy separating build-time constants from runtime operational parameters:
 
-1. **Build-Time (`.env`, `.env.production`)**:
+1. **Build-Time (`.env`, `.env.example`)**:
    - `VITE_API_BASE_URL`: Base URL or relative path (`/api`) for backend communication.
    - `VITE_ALLOW_MOCK_FALLBACK`: Set to `false` in production to ensure genuine server failure visibility.
    - `VITE_DROP_CONSOLE`: Strips debug logs from production bundles.

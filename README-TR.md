@@ -224,7 +224,7 @@ Derlenmiş ve optimize edilmiş statik dosyalar `dist/` klasörüne aktarılır.
 
 Guidora, derleme zamanı sabitlerini operasyonel çalışma zamanı parametrelerinden ayıran çift katmanlı bir yapılandırma modeli kullanır:
 
-1. **Derleme Zamanı (`.env`, `.env.production`)**:
+1. **Derleme Zamanı (`.env`, `.env.example`)**:
    - `VITE_API_BASE_URL`: Backend API taban yolu (`/api`).
    - `VITE_ALLOW_MOCK_FALLBACK`: Canlıda gerçek hataları görebilmek için `false`.
    - `VITE_DROP_CONSOLE`: Üretim paketlerinde konsol loglarını temizler.
