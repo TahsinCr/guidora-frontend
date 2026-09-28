@@ -7,8 +7,8 @@ export const MOCK_USERS = [
   {
     id: 'usr_admin_01',
     name: 'Tahsin Cr',
-    username: import.meta.env?.VITE_MOCK_ADMIN_USERNAME || 'tahsincr',
-    email: import.meta.env?.VITE_MOCK_ADMIN_EMAIL || 'tahsincrs@gmail.com',
+    username: 'tahsincr',
+    email: 'tahsincrs@gmail.com',
     role: 'admin', // 'admin' | 'moderator' | 'creator' | 'member'
     avatar: 'TC',
     title: 'Lead AI Engineer & Product Architect',

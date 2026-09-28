@@ -257,7 +257,7 @@ Guidora implements a dual-layer configuration strategy separating build-time con
 1. **Build-Time (`.env`, `.env.example`)**:
    - `VITE_API_BASE_URL`: Base URL or relative path (`/api`) for backend communication.
    - `VITE_USE_MOCK`: Set to `true` (default) for seamless in-process mock API or `false` for live backend proxy.
-   - `MOCK_ADMIN_*` / `VITE_MOCK_ADMIN_*`: Administrator credentials matching backend `BOOTSTRAP_ADMIN_*`.
+   - `MOCK_ADMIN_*`: Administrator credentials matching backend `BOOTSTRAP_ADMIN_*` (Node/server/Docker level, decoupled from browser bundle).
    - `VITE_ALLOW_MOCK_FALLBACK`: Set to `false` in production to ensure genuine server failure visibility.
    - `VITE_DROP_CONSOLE`: Strips debug logs from production bundles.
 

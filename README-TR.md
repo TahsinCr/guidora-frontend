@@ -257,7 +257,7 @@ Guidora, derleme zamanı sabitlerini operasyonel çalışma zamanı parametreler
 1. **Derleme Zamanı (`.env`, `.env.example`)**:
    - `VITE_API_BASE_URL`: Backend API taban yolu (`/api`).
    - `VITE_USE_MOCK`: Yerel mock API motoru için `true` (varsayılan), gerçek backend yönlendirmesi için `false`.
-   - `MOCK_ADMIN_*` / `VITE_MOCK_ADMIN_*`: Backend `BOOTSTRAP_ADMIN_*` ile uyumlu yönetici kimlik bilgileri.
+   - `MOCK_ADMIN_*`: Backend `BOOTSTRAP_ADMIN_*` ile uyumlu yönetici kimlik bilgileri (Node/sunucu/Docker katmanında, istemci tarayıcı paketinden tamamen yalıtılmış).
    - `VITE_ALLOW_MOCK_FALLBACK`: Canlıda gerçek hataları görebilmek için `false`.
    - `VITE_DROP_CONSOLE`: Üretim paketlerinde konsol loglarını temizler.
 

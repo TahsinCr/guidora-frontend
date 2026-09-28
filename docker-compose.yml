@@ -38,6 +38,14 @@ services:
     restart: unless-stopped
     ports:
       - "${MOCK_API_PORT:-8080}:8080"
+    environment:
+      - PORT=8080
+      - MOCK_ADMIN_USERNAME=${MOCK_ADMIN_USERNAME:-tahsincr}
+      - MOCK_ADMIN_EMAIL=${MOCK_ADMIN_EMAIL:-tahsincrs@gmail.com}
+      - MOCK_ADMIN_PASSWORD=${MOCK_ADMIN_PASSWORD:-9PS1CgoOmsBIj5O9V7SQfDZMIibHvI4Q}
+      - BOOTSTRAP_ADMIN_USERNAME=${MOCK_ADMIN_USERNAME:-tahsincr}
+      - BOOTSTRAP_ADMIN_EMAIL=${MOCK_ADMIN_EMAIL:-tahsincrs@gmail.com}
+      - BOOTSTRAP_ADMIN_PASSWORD=${MOCK_ADMIN_PASSWORD:-9PS1CgoOmsBIj5O9V7SQfDZMIibHvI4Q}
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health/live || exit 1"]
       interval: 5s

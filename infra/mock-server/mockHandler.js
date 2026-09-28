@@ -146,7 +146,6 @@ export function createMockApiHandler(options = {}) {
   const adminEmail = (
     options.adminEmail ||
     process.env.MOCK_ADMIN_EMAIL ||
-    process.env.VITE_MOCK_ADMIN_EMAIL ||
     process.env.BOOTSTRAP_ADMIN_EMAIL ||
     'tahsincrs@gmail.com'
   ).toLowerCase().trim();
@@ -154,7 +153,6 @@ export function createMockApiHandler(options = {}) {
   const adminPassword = (
     options.adminPassword ||
     process.env.MOCK_ADMIN_PASSWORD ||
-    process.env.VITE_MOCK_ADMIN_PASSWORD ||
     process.env.BOOTSTRAP_ADMIN_PASSWORD ||
     '9PS1CgoOmsBIj5O9V7SQfDZMIibHvI4Q'
   ).trim();
@@ -162,7 +160,6 @@ export function createMockApiHandler(options = {}) {
   const adminUsername = (
     options.adminUsername ||
     process.env.MOCK_ADMIN_USERNAME ||
-    process.env.VITE_MOCK_ADMIN_USERNAME ||
     process.env.BOOTSTRAP_ADMIN_USERNAME ||
     'tahsincr'
   ).trim();

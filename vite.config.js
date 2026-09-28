@@ -10,9 +10,9 @@ function guidoraMockPlugin(env) {
   if (!useMock) return null;
 
   const mockHandler = createMockApiHandler({
-    adminUsername: env.MOCK_ADMIN_USERNAME || env.VITE_MOCK_ADMIN_USERNAME || env.BOOTSTRAP_ADMIN_USERNAME,
-    adminEmail: env.MOCK_ADMIN_EMAIL || env.VITE_MOCK_ADMIN_EMAIL || env.BOOTSTRAP_ADMIN_EMAIL,
-    adminPassword: env.MOCK_ADMIN_PASSWORD || env.VITE_MOCK_ADMIN_PASSWORD || env.BOOTSTRAP_ADMIN_PASSWORD,
+    adminUsername: env.MOCK_ADMIN_USERNAME || env.BOOTSTRAP_ADMIN_USERNAME,
+    adminEmail: env.MOCK_ADMIN_EMAIL || env.BOOTSTRAP_ADMIN_EMAIL,
+    adminPassword: env.MOCK_ADMIN_PASSWORD || env.BOOTSTRAP_ADMIN_PASSWORD,
   });
 
   return {

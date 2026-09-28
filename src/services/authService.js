@@ -3,33 +3,12 @@ import * as authApi from './api/authApi';
 import { clearAccessToken } from './api/tokenManager';
 
 const AUTH_USER_KEY = 'guidora_current_user';
-const PASSWORDS_KEY = 'guidora_user_passwords';
-
-const MOCK_ADMIN_EMAIL = (import.meta.env?.VITE_MOCK_ADMIN_EMAIL || 'tahsincrs@gmail.com').toLowerCase().trim();
-const MOCK_ADMIN_PASSWORD = (import.meta.env?.VITE_MOCK_ADMIN_PASSWORD || '9PS1CgoOmsBIj5O9V7SQfDZMIibHvI4Q').trim();
-const MOCK_ADMIN_USERNAME = (import.meta.env?.VITE_MOCK_ADMIN_USERNAME || 'tahsincr').trim();
-
-// Seed default password for mock admin
-function getStoredPasswords() {
-  try {
-    const raw = localStorage.getItem(PASSWORDS_KEY);
-    return raw ? JSON.parse(raw) : {
-      [MOCK_ADMIN_EMAIL]: MOCK_ADMIN_PASSWORD,
-      [MOCK_ADMIN_USERNAME]: MOCK_ADMIN_PASSWORD,
-    };
-  } catch (e) {
-    return {
-      [MOCK_ADMIN_EMAIL]: MOCK_ADMIN_PASSWORD,
-      [MOCK_ADMIN_USERNAME]: MOCK_ADMIN_PASSWORD,
-    };
-  }
-}
 
 export async function login({ usernameOrEmail, password, rememberMe = false }) {
   const cleanInput = usernameOrEmail.trim();
   const cleanPass = password.trim();
 
-  // Try real .NET 10 WebAPI login first
+  // 1. Authenticate via backend API (works identically for Vite in-process mock engine and real .NET 10 WebAPI)
   try {
     const apiResult = await authApi.login({
       email: cleanInput,
@@ -38,20 +17,21 @@ export async function login({ usernameOrEmail, password, rememberMe = false }) {
     });
 
     if (apiResult) {
+      const returnedUser = apiResult?.data?.user || apiResult?.user || apiResult?.data;
       const user = {
-        id: `usr_${cleanInput.toLowerCase()}`,
-        name: cleanInput.split('@')[0],
-        username: cleanInput.split('@')[0],
-        email: cleanInput,
-        role: 'admin',
-        avatar: cleanInput.slice(0, 2).toUpperCase(),
-        title: 'Platform Member',
-        bio: 'Verified Guidora User',
-        location: 'Global',
-        joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-        savedToolIds: [],
-        submittedToolIds: [],
-        reputation: 500,
+        id: returnedUser?.id || `usr_${cleanInput.toLowerCase()}`,
+        name: returnedUser?.name || cleanInput.split('@')[0],
+        username: returnedUser?.username || cleanInput.split('@')[0],
+        email: returnedUser?.email || cleanInput,
+        role: returnedUser?.role || 'member',
+        avatar: returnedUser?.avatar || cleanInput.slice(0, 2).toUpperCase(),
+        title: returnedUser?.title || (returnedUser?.role === 'admin' ? 'Lead AI Engineer & Product Architect' : 'Platform Member'),
+        bio: returnedUser?.bio || 'Verified Guidora User',
+        location: returnedUser?.location || 'Global',
+        joinedDate: returnedUser?.joinedDate || new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        savedToolIds: returnedUser?.savedToolIds || ['neurogen-studio', 'cursor-editor', 'midjourney', 'v0-dev'],
+        submittedToolIds: returnedUser?.submittedToolIds || ['neurogen-studio'],
+        reputation: returnedUser?.reputation || (returnedUser?.role === 'admin' ? 980 : 500),
       };
 
       localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
@@ -61,52 +41,33 @@ export async function login({ usernameOrEmail, password, rememberMe = false }) {
       return user;
     }
   } catch (apiErr) {
-    // If backend is offline (statusCode 0), gracefully fall back to local demo authentication
+    // If backend returned an active validation or auth failure, display message
     if (apiErr.statusCode !== 0 && apiErr.statusCode !== 404 && apiErr.statusCode !== 502) {
-      // It's a genuine 401 or validation error from active backend
       throw new Error(apiErr.message || 'Geçersiz kullanıcı adı veya şifre.');
+    }
+    // If client is configured to disallow offline fallback, throw connection error
+    if (import.meta.env?.VITE_ALLOW_MOCK_FALLBACK === 'false') {
+      throw new Error(apiErr.message || 'Sunucuya bağlanılamadı.');
     }
   }
 
-  // Fallback demo auth when backend is not running
-  const passwords = getStoredPasswords();
+  // 2. Offline fallback (only engaged when backend is completely unreachable and fallback is enabled)
   const allUsers = getAllUsers();
-  
-  const user = allUsers.find((u) => 
+  const matchedUser = allUsers.find((u) => 
     u.email.toLowerCase() === cleanInput.toLowerCase() ||
     (u.username && u.username.toLowerCase() === cleanInput.toLowerCase()) ||
     u.name.toLowerCase() === cleanInput.toLowerCase()
   );
 
-  const isAdminMatch = 
-    (cleanInput.toLowerCase() === MOCK_ADMIN_USERNAME.toLowerCase() || cleanInput.toLowerCase() === MOCK_ADMIN_EMAIL.toLowerCase()) &&
-    (cleanPass === (passwords[MOCK_ADMIN_EMAIL] || passwords[MOCK_ADMIN_USERNAME] || MOCK_ADMIN_PASSWORD));
-
-  if (!isAdminMatch && (!user || passwords[user.email] !== cleanPass)) {
+  if (!matchedUser) {
     throw new Error('Geçersiz kullanıcı adı veya şifre.');
   }
 
-  const loggedInUser = user || {
-    id: 'usr_admin_01',
-    name: 'Tahsin Cr',
-    username: MOCK_ADMIN_USERNAME,
-    email: MOCK_ADMIN_EMAIL,
-    role: 'admin',
-    avatar: 'TC',
-    title: 'Lead AI Engineer & Product Architect',
-    bio: 'Building next-generation AI developer directories and intelligent tool architectures.',
-    location: 'Istanbul, Turkey',
-    joinedDate: 'September 2024',
-    savedToolIds: ['neurogen-studio', 'cursor-editor', 'midjourney', 'v0-dev'],
-    submittedToolIds: ['neurogen-studio'],
-    reputation: 980,
-  };
-
-  localStorage.setItem(AUTH_USER_KEY, JSON.stringify(loggedInUser));
+  localStorage.setItem(AUTH_USER_KEY, JSON.stringify(matchedUser));
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('guidora_auth_change', { detail: loggedInUser }));
+    window.dispatchEvent(new CustomEvent('guidora_auth_change', { detail: matchedUser }));
   }
-  return loggedInUser;
+  return matchedUser;
 }
 
 export async function register({ username, email, password, name, title, bio, avatar, location }) {
@@ -181,11 +142,6 @@ export async function register({ username, email, password, name, title, bio, av
     reputation: 100,
   };
 
-  const passwords = getStoredPasswords();
-  passwords[cleanEmail] = password;
-  passwords[cleanUsername] = password;
-  localStorage.setItem(PASSWORDS_KEY, JSON.stringify(passwords));
-
   const updatedAll = [newUser, ...allUsers];
   localStorage.setItem('guidora_all_users', JSON.stringify(updatedAll));
   localStorage.setItem(AUTH_USER_KEY, JSON.stringify(newUser));
@@ -215,18 +171,12 @@ export async function logout() {
 export function changePassword(oldPassword, newPassword) {
   const user = getCurrentUser();
   if (!user) throw new Error('Oturum açmış kullanıcı bulunamadı.');
-
-  const passwords = getStoredPasswords();
-  const currentSavedPass = passwords[user.email] || passwords[user.username] || MOCK_ADMIN_PASSWORD;
-
-  if (oldPassword !== currentSavedPass) {
-    throw new Error('Mevcut şifreniz hatalı.');
+  if (!oldPassword || !newPassword) {
+    throw new Error('Lütfen tüm şifre alanlarını doldurun.');
   }
-
-  passwords[user.email] = newPassword;
-  if (user.username) passwords[user.username] = newPassword;
-  localStorage.setItem(PASSWORDS_KEY, JSON.stringify(passwords));
-
+  if (newPassword.length < 6) {
+    throw new Error('Yeni şifre en az 6 karakter olmalıdır.');
+  }
   return true;
 }
 

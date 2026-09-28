@@ -46,25 +46,23 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode
 
   if (!isOpen) return null;
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    setTimeout(() => {
-      try {
-        const user = login({
-          usernameOrEmail: loginInput,
-          password: loginPassword,
-        });
-        setIsLoading(false);
-        onLoginSuccess(user);
-        onClose();
-      } catch (err) {
-        setIsLoading(false);
-        setError(err.message || t('auth.loginFailed', 'Login failed. Please check your credentials.'));
-      }
-    }, getDemoDelayDuration(450));
+    try {
+      const user = await login({
+        usernameOrEmail: loginInput,
+        password: loginPassword,
+      });
+      setIsLoading(false);
+      onLoginSuccess(user);
+      onClose();
+    } catch (err) {
+      setIsLoading(false);
+      setError(err.message || t('auth.loginFailed', 'Login failed. Please check your credentials.'));
+    }
   };
 
   const handleProceedToProfile = (e) => {
@@ -98,7 +96,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode
     setRegisterStep(2);
   };
 
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -108,25 +106,23 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess, initialMode
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      try {
-        const user = register({
-          username: regUsername.trim(),
-          email: regEmail.trim(),
-          password: regPassword,
-          name: regFullName.trim() || regUsername.trim(),
-          title: regTitle.trim(),
-          bio: regBio.trim(),
-          avatar: regAvatar.trim(),
-        });
-        setIsLoading(false);
-        onLoginSuccess(user);
-        onClose();
-      } catch (err) {
-        setIsLoading(false);
-        setError(err.message || t('auth.registerFailed', 'Registration could not be completed.'));
-      }
-    }, getDemoDelayDuration(450));
+    try {
+      const user = await register({
+        username: regUsername.trim(),
+        email: regEmail.trim(),
+        password: regPassword,
+        name: regFullName.trim() || regUsername.trim(),
+        title: regTitle.trim(),
+        bio: regBio.trim(),
+        avatar: regAvatar.trim(),
+      });
+      setIsLoading(false);
+      onLoginSuccess(user);
+      onClose();
+    } catch (err) {
+      setIsLoading(false);
+      setError(err.message || t('auth.registerFailed', 'Registration could not be completed.'));
+    }
   };
 
   return (

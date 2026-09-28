@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Single Administrator Environment Variable & Backend-Agnostic Client Decoupling**:
+  - Eliminated duplicate `VITE_MOCK_ADMIN_*` variables in `.env` and `.env.example`, consolidating strictly to a single `MOCK_ADMIN_*` definition (`MOCK_ADMIN_USERNAME`, `MOCK_ADMIN_EMAIL`, `MOCK_ADMIN_PASSWORD`).
+  - Completely decoupled frontend bundle (`src/services/authService.js`, `src/services/userService.js`) from mock passwords or client-side authentication checks; purged passwords dictionary and plain-text storage from `localStorage`.
+  - Upgraded authentication flow (`authService.js` and `AuthModal.jsx`) to be 100% backend-agnostic: the client sends credentials to `/api/auth/login` and receives the authenticated user session directly from the server response whether running against Vite's in-process mock engine, standalone Docker container, or real .NET 10 WebAPI.
+  - Aligned server configurations (`infra/mock-server/mockHandler.js`, `vite.config.js`, `docker-compose.yml`) to seamlessly support both `MOCK_ADMIN_*` and .NET backend's `BOOTSTRAP_ADMIN_*`.
+
 - **Enterprise Collapsible Admin Workspace & PostgreSQL 18 Management Architecture**:
   - Completely re-architected `AdminDashboardPage.jsx` into a modular, enterprise-grade admin workspace adhering to Guidora's cyber slate and dark glassmorphism design system.
   - Implemented classic collapsible left navigation sidebar (`AdminSidebar.jsx`) with smooth width transition (260px expanded $\leftrightarrow$ 76px compact), persistent localStorage state (`guidora_admin_sidebar_collapsed`), keyboard shortcut (`Ctrl+B` / `Cmd+B`), categorical sections, real-time badge counters, and off-canvas mobile drawer.
