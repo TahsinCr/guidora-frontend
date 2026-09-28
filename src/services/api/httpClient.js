@@ -150,10 +150,15 @@ async function parseApiResponse(response) {
     if (body) {
       if (typeof body === 'string') {
         errorMessage = body;
-      } else if (body.message) {
-        errorMessage = body.message;
-      } else if (body.errors && Array.isArray(body.errors)) {
-        errorMessage = body.errors.map((e) => e.errorMessage || e).join(', ');
+      } else {
+        const errorList = body.errors || body.Errors;
+        if (Array.isArray(errorList) && errorList.length > 0) {
+          errorMessage = errorList
+            .map((e) => e.errorMessage || e.ErrorMessage || (typeof e === 'string' ? e : JSON.stringify(e)))
+            .join(', ');
+        } else if (body.message || body.Message) {
+          errorMessage = body.message || body.Message;
+        }
       }
     }
 

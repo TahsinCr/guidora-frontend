@@ -113,9 +113,16 @@ export default function App() {
   });
   const [activeToolData, setActiveToolData] = useState(null);
 
-  // Load categories
+  // Load categories and silently restore in-memory session if HttpOnly cookie exists
   useEffect(() => {
     getCategories().then(setCategories).catch(console.error);
+
+    // Silent refresh to populate in-memory AccessToken on page reload/startup
+    import('@/services/api/authApi').then(({ refreshSession }) => {
+      refreshSession().catch(() => {
+        // No active persistent session or cookie expired, normal guest flow
+      });
+    });
 
     // Warm up chunks during browser idle time for zero-latency interactions
     const prefetchIdle = () => {
