@@ -51,6 +51,21 @@ class ConfigService {
     }
   }
 
+  loadRuntimeConfig(overrideObj) {
+    const merged = this._mergeAndValidate(SAFE_CONFIG_DEFAULTS, overrideObj);
+    this._config = this._deepFreeze(merged);
+    this._isLoaded = true;
+    this._notifyListeners();
+    return this._config;
+  }
+
+  resetToSafeDefaults() {
+    this._config = SAFE_CONFIG_DEFAULTS;
+    this._isLoaded = false;
+    this._notifyListeners();
+    return this._config;
+  }
+
   subscribe(listener) {
     this._listeners.add(listener);
     return () => this._listeners.delete(listener);

@@ -220,6 +220,18 @@ Derlenmiş ve optimize edilmiş statik dosyalar `dist/` klasörüne aktarılır.
 - **Sharp & SVGO Görsel Optimizasyonu**: Kayıpsız SVG ve sıkıştırılmış WebP/PNG/JPEG optimizasyonu (yaklaşık %57 dosya boyutu tasarrufu).
 - **Çift Ön Sıkıştırma (Brotli & Gzip)**: Canlı ortam ters vekil sunucuları (Nginx, Caddy, Cloudflare vb.) için anlık yükleme sağlayan `.br` ve `.gz` statik çıktıları.
 
+### Otomatik Test Katmanı
+
+```bash
+# Tüm testleri tek seferde çalıştırın
+npm test
+
+# Testleri interaktif izleme (watch) modunda çalıştırın
+npm run test:watch
+```
+
+Vitest ve Happy-DOM kullanarak bellek içi token güvenliği, mutex kilitli sessiz 401 oturum yenileme, devre kesici durum geçişleri, yarım kalan isteklerin korunması ve hız sınırı denetimlerini kapsayan 27 kritik testi <500ms içinde yürütür.
+
 ### Çift Katmanlı Konfigürasyon Mimarisi
 
 Guidora, derleme zamanı sabitlerini operasyonel çalışma zamanı parametrelerinden ayıran çift katmanlı bir yapılandırma modeli kullanır:

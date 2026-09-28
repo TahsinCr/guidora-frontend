@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Automated Enterprise Test Suite (Vitest & Happy-DOM)**:
+  - Configured high-performance `vitest` test suite in `tests/` directory with dedicated npm scripts (`npm test`, `npm run test:watch`) executing 27 critical integration and contract tests in <500ms.
+  - Implemented `httpClient.test.js`: verifies in-memory access token injection, `credentials: 'include'` headers, transparent 401 token refresh with mutex queue concurrency locking, 429 rate-limiting parsing `Retry-After`, and .NET 10 validation exception mapping.
+  - Implemented `circuitBreaker.test.js`: verifies failure threshold triggering (`CLOSED -> OPEN`), fast-fail zero-network protection, and `/health/live` probe recovery (`HALF_OPEN -> CLOSED`).
+  - Implemented `networkTracker.test.js`: verifies in-flight request tracking, graceful draining (`waitForInFlight`), and browser online/offline events.
+  - Implemented `maintenanceHelper.test.js`: verifies emergency bypass keys (`?bypass=...`, sessionStorage, role authorization) and scheduled maintenance countdown calculation.
+  - Implemented `toastService.test.js`: verifies toast deduplication, automatic timer dismiss, and manual dismissal.
 - **Enterprise Resilience, Ambient Status Line, Circuit Breaker & Graceful Maintenance Engine**:
   - Implemented `circuitBreaker.js` (CLOSED, OPEN, HALF-OPEN state machine) with automated fast-fail protection and lightweight `/health/live` probe recovery.
   - Built `AmbientStatusBar.jsx` ambient status line (2.5px) directly beneath the sticky navbar: amber/yellow for offline, vibrant red for backend outage, green for recovery, and purple-blue gradient shimmer for navigation.

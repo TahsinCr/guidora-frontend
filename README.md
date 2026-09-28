@@ -220,6 +220,18 @@ The compiled, production-ready static assets will be output to the `dist/` direc
 - **Sharp & SVGO Asset Optimization**: Lossless SVG and compressed WebP/PNG/JPEG optimization (yielding ~57% asset size reduction).
 - **Dual Pre-Compression (Brotli & Gzip)**: Generating `.br` and `.gz` files for production reverse proxies (Nginx, Caddy, Cloudflare) for instant cold loads.
 
+### Automated Test Suite
+
+```bash
+# Run full suite once
+npm test
+
+# Run tests in interactive watch mode
+npm run test:watch
+```
+
+Executes 27 automated tests covering in-memory token security, silent 401 refresh with mutex concurrency locks, circuit breaker state transitions, graceful maintenance draining, and rate limiting in <500ms via Vitest and Happy-DOM.
+
 ### Configuration Architecture
 
 Guidora implements a dual-layer configuration strategy separating build-time constants from runtime operational parameters:
