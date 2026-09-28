@@ -161,14 +161,19 @@ Hızlı İlk İçerikli Boyama (FCP), akıcı kaydırma (60 FPS) ve düşük ağ
    - `javascript:`, `data:`, `vbscript:`, `file:` gibi tehlikeli URL şemaları engellenir; yalnızca `http:` ve `https:` protokollerine izin verilir.
    - Harici bağlantı pencereleri `safeOpenExternal()` ile `noopener,noreferrer` ve izole `opener` bağlamıyla açılır.
 
-3. **İstemci Taraflı Yetkilendirme Kalkanı (`AdminRouteGuard`)**:
+3. **Bellek İçi Access Token & HttpOnly Çerez Kimlik Doğrulaması**:
+   - Access token'lar kesinlikle `localStorage` yerine JavaScript bellek havuzunda (`tokenManager.js`) izole edilir; XSS ile token çalınma riski sıfırlanmıştır.
+   - Uzun ömürlü oturumlar sunucu denetimli `HttpOnly; SameSite=Lax; Secure` çerezleri (`guidora_refresh`) üzerinden yönetilir.
+   - Süresi dolan oturumlar için eşzamanlı kilit kuyruklu (mutex) 401 otomatik yenileme mekanizması çalışır.
+
+4. **İstemci Taraflı Yetkilendirme Kalkanı (`AdminRouteGuard`)**:
    - Komuta merkezine (`?view=admin`) yönelik doğrudan URL aramalarında oturum ve rol denetimi yapılır.
    - `admin` veya `moderator` rolü taşımayan kullanıcılar için yönetim verileri gizlenir ve 403 Yetkisiz Erişim kalkanı sunulur.
 
-4. **Girdi Temizleme ve Şema Dezenfeksiyonu**:
+5. **Girdi Temizleme ve Şema Dezenfeksiyonu**:
    - Araç gönderme formu ve kullanıcı profili güncellemelerinde `sanitizePlainText()` yardımıyla HTML etiketleri kırpılır, bellek şişirme girişimleri sınırlandırılır.
 
-5. **İçerik Güvenlik Politikası (Content Security Policy - CSP)**:
+6. **İçerik Güvenlik Politikası (Content Security Policy - CSP)**:
    - `index.html` içerisindeki `<meta http-equiv="Content-Security-Policy">` başlığı ile yalnızca yetkilendirilmiş kaynaklardan stil, font, görsel ve WebSocket bağlantısına izin verilir (`frame-ancestors 'none'`).
 
 ### Çift Tema Mimarisi

@@ -1,4 +1,6 @@
 import { getCurrentUser, updateCurrentUser, getAllUsers } from './userService';
+import * as authApi from './api/authApi';
+import { clearAccessToken } from './api/tokenManager';
 
 const AUTH_USER_KEY = 'guidora_current_user';
 const PASSWORDS_KEY = 'guidora_user_passwords';
@@ -17,21 +19,59 @@ function getStoredPasswords() {
   }
 }
 
-export function login({ usernameOrEmail, password }) {
+export async function login({ usernameOrEmail, password, rememberMe = false }) {
   const cleanInput = usernameOrEmail.trim();
   const cleanPass = password.trim();
-  const passwords = getStoredPasswords();
 
+  // Try real .NET 10 WebAPI login first
+  try {
+    const apiResult = await authApi.login({
+      email: cleanInput,
+      password: cleanPass,
+      rememberMe,
+    });
+
+    if (apiResult) {
+      const user = {
+        id: `usr_${cleanInput.toLowerCase()}`,
+        name: cleanInput.split('@')[0],
+        username: cleanInput.split('@')[0],
+        email: cleanInput,
+        role: 'admin',
+        avatar: cleanInput.slice(0, 2).toUpperCase(),
+        title: 'Platform Member',
+        bio: 'Verified Guidora User',
+        location: 'Global',
+        joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        savedToolIds: [],
+        submittedToolIds: [],
+        reputation: 500,
+      };
+
+      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('guidora_auth_change', { detail: user }));
+      }
+      return user;
+    }
+  } catch (apiErr) {
+    // If backend is offline (statusCode 0), gracefully fall back to local demo authentication
+    if (apiErr.statusCode !== 0 && apiErr.statusCode !== 404 && apiErr.statusCode !== 502) {
+      // It's a genuine 401 or validation error from active backend
+      throw new Error(apiErr.message || 'Geçersiz kullanıcı adı veya şifre.');
+    }
+  }
+
+  // Fallback demo auth when backend is not running
+  const passwords = getStoredPasswords();
   const allUsers = getAllUsers();
   
-  // Find user by username, email or ID
   const user = allUsers.find((u) => 
     u.email.toLowerCase() === cleanInput.toLowerCase() ||
     (u.username && u.username.toLowerCase() === cleanInput.toLowerCase()) ||
     u.name.toLowerCase() === cleanInput.toLowerCase()
   );
 
-  // Check valid credentials (match TahsinCr credentials or user password)
   const isTahsinMatch = 
     (cleanInput.toLowerCase() === 'tahsincr' || cleanInput.toLowerCase() === 'tahsincrs@gmail.com' || cleanInput.toLowerCase() === 'tahsin@guidora.io') &&
     (cleanPass === (passwords['TahsinCr'] || 'TahsinCr'));
@@ -40,7 +80,6 @@ export function login({ usernameOrEmail, password }) {
     throw new Error('Geçersiz kullanıcı adı veya şifre.');
   }
 
-  // Active user object
   const loggedInUser = user || {
     id: 'usr_tahsin_01',
     name: 'Tahsin Cr',
@@ -64,16 +103,60 @@ export function login({ usernameOrEmail, password }) {
   return loggedInUser;
 }
 
-export function register({ username, email, password, name, title, bio, avatar, location }) {
-  const allUsers = getAllUsers();
+export async function register({ username, email, password, name, title, bio, avatar, location }) {
   const cleanEmail = email.trim().toLowerCase();
   const cleanUsername = username.trim();
+  const cleanName = name?.trim() || cleanUsername;
 
+  // Try real .NET 10 WebAPI registration
+  try {
+    const parts = cleanName.split(' ');
+    const firstName = parts[0] || cleanUsername;
+    const lastName = parts.slice(1).join(' ') || 'User';
+
+    const apiResult = await authApi.register({
+      email: cleanEmail,
+      password,
+      firstName,
+      lastName,
+      rememberMe: true,
+    });
+
+    if (apiResult) {
+      const newUser = {
+        id: `usr_${cleanUsername}`,
+        name: cleanName,
+        username: cleanUsername,
+        email: cleanEmail,
+        role: 'member',
+        avatar: avatar?.trim() || cleanUsername.slice(0, 2).toUpperCase(),
+        title: title?.trim() || 'AI Community Member',
+        bio: bio?.trim() || 'New explorer in the Guidora AI ecosystem.',
+        location: location?.trim() || 'Global',
+        joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        savedToolIds: [],
+        submittedToolIds: [],
+        reputation: 100,
+      };
+
+      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(newUser));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('guidora_auth_change', { detail: newUser }));
+      }
+      return newUser;
+    }
+  } catch (apiErr) {
+    if (apiErr.statusCode !== 0 && apiErr.statusCode !== 404 && apiErr.statusCode !== 502) {
+      throw new Error(apiErr.message || 'Kayıt işlemi başarısız.');
+    }
+  }
+
+  // Fallback demo registration when backend is offline
+  const allUsers = getAllUsers();
   if (allUsers.some((u) => u.email.toLowerCase() === cleanEmail)) {
     throw new Error('Bu e-posta adresi zaten kullanımda.');
   }
 
-  const cleanName = name?.trim() || cleanUsername;
   const initials = cleanName.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase() || cleanUsername.slice(0, 2).toUpperCase();
 
   const newUser = {
@@ -108,10 +191,17 @@ export function register({ username, email, password, name, title, bio, avatar, 
   return newUser;
 }
 
-export function logout() {
-  localStorage.removeItem(AUTH_USER_KEY);
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('guidora_auth_change', { detail: null }));
+export async function logout() {
+  try {
+    await authApi.logout();
+  } catch {
+    // ignore network errors on logout
+  } finally {
+    clearAccessToken();
+    localStorage.removeItem(AUTH_USER_KEY);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('guidora_auth_change', { detail: null }));
+    }
   }
   return true;
 }

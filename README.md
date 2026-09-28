@@ -161,14 +161,19 @@ To safeguard against client-side exploitation, user impersonation, and injection
    - Malicious link protocols (`javascript:`, `data:`, `vbscript:`, `file:`) are blocked, permitting only validated `http:` and `https:` schemes.
    - Programmatic `window.open` calls invoke `safeOpenExternal()` with `noopener,noreferrer` and nullified `opener` contexts.
 
-3. **Client-Side Authorization Guard (`AdminRouteGuard`)**:
+3. **In-Memory Access Token & HttpOnly Cookie Authentication**:
+   - Access tokens are strictly stored within JavaScript memory closure (`tokenManager.js`), completely isolating authentication credentials from `localStorage` and preventing XSS token exfiltration.
+   - Long-lived session persistence relies on server-managed `HttpOnly; SameSite=Lax; Secure` cookies (`guidora_refresh`).
+   - Seamless token rotation via automated 401 retry interceptor with concurrency queueing.
+
+4. **Client-Side Authorization Guard (`AdminRouteGuard`)**:
    - Access to the command center (`?view=admin`) is guarded against unauthenticated and non-privileged roles.
    - Unauthorized attempts render a structured 403 Access Denied interface rather than exposing administrative UI state.
 
-4. **Input Cleansing & Schema Sanitization**:
+5. **Input Cleansing & Schema Sanitization**:
    - Tool submission forms and profile inputs utilize `sanitizePlainText()` to strip HTML markup and enforce clean metadata bounds before state persistence.
 
-5. **Content Security Policy (CSP)**:
+6. **Content Security Policy (CSP)**:
    - Configured via `<meta http-equiv="Content-Security-Policy">` in `index.html` with explicit origins for styles, fonts, images, and WebSocket connections (`frame-ancestors 'none'`).
 
 ### Dual-Theme Architecture

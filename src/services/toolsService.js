@@ -585,6 +585,24 @@ export async function getUserReviews(userId) {
  */
 export async function submitReport(toolId, reportData) {
   await simulateDelay(80);
+  
+  // Try sending to .NET 10 API if numeric ID is available
+  try {
+    const all = getAllTools();
+    const targetTool = all.find((t) => t.id === toolId);
+    if (targetTool?.numericId) {
+      const { reportProduct } = await import('./api/productsApi');
+      await reportProduct(targetTool.numericId, {
+        reason: reportData.reason,
+        details: reportData.details,
+        contactEmail: reportData.email || '',
+      });
+      return { success: true, message: 'Report submitted successfully' };
+    }
+  } catch (e) {
+    // Fallback to local storage
+  }
+
   const report = {
     id: `rep-${Date.now()}`,
     toolId,
@@ -605,10 +623,24 @@ export async function submitReport(toolId, reportData) {
 }
 
 /**
- * Fetch list of categories
+ * Fetch list of categories (queries .NET 10 API first, falls back to local data)
  */
 export async function getCategories() {
   await simulateDelay(40);
+  try {
+    const { fetchCategories } = await import('./api/taxonomiesApi');
+    const apiCats = await fetchCategories();
+    if (Array.isArray(apiCats) && apiCats.length > 0) {
+      return apiCats.map((c) => ({
+        id: c.slug || String(c.categoryId),
+        numericId: c.categoryId,
+        name: c.categoryName,
+        count: 0,
+      }));
+    }
+  } catch (e) {
+    // API offline, fallback to local categories
+  }
   return adminGetCategories();
 }
 
@@ -617,7 +649,8 @@ export async function getCategories() {
  */
 export async function getPopularCategories() {
   await simulateDelay(30);
-  return adminGetCategories().filter((c) => c.isPopular);
+  const all = await getCategories();
+  return all.filter((c) => c.isPopular);
 }
 
 /**

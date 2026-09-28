@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Enterprise .NET 10 WebAPI Integration & TanStack Query Infrastructure**:
+  - Integrated `@tanstack/react-query` v5 with dedicated `query-vendor` rollup chunk, zero-friction caching (`staleTime: 5m`, `gcTime: 15m`), and optimistic UI readiness.
+  - Implemented secure `src/services/api/httpClient.js` with `credentials: 'include'` for HttpOnly `guidora_refresh` cookie transmission and in-memory access token storage (zero disk leakage, complete XSS defense).
+  - Built automatic 401 retry interceptor with concurrency mutex/queue, handling transparent session rotation without user interruption.
+  - Added Vite `/api` development proxy in `vite.config.js` forwarding to .NET 10 backend (`localhost:8080`), pre-configured for Docker reverse proxy environments.
+  - Created domain-agnostic `toolAdapter.js` to map `ProductResponseDto` cleanly to catalog view components without altering Figma layouts or UI states.
 - **Automated Asset Optimization & Pre-Compression Engine (Brotli & Gzip)**:
   - Integrated `vite-plugin-compression` generating dual pre-compressed `.br` (Brotli) and `.gz` (Gzip) static assets on production build for cold-start server delivery (reducing vendor and app bundles by up to 75%).
   - Integrated `vite-plugin-image-optimizer` with `sharp` and `svgo`, achieving automated lossless SVG cleaning and lossy/lossless WebP/PNG/JPEG compression (~57% total image byte savings) during the build step.

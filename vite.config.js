@@ -54,6 +54,16 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: process.env.VITE_BACKEND_URL || 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
   css: {
     preprocessorOptions: {
       scss: {
@@ -68,6 +78,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
+          'query-vendor': ['@tanstack/react-query'],
           'icons-vendor': ['lucide-react'],
           'markdown-vendor': ['marked', 'dompurify'],
         },
