@@ -29,12 +29,18 @@ const RATING_CHIPS = [
 export default function ReviewsTab({
   reviews = [],
   tools = [],
+  globalSearch = '',
   onRefreshReviews,
   onOpenTool,
 }) {
   const safeReviews = Array.isArray(reviews) ? reviews : [];
   const [search, setSearch] = useState('');
   const [activeChip, setActiveChip] = useState('all');
+
+  // Normalized review field accessors
+  const getAuthor = (r) => r.author || r.userName || r.name || 'Kullanıcı';
+  const getContent = (r) => r.content || r.text || r.comment || '';
+  const getDate = (r) => r.date || (r.createdAt ? new Date(r.createdAt).toLocaleDateString('tr-TR') : 'Yeni');
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -55,16 +61,16 @@ export default function ReviewsTab({
       if (activeChip !== 'all' && Number(r.rating) !== parseInt(activeChip, 10)) {
         return false;
       }
-      if (search) {
-        const q = search.toLowerCase();
-        const textMatch = (r.text || r.comment || '').toLowerCase().includes(q);
-        const userMatch = (r.userName || r.author || '').toLowerCase().includes(q);
+      const q = (search || globalSearch || '').trim().toLowerCase();
+      if (q) {
+        const textMatch = getContent(r).toLowerCase().includes(q);
+        const userMatch = getAuthor(r).toLowerCase().includes(q);
         const toolMatch = (r.toolName || r.toolId || '').toLowerCase().includes(q);
         if (!textMatch && !userMatch && !toolMatch) return false;
       }
       return true;
     });
-  }, [safeReviews, activeChip, search]);
+  }, [safeReviews, activeChip, search, globalSearch]);
 
   // Paginated reviews
   const paginatedReviews = useMemo(() => {
@@ -111,12 +117,12 @@ export default function ReviewsTab({
     const headers = ['ID', 'Kullanıcı', 'Araç ID', 'Araç Adı', 'Puan', 'Yorum', 'Tarih'];
     const rows = filteredReviews.map((r) => [
       `"${r.id || ''}"`,
-      `"${(r.userName || '').replace(/"/g, '""')}"`,
+      `"${getAuthor(r).replace(/"/g, '""')}"`,
       `"${r.toolId || ''}"`,
       `"${(r.toolName || '').replace(/"/g, '""')}"`,
       r.rating || 5,
-      `"${(r.text || r.comment || '').replace(/"/g, '""')}"`,
-      `"${r.createdAt || ''}"`,
+      `"${getContent(r).replace(/"/g, '""')}"`,
+      `"${getDate(r)}"`,
     ]);
     const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -171,7 +177,7 @@ export default function ReviewsTab({
         <div className={styles.toolbarActions}>
           <button
             type="button"
-            className={styles.actionBtnOutline}
+            className={styles.actionBtnSecondary}
             onClick={handleExportCSV}
             title="CSV Dışa Aktar"
           >
@@ -202,15 +208,21 @@ export default function ReviewsTab({
                     <User size={14} />
                   </div>
                   <div>
-                    <h4 className={styles.reviewUserName}>{rev.userName || 'Kullanıcı'}</h4>
+                    <h4 className={styles.reviewUserName}>{getAuthor(rev)}</h4>
                     <span className={styles.reviewTargetTool}>
                       Araç: <strong>{rev.toolName || rev.toolId}</strong>
-                      {rev.toolId && onOpenTool && (
+                      {rev.toolId && (
                         <button
                           type="button"
                           className={styles.toolLinkBtn}
-                          onClick={() => onOpenTool(rev.toolId)}
-                          title="Araca Git"
+                          onClick={() => {
+                            if (typeof window !== 'undefined') {
+                              window.open(`/?tool=${encodeURIComponent(rev.toolId)}`, '_blank');
+                            } else if (onOpenTool) {
+                              onOpenTool(rev.toolId);
+                            }
+                          }}
+                          title="Aracı Yeni Sekmede Görüntüle"
                         >
                           <ExternalLink size={11} />
                         </button>
@@ -232,18 +244,18 @@ export default function ReviewsTab({
               </div>
 
               <p className={styles.reviewCardText}>
-                "{rev.text || rev.comment || 'Metin yok'}"
+                "{getContent(rev) || 'Metin yok'}"
               </p>
 
               <div className={styles.reviewCardFooter}>
                 <span className={styles.reviewDate}>
                   <Clock size={11} />
-                  {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('tr-TR') : 'Yeni'}
+                  {getDate(rev)}
                 </span>
 
                 <button
                   type="button"
-                  className={styles.actionIconBtnDanger}
+                  className={styles.reviewDeleteBtn}
                   onClick={() => handleDeleteReview(rev)}
                   title="Yorumu Sil"
                 >

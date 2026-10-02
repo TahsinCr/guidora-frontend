@@ -13,12 +13,10 @@ import {
   Plus,
   CheckSquare,
   Square,
-  Sparkles,
   Download,
   Star,
   ChevronLeft,
   ChevronRight,
-  Layers,
 } from 'lucide-react';
 import {
   adminUpdateTool,
@@ -27,27 +25,31 @@ import {
   getDeletedToolIds,
   adminAddLog,
 } from '@/services/adminService';
+import { addTool } from '@/services/toolsService';
 import toastService from '@/services/toast/toastService';
 import ToolStudioForm from '@/components/common/ToolStudioForm';
+import { useLanguage } from '@/context/LanguageContext';
 import AdminConfirmModal from '../modals/AdminConfirmModal';
 import styles from '../AdminDashboardPage.module.scss';
 
 const FILTER_CHIPS = [
-  { id: 'ALL', label: 'Tüm Araçlar' },
-  { id: 'VERIFIED', label: 'Onaylılar' },
-  { id: 'PENDING', label: 'Onay Bekleyenler' },
-  { id: 'FEATURED', label: 'Öne Çıkanlar' },
-  { id: 'FREE', label: 'Ücretsiz / Freemium' },
-  { id: 'PAID', label: 'Ücretli / Ticari' },
-  { id: 'ARCHIVED', label: 'Arşivlenmiş / Silinmiş' },
+  { id: 'ALL', key: 'admin.chipAll', defaultLabel: 'Tüm Araçlar' },
+  { id: 'VERIFIED', key: 'admin.chipVerified', defaultLabel: 'Onaylılar' },
+  { id: 'PENDING', key: 'admin.chipPending', defaultLabel: 'Onay Bekleyenler' },
+  { id: 'FEATURED', key: 'admin.chipFeatured', defaultLabel: 'Öne Çıkanlar' },
+  { id: 'FREE', key: 'admin.chipFree', defaultLabel: 'Ücretsiz / Freemium' },
+  { id: 'PAID', key: 'admin.chipPaid', defaultLabel: 'Ücretli / Ticari' },
+  { id: 'ARCHIVED', key: 'admin.chipArchived', defaultLabel: 'Arşivlenmiş / Silinmiş' },
 ];
 
 export default function ToolsTab({
   tools = [],
   categories = [],
+  globalSearch = '',
   onRefreshTools,
   onOpenTool,
 }) {
+  const { t, language } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [activeChip, setActiveChip] = useState('ALL');
@@ -94,19 +96,19 @@ export default function ToolsTab({
       }
 
       // Search Query
-      if (searchTerm) {
-        const q = searchTerm.toLowerCase();
+      const q = (searchTerm || globalSearch || '').trim().toLowerCase();
+      if (q) {
         const nameMatch = (tool.name || '').toLowerCase().includes(q);
         const taglineMatch = (tool.tagline || '').toLowerCase().includes(q);
-        const descMatch = (tool.overview || '').toLowerCase().includes(q);
-        const tagsMatch = (tool.tags || []).some((t) => t.toLowerCase().includes(q));
+        const descMatch = (tool.overview || tool.description || '').toLowerCase().includes(q);
+        const tagsMatch = (tool.tags || []).some((t) => (typeof t === 'string' ? t : t.name || '').toLowerCase().includes(q));
         if (!nameMatch && !taglineMatch && !descMatch && !tagsMatch) {
           return false;
         }
       }
       return true;
     });
-  }, [tools, categoryFilter, activeChip, searchTerm, deletedIds]);
+  }, [tools, categoryFilter, activeChip, searchTerm, globalSearch, deletedIds]);
 
   // Paginated Tools
   const paginatedTools = useMemo(() => {
@@ -236,6 +238,44 @@ export default function ToolsTab({
     });
   };
 
+  // Save / Update Tool from ToolStudioForm
+  const handleSaveTool = async (toolPayload) => {
+    try {
+      if (editingTool) {
+        adminUpdateTool(editingTool.id, toolPayload);
+        adminAddLog('PRODUCT_UPDATED', toolPayload.name, 'info', {
+          entityName: 'Product',
+          entityId: editingTool.id,
+          category: 'CATALOG',
+          newValues: toolPayload,
+        });
+        toastService.success(`"${toolPayload.name}" başarıyla güncellendi.`);
+      } else {
+        const newTool = await addTool(toolPayload);
+        adminAddLog('PRODUCT_CREATED', toolPayload.name, 'success', {
+          entityName: 'Product',
+          entityId: newTool?.id,
+          category: 'CATALOG',
+        });
+        toastService.success(`"${toolPayload.name}" kataloğa eklendi.`);
+      }
+      setIsFormOpen(false);
+      setEditingTool(null);
+      if (onRefreshTools) onRefreshTools();
+    } catch (err) {
+      toastService.error('Kaydetme hatası: ' + err.message);
+    }
+  };
+
+  // Open Tool Live View in new tab without navigating away from Admin
+  const handleOpenToolLive = (toolId) => {
+    if (typeof window !== 'undefined') {
+      window.open(`/?tool=${encodeURIComponent(toolId)}`, '_blank');
+    } else if (onOpenTool) {
+      onOpenTool(toolId);
+    }
+  };
+
   // Export to CSV
   const handleExportCsv = () => {
     const cols = ['id', 'name', 'tagline', 'category', 'pricing', 'rating', 'votes', 'isVerified', 'isFeatured', 'websiteUrl'];
@@ -277,7 +317,7 @@ export default function ToolsTab({
             <input
               type="text"
               className={styles.searchInput}
-              placeholder="Araç adı, etiket veya açıklama ara..."
+              placeholder={t('admin.searchToolOrCat', 'Araç adı, etiket veya açıklama ara...')}
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -295,9 +335,9 @@ export default function ToolsTab({
                 setCategoryFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              aria-label="Kategoriye Göre Filtrele"
+              aria-label={t('admin.filterByCategory', 'Kategoriye Göre Filtrele')}
             >
-              <option value="ALL">Tüm Kategoriler</option>
+              <option value="ALL">{t('admin.allCategories', 'Tüm Kategoriler')}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -314,7 +354,7 @@ export default function ToolsTab({
             className={styles.actionBtnSecondary}
             onClick={handleExportCsv}
             disabled={!filteredTools.length}
-            title="CSV Olarak İndir"
+            title={t('admin.exportCsv', 'CSV Dışa Aktar')}
           >
             <Download size={14} />
             <span>CSV</span>
@@ -325,7 +365,7 @@ export default function ToolsTab({
             className={styles.actionBtnSecondary}
             onClick={handleExportJson}
             disabled={!filteredTools.length}
-            title="JSON Olarak İndir"
+            title={t('admin.exportJson', 'JSON Dışa Aktar')}
           >
             <Download size={14} />
             <span>JSON</span>
@@ -340,7 +380,7 @@ export default function ToolsTab({
             }}
           >
             <Plus size={16} />
-            <span>Yeni Araç Tanımla</span>
+            <span>{t('admin.createNewTool', 'Yeni Araç Ekle')}</span>
           </button>
         </div>
       </div>
@@ -374,7 +414,7 @@ export default function ToolsTab({
                 setCurrentPage(1);
               }}
             >
-              <span>{chip.label}</span>
+              <span>{t(chip.key, chip.defaultLabel)}</span>
               <span className={styles.filterChipCount}>{count}</span>
             </button>
           );
@@ -386,7 +426,7 @@ export default function ToolsTab({
         <div className={styles.batchBar}>
           <div className={styles.batchBarSelected}>
             <CheckSquare size={16} color="#6366f1" />
-            <span><strong>{selectedToolIds.length}</strong> araç seçildi</span>
+            <span><strong>{selectedToolIds.length}</strong> {t('admin.toolsSuffix', 'araç')} {language === 'tr' ? 'seçildi' : language === 'ru' ? 'выбрано' : 'selected'}</span>
           </div>
 
           <div className={styles.batchBarActions}>
@@ -396,7 +436,7 @@ export default function ToolsTab({
               onClick={() => handleBatchVerify(true)}
             >
               <CheckCircle2 size={13} color="#10b981" />
-              <span>Onayla</span>
+              <span>{t('admin.batchVerify', 'Onayla')}</span>
             </button>
 
             <button
@@ -406,13 +446,13 @@ export default function ToolsTab({
                 selectedToolIds.forEach((id) => {
                   adminUpdateTool(id, { isFeatured: true, featured: true });
                 });
-                toastService.success(`${selectedToolIds.length} araç öne çıkarıldı.`);
+                toastService.success(`${selectedToolIds.length} ${language === 'tr' ? 'araç öne çıkarıldı.' : language === 'ru' ? 'инструментов выделено.' : 'tools featured.'}`);
                 setSelectedToolIds([]);
                 if (onRefreshTools) onRefreshTools();
               }}
             >
               <Star size={13} color="#fbbf24" />
-              <span>Öne Çıkar</span>
+              <span>{language === 'tr' ? 'Öne Çıkar' : language === 'ru' ? 'В избранное' : 'Feature'}</span>
             </button>
 
             <button
@@ -421,7 +461,7 @@ export default function ToolsTab({
               onClick={handleBatchDeletePrompt}
             >
               <Trash2 size={13} />
-              <span>Kaldır</span>
+              <span>{t('admin.batchDelete', 'Sil')}</span>
             </button>
 
             <button
@@ -429,7 +469,7 @@ export default function ToolsTab({
               className={styles.batchBtn}
               onClick={() => setSelectedToolIds([])}
             >
-              Seçimi Temizle
+              {language === 'tr' ? 'Seçimi Temizle' : language === 'ru' ? 'Снять выделение' : 'Clear Selection'}
             </button>
           </div>
         </div>
@@ -446,7 +486,7 @@ export default function ToolsTab({
                     type="button"
                     onClick={handleToggleSelectAll}
                     className={styles.rowSelectBtn}
-                    aria-label="Tümünü Seç"
+                    aria-label={t('admin.selectAll', 'Tümünü Seç')}
                   >
                     {selectedToolIds.length === paginatedTools.length && paginatedTools.length > 0 ? (
                       <CheckSquare size={15} color="#6366f1" />
@@ -455,19 +495,19 @@ export default function ToolsTab({
                     )}
                   </button>
                 </th>
-                <th>Araç Adı & Tanım</th>
-                <th>Kategori</th>
-                <th>Fiyatlandırma</th>
-                <th>Puan & Oylar</th>
-                <th>Doğrulama</th>
-                <th style={{ textAlign: 'right' }}>İşlemler</th>
+                <th>{t('admin.colTool', 'Araç Adı & Tanım')}</th>
+                <th>{t('admin.colCategory', 'Kategori')}</th>
+                <th>{t('admin.colPricing', 'Fiyatlandırma')}</th>
+                <th>{t('admin.colRatingVotes', 'Rating & Votes')}</th>
+                <th>{t('filter.verification', 'Doğrulama')}</th>
+                <th style={{ textAlign: 'right' }}>{t('admin.colActions', 'İşlemler')}</th>
               </tr>
             </thead>
             <tbody>
               {paginatedTools.length === 0 ? (
                 <tr>
                   <td colSpan={7} className={styles.emptyTableTd}>
-                    Filtre kriterlerine uygun araç kaydı bulunamadı.
+                    {language === 'tr' ? 'Filtre kriterlerine uygun araç kaydı bulunamadı.' : language === 'ru' ? 'Записей инструментов по критериям фильтра не найдено.' : 'No tool listings found matching these criteria.'}
                   </td>
                 </tr>
               ) : (
@@ -571,16 +611,14 @@ export default function ToolsTab({
                           </button>
 
                           {/* View in catalog */}
-                          {onOpenTool && (
-                            <button
-                              type="button"
-                              className={styles.actionIconBtn}
-                              onClick={() => onOpenTool(tool.id)}
-                              title="Kullanıcı Görünümünde Aç"
-                            >
-                              <ExternalLink size={15} />
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            className={styles.actionIconBtn}
+                            onClick={() => handleOpenToolLive(tool.id)}
+                            title="Kullanıcı Görünümünde Aç (Yeni Sekme)"
+                          >
+                            <ExternalLink size={15} />
+                          </button>
 
                           {/* Edit Form */}
                           <button
@@ -630,11 +668,15 @@ export default function ToolsTab({
           <div className={styles.paginationBar}>
             <div className={styles.paginationInfo}>
               <span>
-                Toplam <strong>{filteredTools.length}</strong> araçtan <strong>{pageSize === 'all' ? filteredTools.length : Math.min((currentPage - 1) * pageSize + 1, filteredTools.length)}</strong> - <strong>{pageSize === 'all' ? filteredTools.length : Math.min(currentPage * pageSize, filteredTools.length)}</strong> arası gösteriliyor
+                {language === 'tr'
+                  ? <>Toplam <strong>{filteredTools.length}</strong> araçtan <strong>{pageSize === 'all' ? filteredTools.length : Math.min((currentPage - 1) * pageSize + 1, filteredTools.length)}</strong> - <strong>{pageSize === 'all' ? filteredTools.length : Math.min(currentPage * pageSize, filteredTools.length)}</strong> arası gösteriliyor</>
+                  : language === 'ru'
+                  ? <>Показано <strong>{pageSize === 'all' ? filteredTools.length : Math.min((currentPage - 1) * pageSize + 1, filteredTools.length)}</strong> - <strong>{pageSize === 'all' ? filteredTools.length : Math.min(currentPage * pageSize, filteredTools.length)}</strong> из <strong>{filteredTools.length}</strong> инструментов</>
+                  : <>Showing <strong>{pageSize === 'all' ? filteredTools.length : Math.min((currentPage - 1) * pageSize + 1, filteredTools.length)}</strong> - <strong>{pageSize === 'all' ? filteredTools.length : Math.min(currentPage * pageSize, filteredTools.length)}</strong> of <strong>{filteredTools.length}</strong> tools</>}
               </span>
 
               <div className={styles.pageSizeSelector}>
-                <label>Sayfa Başına:</label>
+                <label>{t('admin.pageSize', 'Sayfa Başına')}:</label>
                 <select
                   value={pageSize}
                   onChange={(e) => {
@@ -647,7 +689,7 @@ export default function ToolsTab({
                   <option value={10}>10</option>
                   <option value={25}>25</option>
                   <option value={50}>50</option>
-                  <option value="all">Tümü</option>
+                  <option value="all">{language === 'tr' ? 'Tümü' : language === 'ru' ? 'Все' : 'All'}</option>
                 </select>
               </div>
             </div>
@@ -704,6 +746,7 @@ export default function ToolsTab({
           isOpen={isFormOpen}
           initialData={editingTool}
           isEditMode={Boolean(editingTool)}
+          onSave={handleSaveTool}
           onClose={() => {
             setIsFormOpen(false);
             setEditingTool(null);

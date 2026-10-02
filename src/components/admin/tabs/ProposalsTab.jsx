@@ -28,6 +28,7 @@ const STATUS_CHIPS = [
 
 export default function ProposalsTab({
   proposals = [],
+  globalSearch = '',
   onRefreshProposals,
   onOpenTool,
 }) {
@@ -47,8 +48,8 @@ export default function ProposalsTab({
       if (filterStatus !== 'all' && p.status !== filterStatus) {
         return false;
       }
-      if (search) {
-        const q = search.toLowerCase();
+      const q = (search || globalSearch || '').trim().toLowerCase();
+      if (q) {
         const toolMatch = (p.toolName || '').toLowerCase().includes(q);
         const proposerMatch = (p.proposer || '').toLowerCase().includes(q);
         const summaryMatch = (p.summary || '').toLowerCase().includes(q);
@@ -56,7 +57,7 @@ export default function ProposalsTab({
       }
       return true;
     });
-  }, [safeProposals, filterStatus, search]);
+  }, [safeProposals, filterStatus, search, globalSearch]);
 
   // Paginated proposals
   const paginatedProposals = useMemo(() => {
@@ -203,12 +204,18 @@ export default function ProposalsTab({
                   </div>
                   <h3 className={styles.proposalToolName}>
                     {prop.toolName}
-                    {onOpenTool && prop.toolId && (
+                    {prop.toolId && (
                       <button
                         type="button"
                         className={styles.toolLinkBtn}
-                        onClick={() => onOpenTool(prop.toolId)}
-                        title="Aracı Görüntüle"
+                        onClick={() => {
+                          if (typeof window !== 'undefined') {
+                            window.open(`/?tool=${encodeURIComponent(prop.toolId)}`, '_blank');
+                          } else if (onOpenTool) {
+                            onOpenTool(prop.toolId);
+                          }
+                        }}
+                        title="Aracı Yeni Sekmede Görüntüle"
                       >
                         <ExternalLink size={13} />
                       </button>

@@ -7,19 +7,27 @@ import {
   X,
   Loader2,
 } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from '../AdminDashboardPage.module.scss';
 
 export default function AdminConfirmModal({
   isOpen,
-  title = 'İşlemi Onayla',
-  message = 'Bu işlemi gerçekleştirmek istediğinize emin misiniz?',
+  title,
+  message,
   variant = 'danger', // 'danger' | 'warning' | 'primary' | 'info'
-  confirmText = 'Onayla',
-  cancelText = 'Vazgeç',
+  confirmText,
+  cancelText,
   isLoading = false,
   onConfirm,
   onClose,
 }) {
+  const { t } = useLanguage();
+
+  const finalTitle = title || t('admin.confirmTitleDefault') || 'İşlemi Onayla';
+  const finalMessage = message || t('admin.confirmMessageDefault') || 'Bu işlemi gerçekleştirmek istediğinize emin misiniz?';
+  const finalConfirmText = confirmText || t('admin.confirmBtnConfirm') || 'Onayla';
+  const finalCancelText = cancelText || t('admin.confirmBtnCancel') || 'Vazgeç';
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -79,16 +87,16 @@ export default function AdminConfirmModal({
           <div className={styles.confirmIconWrapper}>{renderIcon()}</div>
           <div className={styles.confirmTitleArea}>
             <h3 id="confirm-modal-title" className={styles.confirmTitle}>
-              {title}
+              {finalTitle}
             </h3>
-            <p className={styles.confirmMessage}>{message}</p>
+            <p className={styles.confirmMessage}>{finalMessage}</p>
           </div>
           <button
             type="button"
             className={styles.modalCloseBtn}
             onClick={onClose}
             disabled={isLoading}
-            aria-label="Kapat"
+            aria-label={t('admin.close') || 'Kapat'}
           >
             <X size={18} />
           </button>
@@ -101,7 +109,7 @@ export default function AdminConfirmModal({
             onClick={onClose}
             disabled={isLoading}
           >
-            {cancelText}
+            {finalCancelText}
           </button>
           <button
             type="button"
@@ -112,10 +120,10 @@ export default function AdminConfirmModal({
             {isLoading ? (
               <>
                 <Loader2 size={16} className={styles.spinIcon} />
-                <span>İşleniyor...</span>
+                <span>{t('admin.processing') || 'İşlem yapılıyor...'}</span>
               </>
             ) : (
-              confirmText
+              finalConfirmText
             )}
           </button>
         </div>

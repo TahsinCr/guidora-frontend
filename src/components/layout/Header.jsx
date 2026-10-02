@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { Plus, Bell, Sun, Moon, ChevronRight } from 'lucide-react';
+import { Plus, Bell, Sun, Moon, ChevronRight, ShieldCheck } from 'lucide-react';
 import UserMenu from './UserMenu';
 import LanguageDropdown from './LanguageDropdown';
 import AmbientStatusBar from './AmbientStatusBar';
@@ -51,87 +51,53 @@ export default function Header({
         </div>
 
         <div className={styles.toolBar}>
-          {activeTool ? (
-            <>
-              <button
-                className={styles.submitBtn}
-                onClick={onSubmitTool}
-                title={t('header.submitTool', 'Submit Tool')}
-              >
-                <Plus size={15} />
-                <span className={styles.btnText}>{t('header.submitTool', 'Submit Tool')}</span>
-              </button>
+          <button
+            className={styles.submitBtn}
+            onClick={onSubmitTool}
+            title={t('header.submitTool', 'Submit Tool')}
+          >
+            <Plus size={15} />
+            <span className={styles.btnText}>{t('header.submitTool', 'Submit Tool')}</span>
+          </button>
 
-              <LanguageDropdown />
+          <button
+            type="button"
+            className={styles.adminTriggerBtn}
+            onClick={onOpenAdmin}
+            title="Admin Dashboard"
+          >
+            <ShieldCheck size={15} />
+            <span className={styles.adminTriggerText}>Admin</span>
+          </button>
 
-              <button
-                className={styles.iconBtn}
-                onClick={toggleTheme}
-                title={theme === 'dark' ? t('header.switchToLight', 'Switch to Light Mode') : t('header.switchToDark', 'Switch to Dark Mode')}
-              >
-                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
+          <LanguageDropdown />
 
-              <button
-                type="button"
-                className={styles.iconBtn}
-                onClick={onOpenNotifications}
-                title={t('header.notifications', 'Notifications')}
-              >
-                <Bell size={18} />
-                <span className={styles.pinkDot} />
-              </button>
-              
-              <UserMenu
-                currentUser={currentUser}
-                onOpenProfile={onOpenProfile}
-                onOpenAdmin={onOpenAdmin}
-                onOpenSettings={onOpenSettings}
-                onOpenAuth={onOpenAuth}
-                onUserChange={onUserChange}
-              />
-            </>
-          ) : (
-            <>
-              <button
-                className={styles.submitBtn}
-                onClick={onSubmitTool}
-                title={t('header.submitTool', 'Submit Tool')}
-              >
-                <Plus size={15} />
-                <span className={styles.btnText}>{t('header.submitTool', 'Submit Tool')}</span>
-              </button>
+          <button
+            className={styles.iconBtn}
+            onClick={toggleTheme}
+            title={theme === 'dark' ? t('header.switchToLight', 'Switch to Light Mode') : t('header.switchToDark', 'Switch to Dark Mode')}
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
 
-              <LanguageDropdown />
-
-              <button
-                className={styles.iconBtn}
-                onClick={toggleTheme}
-                title={theme === 'dark' ? t('header.switchToLight', 'Switch to Light Mode') : t('header.switchToDark', 'Switch to Dark Mode')}
-              >
-                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
-
-              <button
-                type="button"
-                className={styles.iconBtn}
-                onClick={onOpenNotifications}
-                title={t('header.notifications', 'Notifications')}
-              >
-                <Bell size={18} />
-                <span className={styles.pinkDot} />
-              </button>
-
-              <UserMenu
-                currentUser={currentUser}
-                onOpenProfile={onOpenProfile}
-                onOpenAdmin={onOpenAdmin}
-                onOpenSettings={onOpenSettings}
-                onOpenAuth={onOpenAuth}
-                onUserChange={onUserChange}
-              />
-            </>
-          )}
+          <button
+            type="button"
+            className={styles.iconBtn}
+            onClick={onOpenNotifications}
+            title={t('header.notifications', 'Notifications')}
+          >
+            <Bell size={18} />
+            <span className={styles.pinkDot} />
+          </button>
+          
+          <UserMenu
+            currentUser={currentUser}
+            onOpenProfile={onOpenProfile}
+            onOpenAdmin={onOpenAdmin}
+            onOpenSettings={onOpenSettings}
+            onOpenAuth={onOpenAuth}
+            onUserChange={onUserChange}
+          />
         </div>
       </div>
       <AmbientStatusBar isNavigating={isNavigating} />

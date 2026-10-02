@@ -1,32 +1,31 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import {
   Menu,
   Search,
-  Download,
-  Upload,
-  Database,
   CheckCircle2,
-  Sliders,
-  Shield,
   Activity,
+  Sun,
+  Moon,
+  Globe,
 } from 'lucide-react';
-import toastService from '@/services/toast/toastService';
+import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from './AdminDashboardPage.module.scss';
 
 const TAB_TITLES = {
-  overview: { title: 'Genel Bakış & Analitik', breadcrumb: 'Platform / Genel Bakış' },
-  schema: { title: 'Veri Modeli & REST API Tasarımı', breadcrumb: 'Platform / Veri Modeli & API' },
-  database: { title: 'Veri Modeli & REST API Tasarımı', breadcrumb: 'Platform / Veri Modeli & API' },
-  logs: { title: 'Denetim & Sistem Logları', breadcrumb: 'Platform / Denetim Logları' },
-  tools: { title: 'Araç Kataloğu Yönetimi', breadcrumb: 'Yönetişim / Araçlar' },
+  overview: { title: 'Genel Bakış & Platform Analitiği', breadcrumb: 'Platform / Genel Bakış' },
+  schema: { title: 'REST API Sözleşmeleri & Bağlantı Kataloğu', breadcrumb: 'Platform / REST API Sözleşmeleri' },
+  database: { title: 'REST API Sözleşmeleri & Bağlantı Kataloğu', breadcrumb: 'Platform / REST API Sözleşmeleri' },
+  logs: { title: 'Denetim & Sistem Olay Günlükleri', breadcrumb: 'Platform / Denetim Logları' },
+  tools: { title: 'Araç Kataloğu Yönetimi', breadcrumb: 'Yönetişim / Araç Kataloğu' },
   proposals: { title: 'Topluluk Düzenleme Teklifleri', breadcrumb: 'Yönetişim / Teklif Kuyruğu' },
   categories: { title: 'Kategori Taksonomisi', breadcrumb: 'Yönetişim / Kategoriler' },
   tags: { title: 'Etiket Grupları & Sınıflandırma', breadcrumb: 'Yönetişim / Etiketler' },
-  users: { title: 'Kullanıcı Hesapları & Rol İzinleri', breadcrumb: 'Topluluk / Kullanıcılar & Roller' },
+  users: { title: 'Kullanıcı Hesapları & Rol İzinleri', breadcrumb: 'Topluluk / Kullanıcılar' },
   organizations: { title: 'Yapay Zeka Kuruluşları & Doğrulama', breadcrumb: 'Topluluk / Kuruluşlar' },
   reports: { title: 'Kullanıcı Şikayetleri & Moderasyon', breadcrumb: 'Güvenlik / Şikayetler' },
   reviews: { title: 'Topluluk İncelemeleri & Yorumlar', breadcrumb: 'Topluluk / Değerlendirmeler' },
-  system: { title: 'Sistem Yapılandırması & Bakım', breadcrumb: 'Altyapı / Sistem' },
+  system: { title: 'Sistem Yapılandırması & Bakım', breadcrumb: 'Platform / Sistem & Bakım' },
 };
 
 export default function AdminHeader({
@@ -34,33 +33,16 @@ export default function AdminHeader({
   onToggleMobile,
   globalSearch,
   onGlobalSearchChange,
-  onExportData,
-  onImportData,
   dbStatus = { isOnline: true, latencyMs: 8, status: 'ONLINE' },
   currentUser,
 }) {
-  const fileInputRef = useRef(null);
+  const { theme, toggleTheme } = useTheme();
+  const { lang, setLang, supportedLanguages } = useLanguage();
   const activeMeta = TAB_TITLES[activeTab] || { title: 'Yönetim Paneli', breadcrumb: 'Admin' };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          onImportData(event.target.result);
-        } catch (err) {
-          toastService.error('Dosya okuma hatası: ' + err.message);
-        }
-      };
-      reader.readAsText(file);
-    }
-    e.target.value = '';
-  };
 
   return (
     <header className={styles.adminHeader}>
-      {/* Left: Mobile Toggle & Breadcrumbs */}
+      {/* Left: Mobile Toggle & Professional Breadcrumb */}
       <div className={styles.headerLeft}>
         <button
           type="button"
@@ -68,7 +50,7 @@ export default function AdminHeader({
           onClick={onToggleMobile}
           aria-label="Menüyü Aç"
         >
-          <Menu size={22} />
+          <Menu size={20} />
         </button>
 
         <div className={styles.breadcrumbBlock}>
@@ -77,12 +59,14 @@ export default function AdminHeader({
         </div>
       </div>
 
-      {/* Center: Live Platform Status Indicators */}
+      {/* Center: Live Architecture & Telemetry Gauges */}
       <div className={styles.headerCenter}>
         <div className={styles.statusPill} title="REST API ve Servis Katmanı Sağlığı">
           <span className={`${styles.statusDot} ${dbStatus.isOnline ? styles.online : styles.offline}`} />
           <Activity size={13} className={styles.statusPillIcon} />
-          <span className={styles.statusPillText}>API: {dbStatus.isOnline ? `AKTİF (${dbStatus.latencyMs || 8}ms)` : 'DEVRE DIŞI'}</span>
+          <span className={styles.statusPillText}>
+            API: {dbStatus.isOnline ? `ONLINE (${dbStatus.latencyMs || 8}ms)` : 'OFFLINE'}
+          </span>
         </div>
 
         <div className={styles.statusPill} title="Circuit Breaker Durumu">
@@ -96,10 +80,11 @@ export default function AdminHeader({
         </div>
       </div>
 
-      {/* Right: Quick Search & Export/Import Actions */}
+      {/* Right: Quick Search, Language Switcher, Theme & Admin Profile Pill */}
       <div className={styles.headerRight}>
+        {/* Global Live Filter Search */}
         <div className={styles.searchWrapper}>
-          <Search size={16} className={styles.searchIcon} />
+          <Search size={15} className={styles.searchIcon} />
           <input
             type="text"
             className={styles.searchInput}
@@ -110,34 +95,47 @@ export default function AdminHeader({
           />
         </div>
 
-        {/* Backup Export */}
+        {/* Multi-Language Selector Dropdown */}
+        <div className={styles.headerLangWrapper} title="Dili Değiştir (Language)">
+          <Globe size={15} className={styles.headerLangIcon} />
+          <select
+            className={styles.headerLangSelect}
+            value={lang}
+            onChange={(e) => setLang(e.target.value)}
+            aria-label="Dil Seçimi"
+          >
+            {(supportedLanguages || ['en', 'tr', 'ru']).map((item) => {
+              const code = typeof item === 'string' ? item : item?.code || 'en';
+              return (
+                <option key={code} value={code}>
+                  {code.toUpperCase()}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+
+        {/* Theme Toggle Button */}
         <button
           type="button"
-          className={styles.headerActionBtn}
-          onClick={onExportData}
-          title="Tüm platform verilerini JSON olarak yedekle"
+          className={styles.headerIconBtn}
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Açık Temaya Geç' : 'Koyu Temaya Geç'}
+          aria-label="Temayı Değiştir"
         >
-          <Download size={15} />
-          <span className={styles.btnLabel}>Yedekle</span>
+          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
 
-        {/* Backup Import */}
-        <input
-          type="file"
-          ref={fileInputRef}
-          accept=".json"
-          style={{ display: 'none' }}
-          onChange={handleFileChange}
-        />
-        <button
-          type="button"
-          className={styles.headerActionBtn}
-          onClick={() => fileInputRef.current?.click()}
-          title="Önceden indirilmiş JSON yedeğini yükle"
-        >
-          <Upload size={15} />
-          <span className={styles.btnLabel}>Yükle</span>
-        </button>
+        {/* Header Admin User Profile Pill */}
+        <div className={styles.headerUserPill}>
+          <div className={styles.headerUserAvatar}>
+            {currentUser?.avatar || 'TC'}
+          </div>
+          <div className={styles.headerUserInfo}>
+            <span className={styles.headerUserName}>{currentUser?.username || currentUser?.name || 'tahsincr'}</span>
+            <span className={styles.headerUserRole}>ADMIN</span>
+          </div>
+        </div>
       </div>
     </header>
   );

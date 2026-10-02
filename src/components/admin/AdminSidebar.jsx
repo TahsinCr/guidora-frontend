@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   LayoutDashboard,
-  Database,
   Layers,
   FileText,
   Wrench,
@@ -15,10 +14,10 @@ import {
   Activity,
   ChevronLeft,
   ChevronRight,
-  ArrowLeft,
   ShieldCheck,
   X,
 } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from './AdminDashboardPage.module.scss';
 
 export default function AdminSidebar({
@@ -32,37 +31,34 @@ export default function AdminSidebar({
   isMobileOpen,
   onCloseMobile,
 }) {
+  const { t } = useLanguage();
+
   const navSections = [
     {
-      title: 'Platform & İzleme',
+      title: t('admin.sectionPlatform') || 'Platform & İzleme',
       items: [
-        { id: 'overview', label: 'Genel Bakış', icon: LayoutDashboard },
-        { id: 'schema', label: 'Veri Modeli & API', icon: Layers, badge: badges.schema || 8, badgeVariant: 'accent' },
-        { id: 'logs', label: 'Denetim Logları', icon: FileText, badge: badges.criticalLogs > 0 ? `${badges.criticalLogs} Alert` : null, badgeVariant: 'danger' },
+        { id: 'overview', label: t('admin.tabOverview') || 'Genel Bakış', icon: LayoutDashboard },
+        { id: 'schema', label: 'REST API Sözleşmeleri', icon: Layers, badge: '18 API', badgeVariant: 'accent' },
+        { id: 'logs', label: t('admin.tabLogs') || 'Denetim Logları', icon: FileText, badge: badges.criticalLogs > 0 ? `${badges.criticalLogs} Alert` : null, badgeVariant: 'danger' },
+        { id: 'system', label: t('admin.tabSystem') || 'Sistem & Bakım', icon: Activity },
       ],
     },
     {
-      title: 'Yönetişim & İçerik',
+      title: t('admin.sectionGovernance') || 'Yönetişim & İçerik',
       items: [
-        { id: 'tools', label: 'Araç Kataloğu', icon: Wrench, badge: badges.toolsCount },
-        { id: 'proposals', label: 'Teklif Sırası', icon: GitPullRequest, badge: badges.pendingProposals > 0 ? badges.pendingProposals : null, badgeVariant: 'warning' },
-        { id: 'categories', label: 'Kategoriler', icon: FolderTree, badge: badges.categoriesCount },
-        { id: 'tags', label: 'Etiket Taksonomisi', icon: Tag },
+        { id: 'tools', label: t('admin.tabTools') || 'Araç Kataloğu', icon: Wrench, badge: badges.toolsCount },
+        { id: 'proposals', label: t('admin.tabProposals') || 'Teklif Sırası', icon: GitPullRequest, badge: badges.pendingProposals > 0 ? badges.pendingProposals : null, badgeVariant: 'warning' },
+        { id: 'categories', label: t('admin.tabCategories') || 'Kategoriler', icon: FolderTree, badge: badges.categoriesCount },
+        { id: 'tags', label: t('admin.tabTags') || 'Etiket Taksonomisi', icon: Tag },
       ],
     },
     {
-      title: 'Topluluk & Güvenlik',
+      title: t('admin.sectionCommunity') || 'Topluluk & Güvenlik',
       items: [
-        { id: 'users', label: 'Kullanıcılar & Roller', icon: Users, badge: badges.usersCount },
-        { id: 'organizations', label: 'Kuruluşlar', icon: Building2 },
-        { id: 'reports', label: 'Şikayetler & Moderasyon', icon: AlertTriangle, badge: badges.pendingReports > 0 ? badges.pendingReports : null, badgeVariant: 'danger' },
-        { id: 'reviews', label: 'Değerlendirmeler', icon: MessageSquare },
-      ],
-    },
-    {
-      title: 'Altyapı',
-      items: [
-        { id: 'system', label: 'Sistem & Bakım', icon: Activity },
+        { id: 'users', label: t('admin.tabUsers') || 'Kullanıcılar & Roller', icon: Users, badge: badges.usersCount },
+        { id: 'organizations', label: t('admin.tabOrganizations') || 'Kuruluşlar', icon: Building2 },
+        { id: 'reports', label: t('admin.tabReports') || 'Şikayetler & Moderasyon', icon: AlertTriangle, badge: badges.pendingReports > 0 ? badges.pendingReports : null, badgeVariant: 'danger' },
+        { id: 'reviews', label: t('admin.tabReviews') || 'Değerlendirmeler', icon: MessageSquare },
       ],
     },
   ];
@@ -84,28 +80,63 @@ export default function AdminSidebar({
       >
         {/* Sidebar Brand Header */}
         <div className={styles.sidebarHeader}>
-          <div className={styles.brandRow}>
+          <div
+            className={styles.brandRow}
+            onClick={() => {
+              if (onBack) {
+                onBack();
+              } else if (typeof window !== 'undefined') {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('view');
+                window.location.href = url.pathname;
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (onBack) onBack();
+              }
+            }}
+            title="Ana Sayfaya Dön (Go to Home)"
+            aria-label="Ana Sayfaya Dön"
+          >
             <div className={styles.brandLogo}>
               <ShieldCheck size={22} className={styles.brandIcon} />
             </div>
             {!isCollapsed && (
               <div className={styles.brandInfo}>
                 <div className={styles.brandTitle}>Guidora Admin</div>
-                <div className={styles.brandVersion}>Yönetim Konsolu</div>
+                <div className={styles.brandVersion}>{t('admin.brandSubtitle') || 'Yönetim Konsolu'}</div>
               </div>
             )}
           </div>
-          {/* Mobile Close Button */}
-          {isMobileOpen && (
+
+          <div className={styles.sidebarHeaderActions}>
+            {/* Desktop Collapse Toggle on Top */}
             <button
               type="button"
-              className={styles.mobileCloseBtn}
-              onClick={onCloseMobile}
-              aria-label="Menüyü Kapat"
+              className={styles.headerCollapseBtn}
+              onClick={onToggleCollapse}
+              aria-label={isCollapsed ? (t('admin.expandSidebar') || 'Paneli Genişlet') : (t('admin.collapseSidebar') || 'Paneli Daralt')}
+              title={isCollapsed ? `${t('admin.expandSidebar') || 'Genişlet'} (Ctrl+B)` : `${t('admin.collapseSidebar') || 'Daralt'} (Ctrl+B)`}
             >
-              <X size={20} />
+              {isCollapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}
             </button>
-          )}
+
+            {/* Mobile Close Button */}
+            {isMobileOpen && (
+              <button
+                type="button"
+                className={styles.mobileCloseBtn}
+                onClick={onCloseMobile}
+                aria-label={t('admin.close') || 'Kapat'}
+              >
+                <X size={20} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Navigation Menu List */}
@@ -156,47 +187,6 @@ export default function AdminSidebar({
             </div>
           ))}
         </nav>
-
-        {/* Sidebar Footer Controls */}
-        <div className={styles.sidebarFooter}>
-          {/* Back to site button */}
-          <button
-            type="button"
-            className={styles.backBtn}
-            onClick={onBack}
-            title={isCollapsed ? 'Dizine Geri Dön' : undefined}
-          >
-            <ArrowLeft size={18} />
-            {!isCollapsed && <span>Dizine Dön</span>}
-          </button>
-
-          {/* Desktop Collapse Toggle */}
-          <button
-            type="button"
-            className={styles.collapseToggle}
-            onClick={onToggleCollapse}
-            aria-label={isCollapsed ? 'Paneli Genişlet' : 'Paneli Daralt'}
-            title={isCollapsed ? 'Genişlet (Ctrl+B)' : 'Daralt (Ctrl+B)'}
-          >
-            {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-            {!isCollapsed && <span>Paneli Küçült</span>}
-          </button>
-
-          {/* User Status Card */}
-          <div className={styles.userCard}>
-            <div className={styles.userAvatar}>
-              {currentUser?.avatar || 'TC'}
-            </div>
-            {!isCollapsed && (
-              <div className={styles.userInfo}>
-                <span className={styles.userName}>{currentUser?.name || 'Tahsin Cr'}</span>
-                <span className={styles.userRoleBadge}>
-                  {currentUser?.role?.toUpperCase() || 'ADMIN'}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
       </aside>
     </>
   );

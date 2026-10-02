@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## **[v1.0] - 02.10.2026**
+
 ### Changed
 
 - **Admin Panel Enterprise UX & UI Overhaul (In-App Modals, Pagination, Filter Chips, Light Theme Contrast, Standalone Workspace)**:
@@ -18,8 +20,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Fixed category tool counting bug where `t.category` stored display names while `cat.id` stored slugs.
   - Overhauled Light Mode contrast across the admin console, eliminating missing `--bg-main` fallback and ensuring high-contrast readable cards, tables, inputs, sidebars, modals, and badges.
   - Dedicated full-screen admin workspace: hid public directory Header, Footer, and ScrollToTop in `App.jsx` when `?view=admin` is active.
+  - Upgraded table row selection checkboxes across all data tables with custom dark/light theme styled check boxes (`.rowSelectBtn`), glow effects, and smooth feedback.
+  - Fixed multi-language support (TR, EN, RU) across the admin panel, with shortened language selector (`TR`, `EN`, `RU`) and brand logo home redirect.
   - Fixed async Promise handling in `getAllReviews()`, preventing component crashes in `ReviewsTab`.
-  - Maintained 100% test suite pass rate (74 of 74 tests passing across 12 test suites) and verified Vite production build with gzip/brotli compression.
+  - Maintained 100% test suite pass rate (78 of 78 tests passing across 13 test suites) and verified Vite production build with gzip/brotli compression.
 
 - **Standardized Container Build Specifications to Lowercase `dockerfile`**:
   - Renamed root build file `Dockerfile` to lowercase `dockerfile`.
@@ -164,8 +168,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Upgraded Google OAuth button with official 4-color Google "G" logo SVG (`#4285F4`, `#34A853`, `#FBBC05`, `#EA4335`) and theme-adaptive button surface.
   - Implemented crisp GitHub Octocat SVG logo and elegant separator divider (`OR / VEYA`).
   - Extended Guidora brand emblem logo across Welcome, Login, and Registration headers.
-
-### Changed
 
 - **Clean View Transitions & Seamless Navigation**:
   - Removed all distracting navbar loading progress animations (`.navProgressBar` / `@keyframes navProgressGlow`) on tool view and page transitions, ensuring completely clean, silent, and seamless switching.

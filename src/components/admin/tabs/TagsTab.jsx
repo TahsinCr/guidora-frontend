@@ -25,6 +25,7 @@ import styles from '../AdminDashboardPage.module.scss';
 
 export default function TagsTab({
   tagCategories = [],
+  globalSearch = '',
   onRefreshTags,
 }) {
   const [search, setSearch] = useState('');
@@ -195,33 +196,40 @@ export default function TagsTab({
       {/* Tag Groups Accordion / Grid */}
       <div className={styles.tagGroupsList}>
         {tagCategories.map((group) => {
+          const q = (search || globalSearch || '').trim().toLowerCase();
           const filteredTags = (group.tags || []).filter((tg) =>
-            search ? tg.name.toLowerCase().includes(search.toLowerCase()) : true
+            q ? tg.name.toLowerCase().includes(q) : true
           );
 
           return (
             <div key={group.id} className={styles.tagGroupCard}>
               <div className={styles.tagGroupHeader}>
-                <div className={styles.tagGroupTitleBlock}>
-                  <Tag size={17} className={styles.groupIcon} />
-                  <div>
-                    <h3 className={styles.groupTitleName}>{group.name}</h3>
-                    <code className={styles.groupIdCode}>ID: {group.id}</code>
+                <div className={styles.tagGroupHeaderTop}>
+                  <div className={styles.tagGroupTitleBlock}>
+                    <Tag size={17} className={styles.groupIcon} />
+                    <div>
+                      <h3 className={styles.groupTitleName}>{group.name}</h3>
+                      <code className={styles.groupIdCode}>ID: {group.id}</code>
+                    </div>
                   </div>
                   <span className={group.isSingleSelect ? styles.pillSingle : styles.pillMulti}>
-                    {group.isSingleSelect ? 'Tekli Seçim (Radio)' : 'Çoklu Seçim (Checkbox)'}
+                    {group.isSingleSelect ? 'Tekli Seçim' : 'Çoklu Seçim'}
                   </span>
                 </div>
 
                 <div className={styles.groupActions}>
+                  <span className={styles.tagCountBadge}>
+                    {filteredTags.length} etiket
+                  </span>
+
                   <button
                     type="button"
                     className={styles.groupActionBtn}
                     onClick={() => handleToggleSingleSelect(group)}
                     title="Tekli / Çoklu Seçim Modunu Değiştir"
                   >
-                    <Sliders size={13} />
-                    <span>{group.isSingleSelect ? 'Çokluya Çevir' : 'Tekliye Çevir'}</span>
+                    <Sliders size={12} />
+                    <span>{group.isSingleSelect ? 'Çoklu' : 'Tekli'}</span>
                   </button>
 
                   <button
@@ -230,7 +238,7 @@ export default function TagsTab({
                     onClick={() => handleOpenTranslate(group, 'tag_category')}
                     title="Grup Adı Çevirileri"
                   >
-                    <Globe size={13} />
+                    <Globe size={12} />
                     <span>Çeviriler</span>
                   </button>
 
@@ -240,7 +248,7 @@ export default function TagsTab({
                     onClick={() => handleDeleteGroup(group)}
                     title="Tüm Grubu Sil"
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={12} />
                   </button>
                 </div>
               </div>

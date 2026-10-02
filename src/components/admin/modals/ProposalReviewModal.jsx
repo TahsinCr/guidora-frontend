@@ -11,15 +11,8 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from '../AdminDashboardPage.module.scss';
-
-const REJECTION_PRESETS = [
-  'Eksik / Yetersiz Bilgi',
-  'Spam / Tanıtım Amaçlı',
-  'Kategori Uyuşmazlığı',
-  'Resmi Kaynak Doğrulanamadı',
-  'Mükerrer Teklif',
-];
 
 export default function ProposalReviewModal({
   proposal,
@@ -29,7 +22,16 @@ export default function ProposalReviewModal({
   onOpenTool,
   isLoading = false,
 }) {
+  const { t, language } = useLanguage();
   const [notes, setNotes] = useState('');
+
+  const rejectionPresets = [
+    t('admin.proposalPresetIncomplete', 'Eksik / Yetersiz Bilgi'),
+    t('admin.proposalPresetSpam', 'Spam / Tanıtım Amaçlı'),
+    t('admin.proposalPresetCategoryMismatch', 'Kategori Uyuşmazlığı'),
+    t('admin.proposalPresetUnverifiedSource', 'Resmi Kaynak Doğrulanamadı'),
+    t('admin.proposalPresetDuplicate', 'Mükerrer Teklif'),
+  ];
 
   useEffect(() => {
     if (proposal) {
@@ -54,6 +56,8 @@ export default function ProposalReviewModal({
     setNotes((prev) => (prev ? `${prev} - ${preset}` : preset));
   };
 
+  const dateLocale = language === 'en' ? 'en-US' : language === 'ru' ? 'ru-RU' : 'tr-TR';
+
   return (
     <div
       className={styles.modalOverlay}
@@ -73,15 +77,15 @@ export default function ProposalReviewModal({
             <div className={styles.propBadgeRow}>
               <span className={`${styles.statusBadge} ${styles[proposal.status]}`}>
                 {proposal.status === 'pending'
-                  ? 'İnceleme Bekliyor'
+                  ? t('admin.statusPendingReview', 'İnceleme Bekliyor')
                   : proposal.status === 'accepted'
-                  ? 'Onaylandı'
-                  : 'Reddedildi'}
+                  ? t('admin.statusApproved', 'Onaylandı')
+                  : t('admin.statusRejected', 'Reddedildi')}
               </span>
               <span className={styles.propIdTag}>ID: {proposal.id}</span>
             </div>
             <h2 className={styles.modalTitle}>
-              {proposal.toolName} — Değişiklik Teklifi
+              {proposal.toolName} — {t('admin.proposalChangeTitle', 'Değişiklik Teklifi')}
             </h2>
           </div>
 
@@ -90,7 +94,7 @@ export default function ProposalReviewModal({
             className={styles.modalCloseBtn}
             onClick={onClose}
             disabled={isLoading}
-            aria-label="Kapat"
+            aria-label={t('admin.close', 'Kapat')}
           >
             <X size={20} />
           </button>
@@ -101,10 +105,10 @@ export default function ProposalReviewModal({
           {/* Metadata Grid */}
           <div className={styles.diffMetadataCard}>
             <div className={styles.metaCol}>
-              <div className={styles.metaLabel}>Öneren Kullanıcı</div>
+              <div className={styles.metaLabel}>{t('admin.proposalProposerUser', 'Öneren Kullanıcı')}</div>
               <div className={styles.metaValue}>
                 <User size={14} />
-                <span>{proposal.proposer || 'Anonim'}</span>
+                <span>{proposal.proposer || t('admin.proposalAnonymous', 'Anonim')}</span>
                 {proposal.proposerRole && (
                   <span className={styles.roleTagSmall}>({proposal.proposerRole})</span>
                 )}
@@ -112,15 +116,15 @@ export default function ProposalReviewModal({
             </div>
 
             <div className={styles.metaCol}>
-              <div className={styles.metaLabel}>Gönderilme Tarihi</div>
+              <div className={styles.metaLabel}>{t('admin.proposalSubmittedAt', 'Gönderilme Tarihi')}</div>
               <div className={styles.metaValue}>
                 <Clock size={14} />
-                <span>{new Date(proposal.submittedAt).toLocaleString('tr-TR')}</span>
+                <span>{new Date(proposal.submittedAt).toLocaleString(dateLocale)}</span>
               </div>
             </div>
 
             <div className={styles.metaCol}>
-              <div className={styles.metaLabel}>İlgili Araç</div>
+              <div className={styles.metaLabel}>{t('admin.proposalRelatedTool', 'İlgili Araç')}</div>
               <div className={styles.metaValue}>
                 <span>{proposal.toolName}</span>
                 {proposal.toolId && onOpenTool && (
@@ -131,7 +135,8 @@ export default function ProposalReviewModal({
                       onOpenTool(proposal.toolId);
                       onClose();
                     }}
-                    title="Aracı Aç"
+                    title={t('admin.proposalOpenTool', 'Aracı Aç')}
+                    aria-label={t('admin.proposalOpenTool', 'Aracı Aç')}
                   >
                     <ExternalLink size={12} />
                   </button>
@@ -143,21 +148,21 @@ export default function ProposalReviewModal({
           {/* Proposal Summary */}
           {proposal.summary && (
             <div className={styles.propSummaryBox}>
-              <strong>Teklif Özeti:</strong>
+              <strong>{t('admin.proposalSummaryTitle', 'Teklif Özeti:')}</strong>
               <p>{proposal.summary}</p>
             </div>
           )}
 
           {/* Delta Changes Comparison Table */}
           <div className={styles.changesHeaderTitle}>
-            <h4>Önerilen Alan Değişiklikleri (Delta Diff)</h4>
+            <h4>{t('admin.proposalDeltaTitle', 'Önerilen Alan Değişiklikleri (Delta Diff)')}</h4>
           </div>
 
           <div className={styles.proposalChangesTable}>
             <div className={styles.changesHeader}>
-              <span>Alan (Field)</span>
-              <span>Mevcut Değer</span>
-              <span>Önerilen Yeni Değer</span>
+              <span>{t('admin.proposalColField', 'Alan (Field)')}</span>
+              <span>{t('admin.proposalColCurrent', 'Mevcut Değer')}</span>
+              <span>{t('admin.proposalColProposed', 'Önerilen Yeni Değer')}</span>
             </div>
             {proposal.changes &&
               Object.keys(proposal.changes).map((field) => {
@@ -191,9 +196,9 @@ export default function ProposalReviewModal({
           {proposal.status === 'pending' && (
             <div className={styles.reviewDecisionBox}>
               <div className={styles.presetRow}>
-                <span className={styles.presetLabel}>Hızlı Gerekçeler:</span>
+                <span className={styles.presetLabel}>{t('admin.proposalQuickReasons', 'Hızlı Gerekçeler:')}</span>
                 <div className={styles.presetChips}>
-                  {REJECTION_PRESETS.map((preset) => (
+                  {rejectionPresets.map((preset) => (
                     <button
                       key={preset}
                       type="button"
@@ -207,13 +212,13 @@ export default function ProposalReviewModal({
               </div>
 
               <div className={styles.noteInputArea}>
-                <label htmlFor="reviewNotes">İnceleme Notu / Karar Açıklaması:</label>
+                <label htmlFor="reviewNotes">{t('admin.proposalReviewNoteLabel', 'İnceleme Notu / Karar Açıklaması:')}</label>
                 <textarea
                   id="reviewNotes"
                   className={styles.reviewTextarea}
                   rows={3}
                   maxLength={500}
-                  placeholder="Kullanıcıya iletilecek karar notu giriniz..."
+                  placeholder={t('admin.proposalReviewNotePlaceholder', 'Kullanıcıya iletilecek karar notu giriniz...')}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
@@ -231,7 +236,7 @@ export default function ProposalReviewModal({
             onClick={onClose}
             disabled={isLoading}
           >
-            Kapat
+            {t('admin.close', 'Kapat')}
           </button>
 
           {proposal.status === 'pending' && (
@@ -247,7 +252,7 @@ export default function ProposalReviewModal({
                 ) : (
                   <XCircle size={15} />
                 )}
-                <span>Reddet</span>
+                <span>{t('admin.reject', 'Reddet')}</span>
               </button>
 
               <button
@@ -261,7 +266,7 @@ export default function ProposalReviewModal({
                 ) : (
                   <CheckCircle2 size={15} />
                 )}
-                <span>Onayla & Uygula</span>
+                <span>{t('admin.proposalAcceptApply', 'Onayla & Uygula')}</span>
               </button>
             </div>
           )}

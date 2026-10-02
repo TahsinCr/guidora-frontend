@@ -142,6 +142,34 @@
   }
 }
 
+.adminTriggerBtn {
+  @include layout.inline-flex(row, center, center, 6px);
+  @include layout.box(
+    $padding: 7px 14px,
+    $border: 1px solid rgba(139, 92, 246, 0.4),
+    $radius: var(--radius-full)
+  );
+  background: rgba(139, 92, 246, 0.12);
+  color: #c4b5fd;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(139, 92, 246, 0.24);
+    border-color: rgba(139, 92, 246, 0.8);
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .adminTriggerText {
+    letter-spacing: 0.03em;
+  }
+}
+
 .iconBtn {
   @include layout.square(36px);
   @include layout.flex(row, center, center);

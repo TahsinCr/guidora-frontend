@@ -14,11 +14,13 @@ import { isMaintenanceActive, getScheduledMaintenanceDetails } from '@/services/
 import { networkTracker } from '@/services/api/networkTracker';
 import { toast } from '@/services/toast/toastService';
 
+import AdminDashboardPage from '@/components/admin/AdminDashboardPage';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
+
 // Lazy-loaded heavy views and secondary modals (Code Splitting)
 const ToolDialog = lazy(() => import('@/components/tool-detail/ToolDialog'));
 const SubmitToolPage = lazy(() => import('@/components/submit/SubmitToolPage'));
 const UserProfilePage = lazy(() => import('@/components/profile/UserProfilePage'));
-const AdminDashboardPage = lazy(() => import('@/components/admin/AdminDashboardPage'));
 const AuthModal = lazy(() => import('@/components/auth/AuthModal'));
 const NotificationDrawer = lazy(() => import('@/components/notifications/NotificationDrawer'));
 const AccountSettingsModal = lazy(() => import('@/components/settings/AccountSettingsModal'));
@@ -119,8 +121,7 @@ export default function App() {
     const handleAuthEvent = (e) => {
       setCurrentUser(e.detail);
       if (!e.detail) {
-        // Logged out: redirect immediately to main directory home
-        setIsAdminView(false);
+        // If an explicit logout occurred, close modals and views
         setIsProfileView(false);
         setIsSubmitView(false);
         setActiveToolId(null);
@@ -128,11 +129,6 @@ export default function App() {
         setIsSettingsModalOpen(false);
         setIsNotifDrawerOpen(false);
         setIsAuthModalOpen(false);
-        const url = new URL(window.location.href);
-        url.searchParams.delete('tool');
-        url.searchParams.delete('view');
-        url.searchParams.delete('user');
-        window.history.pushState({}, '', url.pathname + (url.search ? url.search : ''));
       }
     };
     window.addEventListener('guidora_auth_change', handleAuthEvent);
@@ -201,7 +197,7 @@ export default function App() {
 
   // Update browser URL query params without reloading the page
   useEffect(() => {
-    if (isSubmitView || isProfileView || activeToolId) return;
+    if (isSubmitView || isProfileView || activeToolId || isAdminView) return;
 
     const url = new URL(window.location.href);
     
@@ -253,7 +249,7 @@ export default function App() {
     else url.searchParams.delete('bot');
 
     window.history.replaceState({}, '', url.toString());
-  }, [selectedCategory, selectedCategories, selectedTags, selectedOrganizations, search, sort, verification, isSubmitView, isProfileView, activeToolId]);
+  }, [selectedCategory, selectedCategories, selectedTags, selectedOrganizations, search, sort, verification, isSubmitView, isProfileView, activeToolId, isAdminView]);
 
   // Fetch tools whenever filters change (reset to page 1)
   useEffect(() => {
@@ -523,13 +519,22 @@ export default function App() {
         />
       )}
 
-      <main className="main-content">
+      <main className={isAdminView ? undefined : "main-content"}>
         <Suspense fallback={null}>
           {isAdminView ? (
-            <AdminDashboardPage
-              onBack={handleCloseTool}
-              onOpenTool={handleOpenTool}
-            />
+            <ErrorBoundary
+              title="Admin Paneli Yüklenemedi"
+              onReset={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('view');
+                window.location.href = url.pathname;
+              }}
+            >
+              <AdminDashboardPage
+                onBack={handleCloseTool}
+                onOpenTool={handleOpenTool}
+              />
+            </ErrorBoundary>
           ) : isProfileView ? (
             <UserProfilePage
               userId={profileUserId}

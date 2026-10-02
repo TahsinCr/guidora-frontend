@@ -20,6 +20,7 @@ import styles from '../AdminDashboardPage.module.scss';
 
 export default function OrganizationsTab({
   organizations = [],
+  globalSearch = '',
   onRefreshOrgs,
 }) {
   const [search, setSearch] = useState('');
@@ -39,8 +40,8 @@ export default function OrganizationsTab({
   });
 
   const filteredOrgs = organizations.filter((org) => {
-    if (search) {
-      const q = search.toLowerCase();
+    const q = (search || globalSearch || '').trim().toLowerCase();
+    if (q) {
       return (
         org.name.toLowerCase().includes(q) ||
         (org.website || '').toLowerCase().includes(q)

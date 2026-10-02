@@ -1,327 +1,184 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Layers,
+  Code,
   Search,
   Copy,
-  Check,
   Play,
-  ShieldCheck,
-  Code,
-  Database,
-  RefreshCw,
-  Sparkles,
-  ArrowRight,
+  FileCode,
+  Zap,
+  X,
 } from 'lucide-react';
-import {
-  adminGetEntitySchemas,
-  adminGetApiEndpoints,
-  adminGetSystemHealth,
-} from '@/services/adminService';
+import { API_MODULES, getAllApiEndpoints } from '@/services/api/apiCatalog';
+import { adminGetSystemHealth } from '@/services/adminService';
 import toastService from '@/services/toast/toastService';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from '../AdminDashboardPage.module.scss';
 
-export default function SchemaTab({ tools = [], categories = [] }) {
-  const [subTab, setSubTab] = useState('entities'); // 'entities' | 'endpoints' | 'architecture'
-  const [selectedEntityKey, setSelectedEntityKey] = useState('products');
-  const [fieldSearch, setFieldSearch] = useState('');
+export default function SchemaTab() {
+  const { t } = useLanguage();
+  const [selectedModuleId, setSelectedModuleId] = useState('ALL');
   const [endpointSearch, setEndpointSearch] = useState('');
   const [methodFilter, setMethodFilter] = useState('ALL');
-  const [copiedPayload, setCopiedPayload] = useState(false);
   const [simulatedEndpoint, setSimulatedEndpoint] = useState(null);
   const [simulatedResponse, setSimulatedResponse] = useState(null);
 
-  const schemas = useMemo(() => adminGetEntitySchemas(), []);
-  const endpoints = useMemo(() => adminGetApiEndpoints(), []);
+  const allEndpoints = useMemo(() => getAllApiEndpoints(), []);
   const systemHealth = useMemo(() => adminGetSystemHealth(), []);
 
-  const selectedEntity = schemas[selectedEntityKey] || schemas.products;
-
-  const filteredFields = useMemo(() => {
-    if (!fieldSearch) return selectedEntity.fields || [];
-    const q = fieldSearch.toLowerCase();
-    return (selectedEntity.fields || []).filter(
-      (f) =>
-        f.name.toLowerCase().includes(q) ||
-        f.type.toLowerCase().includes(q) ||
-        (f.description || '').toLowerCase().includes(q)
-    );
-  }, [selectedEntity, fieldSearch]);
-
+  // Filter endpoints by module, search query, and HTTP method
   const filteredEndpoints = useMemo(() => {
-    return endpoints.filter((ep) => {
+    return allEndpoints.filter((ep) => {
+      const matchModule = selectedModuleId === 'ALL' || ep.moduleId === selectedModuleId;
+      const q = endpointSearch.toLowerCase();
       const matchSearch =
-        ep.path.toLowerCase().includes(endpointSearch.toLowerCase()) ||
-        ep.summary.toLowerCase().includes(endpointSearch.toLowerCase());
+        !q ||
+        ep.path.toLowerCase().includes(q) ||
+        ep.summary.toLowerCase().includes(q) ||
+        ep.description.toLowerCase().includes(q) ||
+        ep.handlerName.toLowerCase().includes(q);
       const matchMethod = methodFilter === 'ALL' || ep.method === methodFilter;
-      return matchSearch && matchMethod;
+      return matchModule && matchSearch && matchMethod;
     });
-  }, [endpoints, endpointSearch, methodFilter]);
+  }, [allEndpoints, selectedModuleId, endpointSearch, methodFilter]);
 
-  const handleCopyPayload = (payload) => {
-    navigator.clipboard?.writeText(JSON.stringify(payload, null, 2));
-    setCopiedPayload(true);
-    toastService.success('JSON şablonu panoya kopyalandı.');
-    setTimeout(() => setCopiedPayload(false), 2000);
-  };
-
-  const handleCopySimulated = () => {
-    if (!simulatedResponse) return;
-    navigator.clipboard?.writeText(JSON.stringify(simulatedResponse.data, null, 2));
-    toastService.success('Simüle edilmiş yanıt panoya kopyalandı.');
+  const handleCopyCode = (data, successMsg) => {
+    if (!data) return;
+    navigator.clipboard?.writeText(typeof data === 'string' ? data : JSON.stringify(data, null, 2));
+    toastService.success(t('admin.copied', 'Kopyalandı'), successMsg || 'Panoya başarıyla kopyalandı.');
   };
 
   const handleSimulateApi = (endpoint) => {
-    setSimulatedEndpoint(endpoint.path);
+    setSimulatedEndpoint(endpoint.id);
+    const mockLatency = Math.floor(6 + Math.random() * 8);
     setSimulatedResponse({
-      status: endpoint.responseCodes[0] || '200 OK',
+      endpointId: endpoint.id,
+      path: endpoint.path,
+      method: endpoint.method,
+      status: '200 OK',
       data: endpoint.sampleResponse,
-      latencyMs: Math.floor(6 + Math.random() * 8),
+      latencyMs: mockLatency,
       timestamp: new Date().toISOString(),
     });
-    toastService.info(`${endpoint.method} ${endpoint.path} simüle edildi.`);
+    toastService.info('API Simülasyonu', `${endpoint.method} ${endpoint.path} simüle edildi (${mockLatency}ms).`);
   };
 
   return (
     <div className={styles.tabContent}>
-      {/* Top Architecture Overview Banner */}
+      {/* Top Professional API Gateway Header Banner */}
       <div className={styles.dbClusterBanner}>
         <div className={styles.clusterInfo}>
           <div className={styles.clusterIconWrap}>
-            <Layers size={28} className={styles.clusterIcon} />
+            <Zap size={26} className={styles.clusterIcon} />
           </div>
           <div>
             <div className={styles.clusterTitleRow}>
-              <h2 className={styles.clusterName}>Veri Modeli & REST API Tasarımı</h2>
-              <span className={styles.clusterBadge}>Teknoloji Bağımsız Sözleşme Mimarisi</span>
+              <h2 className={styles.clusterName}>{t('admin.schemaTitle', 'REST API Sözleşmeleri & Bağlantı Kataloğu')}</h2>
+              <span className={styles.clusterBadge}>SOLID & Modüler Entegrasyon</span>
             </div>
             <p className={styles.clusterSub}>
-              Guidora istemcisi, arka uç teknolojisinden (Java Spring Boot, .NET WebAPI, Go, Python) bağımsız standart RESTful API sözleşmeleriyle çalışır.
+              Tüm uç noktalar istemci arka plan servisleri (`/src/services/api/*`) ile tam senkronizedir. İstemci katmanı doğrudan standart REST/JSON sözleşmeleri üzerinden konuşur.
             </p>
           </div>
         </div>
 
-        {/* Global Architecture Health Gauges */}
+        {/* Live Gauges */}
         <div className={styles.clusterMetricsGrid}>
           <div className={styles.clusterMetricCard}>
-            <div className={styles.clusterMetricLabel}>Varlık Modelleri</div>
-            <div className={styles.clusterMetricValue}>{Object.keys(schemas).length} Model</div>
-            <div className={styles.clusterMetricSub}>Temel Domain Varlıkları</div>
-          </div>
-          <div className={styles.clusterMetricCard}>
-            <div className={styles.clusterMetricLabel}>REST Uç Noktaları</div>
-            <div className={styles.clusterMetricValue}>{endpoints.length} API</div>
-            <div className={styles.clusterMetricSub}>Açık Sözleşmeler</div>
+            <div className={styles.clusterMetricLabel}>Toplam API Uç Noktası</div>
+            <div className={styles.clusterMetricValue}>{allEndpoints.length} Endpoint</div>
+            <div className={styles.clusterMetricSub}>{API_MODULES.length} Servis Modülü</div>
           </div>
           <div className={styles.clusterMetricCard}>
             <div className={styles.clusterMetricLabel}>API Sağlığı & Gecikme</div>
-            <div className={styles.clusterMetricValue} style={{ color: '#10B981' }}>{systemHealth.latencyMs} ms</div>
-            <div className={styles.clusterMetricSub}>Circuit: {systemHealth.circuitBreaker}</div>
+            <div className={styles.clusterMetricValue} style={{ color: '#10B981' }}>{systemHealth.latencyMs || 8} ms</div>
+            <div className={styles.clusterMetricSub}>Circuit: {systemHealth.circuitBreaker || 'CLOSED'}</div>
+          </div>
+          <div className={styles.clusterMetricCard}>
+            <div className={styles.clusterMetricLabel}>Önbellek & Uptime</div>
+            <div className={styles.clusterMetricValue} style={{ color: '#818cf8' }}>{systemHealth.uptime || '99.98%'}</div>
+            <div className={styles.clusterMetricSub}>Hit Ratio: {systemHealth.cacheHitRatio || '99.4%'}</div>
           </div>
         </div>
       </div>
 
-      {/* Sub Navigation Bar */}
+      {/* Module Pill Tabs */}
       <div className={styles.dbSubNav}>
         <button
           type="button"
-          className={`${styles.dbSubNavBtn} ${subTab === 'entities' ? styles.active : ''}`}
-          onClick={() => setSubTab('entities')}
-        >
-          <Layers size={15} />
-          <span>Varlık Modelleri ({Object.keys(schemas).length})</span>
-        </button>
-        <button
-          type="button"
-          className={`${styles.dbSubNavBtn} ${subTab === 'endpoints' ? styles.active : ''}`}
-          onClick={() => setSubTab('endpoints')}
+          className={`${styles.dbSubNavBtn} ${selectedModuleId === 'ALL' ? styles.active : ''}`}
+          onClick={() => setSelectedModuleId('ALL')}
         >
           <Code size={15} />
-          <span>REST API Sözleşmeleri ({endpoints.length})</span>
+          <span>Tüm Modüller ({allEndpoints.length})</span>
         </button>
-        <button
-          type="button"
-          className={`${styles.dbSubNavBtn} ${subTab === 'architecture' ? styles.active : ''}`}
-          onClick={() => setSubTab('architecture')}
-        >
-          <Network size={15} />
-          <span>Mimari Tasarım & İlişki Haritası</span>
-        </button>
+        {API_MODULES.map((mod) => {
+          const isActive = selectedModuleId === mod.id;
+          return (
+            <button
+              key={mod.id}
+              type="button"
+              className={`${styles.dbSubNavBtn} ${isActive ? styles.active : ''}`}
+              onClick={() => setSelectedModuleId(mod.id)}
+            >
+              <FileCode size={15} />
+              <span>{mod.name} ({mod.endpoints.length})</span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* SUB-TAB 1: DOMAIN ENTITIES & FIELDS */}
-      {subTab === 'entities' && (
-        <div className={styles.schemaLayout}>
-          {/* Left: Entity Selector Pills */}
-          <div className={styles.schemaEntityList}>
-            <div className={styles.schemaEntityHeader}>Domain Varlıkları</div>
-            {Object.entries(schemas).map(([key, ent]) => {
-              const isActive = selectedEntityKey === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  className={`${styles.schemaEntityItem} ${isActive ? styles.active : ''}`}
-                  onClick={() => {
-                    setSelectedEntityKey(key);
-                    setFieldSearch('');
-                  }}
-                >
-                  <div className={styles.entityItemMain}>
-                    <div className={styles.entityItemName}>{ent.name}</div>
-                    <div className={styles.entityItemSub}>{ent.pluralName}</div>
-                  </div>
-                  <span className={styles.entityFieldCount}>{ent.fields.length} alan</span>
-                </button>
-              );
-            })}
+      {/* API Filters Bar */}
+      <div className={styles.endpointsWrapper}>
+        <div className={styles.filterBar}>
+          <div className={styles.searchBox}>
+            <Search size={16} className={styles.searchIcon} aria-hidden="true" />
+            <input
+              type="text"
+              placeholder="Uç nokta, metot, yol veya servis fonksiyonu ara..."
+              value={endpointSearch}
+              onChange={(e) => setEndpointSearch(e.target.value)}
+              className={styles.filterSearchInput}
+              aria-label="API uç noktalarında ara"
+            />
+            {endpointSearch && (
+              <button
+                type="button"
+                className={styles.searchClearBtn}
+                onClick={() => setEndpointSearch('')}
+                aria-label="Aramayı temizle"
+                title="Aramayı temizle"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
 
-          {/* Right: Entity Detail & Field Definition Table */}
-          <div className={styles.schemaDetailPanel}>
-            <div className={styles.entityHeaderCard}>
-              <div className={styles.entityMetaRow}>
-                <div>
-                  <h3 className={styles.entityTitle}>{selectedEntity.name}</h3>
-                  <p className={styles.entityDesc}>{selectedEntity.description}</p>
-                </div>
-                <button
-                  type="button"
-                  className={styles.copyJsonBtn}
-                  onClick={() => handleCopyPayload(selectedEntity.samplePayload)}
-                >
-                  {copiedPayload ? <Check size={14} className={styles.greenText} /> : <Copy size={14} />}
-                  <span>{copiedPayload ? 'Kopyalandı' : 'JSON Şablonunu Kopyala'}</span>
-                </button>
-              </div>
-
-              {/* Relationships */}
-              {selectedEntity.relationships?.length > 0 && (
-                <div className={styles.relationRow}>
-                  <span className={styles.relationLabel}>İlişkiler:</span>
-                  {selectedEntity.relationships.map((rel, idx) => (
-                    <span key={idx} className={styles.relationBadge} title={rel.description}>
-                      {selectedEntity.name} <ArrowRight size={11} /> {rel.targetEntity} ({rel.type})
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Field Search */}
-              <div className={styles.searchWrapper} style={{ marginTop: '0.75rem', maxWidth: '320px' }}>
-                <Search size={14} className={styles.searchIcon} />
-                <input
-                  type="text"
-                  placeholder="Bu varlıkta alan ara..."
-                  value={fieldSearch}
-                  onChange={(e) => setFieldSearch(e.target.value)}
-                  className={styles.searchInput}
-                />
-              </div>
-            </div>
-
-            {/* Field Table */}
-            <div className={styles.tableResponsive}>
-              <table className={styles.dataTable}>
-                <thead>
-                  <tr>
-                    <th>Alan Adı</th>
-                    <th>Veri Tipi</th>
-                    <th>Zorunluluk</th>
-                    <th>Kısıt / İndeks</th>
-                    <th>Açıklama & Örnek</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredFields.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className={styles.emptyTableTd}>
-                        "{fieldSearch}" aramasına uyan alan bulunamadı.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredFields.map((f, i) => (
-                      <tr key={i}>
-                        <td className={styles.monoCell}>
-                          <strong>{f.name}</strong>
-                        </td>
-                        <td>
-                          <span className={styles.typeBadge}>{f.type}</span>
-                        </td>
-                        <td>
-                          <span className={f.required ? styles.requiredBadge : styles.optionalBadge}>
-                            {f.required ? 'Zorunlu' : 'Opsiyonel'}
-                          </span>
-                        </td>
-                        <td>
-                          {f.isPrimaryKey && <span className={styles.pkBadge}>PRIMARY KEY</span>}
-                          {f.isForeignKey && <span className={styles.fkBadge}>FOREIGN KEY</span>}
-                          {f.isUnique && <span className={styles.uniBadge}>UNIQUE</span>}
-                          {f.isIndexed && <span className={styles.indexBadge}>INDEXED</span>}
-                          {!f.isPrimaryKey && !f.isForeignKey && !f.isUnique && !f.isIndexed && (
-                            <span className={styles.dimText}>-</span>
-                          )}
-                        </td>
-                        <td>
-                          <div className={styles.fieldDesc}>{f.description}</div>
-                          {f.example && (
-                            <div className={styles.fieldExample}>Örn: <code>{f.example}</code></div>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Sample Payload Preview */}
-            <div className={styles.jsonPreviewBox}>
-              <div className={styles.jsonPreviewHeader}>
-                <span>Örnek Model Yükü (JSON Payload)</span>
-              </div>
-              <pre className={styles.jsonCodeBlock}>
-                {JSON.stringify(selectedEntity.samplePayload, null, 2)}
-              </pre>
-            </div>
+          <div className={styles.methodPillGroup}>
+            {['ALL', 'GET', 'POST', 'PUT', 'DELETE'].map((m) => (
+              <button
+                key={m}
+                type="button"
+                className={`${styles.methodFilterBtn} ${methodFilter === m ? styles.active : ''}`}
+                onClick={() => setMethodFilter(m)}
+              >
+                {m === 'ALL' ? 'TÜMÜ' : m}
+              </button>
+            ))}
           </div>
         </div>
-      )}
 
-      {/* SUB-TAB 2: REST API ENDPOINTS & LIVE TESTER */}
-      {subTab === 'endpoints' && (
-        <div className={styles.endpointsWrapper}>
-          {/* Controls Bar */}
-          <div className={styles.filterBar}>
-            <div className={styles.searchBox}>
-              <Search size={16} className={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="Endpoint URL veya açıklama ara (örn: /api/products)..."
-                value={endpointSearch}
-                onChange={(e) => setEndpointSearch(e.target.value)}
-                className={styles.filterSearchInput}
-              />
+        {/* Endpoints List */}
+        <div className={styles.endpointCardList}>
+          {filteredEndpoints.length === 0 ? (
+            <div className={styles.emptyTableTd} style={{ textAlign: 'center', padding: '48px 20px' }}>
+              Arama kriterlerine uygun API sözleşmesi bulunamadı.
             </div>
-            <div className={styles.methodPillGroup}>
-              {['ALL', 'GET', 'POST', 'PUT', 'DELETE'].map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  className={`${styles.methodFilterBtn} ${methodFilter === m ? styles.active : ''}`}
-                  onClick={() => setMethodFilter(m)}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
-          </div>
+          ) : (
+            filteredEndpoints.map((ep) => {
+              const isSimulated = simulatedEndpoint === ep.id && simulatedResponse;
 
-          {/* Endpoints List */}
-          <div className={styles.endpointCardList}>
-            {filteredEndpoints.map((ep, idx) => {
-              const isSimulated = simulatedEndpoint === ep.path;
               return (
-                <div key={idx} className={styles.endpointCard}>
+                <div key={ep.id} className={styles.endpointCard}>
                   <div className={styles.endpointCardHeader}>
                     <div className={styles.endpointPathBlock}>
                       <span className={`${styles.methodBadge} ${styles[ep.method.toLowerCase()]}`}>
@@ -329,6 +186,7 @@ export default function SchemaTab({ tools = [], categories = [] }) {
                       </span>
                       <code className={styles.endpointPath}>{ep.path}</code>
                     </div>
+
                     <div className={styles.endpointMetaRight}>
                       <span className={styles.authBadge}>{ep.authLevel}</span>
                       <button
@@ -346,6 +204,14 @@ export default function SchemaTab({ tools = [], categories = [] }) {
                     <div className={styles.endpointSummary}>{ep.summary}</div>
                     <div className={styles.endpointDesc}>{ep.description}</div>
 
+                    {/* Service Handler Binding Info */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                      <span>Servis Katmanı:</span>
+                      <code style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '2px 7px', borderRadius: '4px', color: '#818cf8' }}>
+                        {ep.serviceFile} → {ep.handlerName}()
+                      </code>
+                    </div>
+
                     {/* Query Params */}
                     {ep.queryParams?.length > 0 && (
                       <div className={styles.paramSection}>
@@ -360,8 +226,20 @@ export default function SchemaTab({ tools = [], categories = [] }) {
                       </div>
                     )}
 
+                    {/* Sample Request Body */}
+                    {ep.sampleRequest && (
+                      <div style={{ marginTop: '12px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                          Örnek İstek Gövdesi (Request Body):
+                        </div>
+                        <pre className={styles.simulatedCode} style={{ maxHeight: '110px' }}>
+                          {JSON.stringify(ep.sampleRequest, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+
                     {/* Simulated Response Box */}
-                    {isSimulated && simulatedResponse && (
+                    {isSimulated && (
                       <div className={styles.simulatedBox}>
                         <div className={styles.simulatedHeader}>
                           <div className={styles.simulatedStatusRow}>
@@ -378,7 +256,7 @@ export default function SchemaTab({ tools = [], categories = [] }) {
                               type="button"
                               className={styles.copyJsonBtn}
                               style={{ padding: '2px 8px', fontSize: '11px' }}
-                              onClick={handleCopySimulated}
+                              onClick={() => handleCopyCode(simulatedResponse.data, 'Simüle edilen yanıt kopyalandı.')}
                               title="Yanıtı Kopyala"
                             >
                               <Copy size={11} />
@@ -394,112 +272,10 @@ export default function SchemaTab({ tools = [], categories = [] }) {
                   </div>
                 </div>
               );
-            })}
-          </div>
+            })
+          )}
         </div>
-      )}
-
-      {/* SUB-TAB 3: ARCHITECTURE & RELATIONS MAP */}
-      {subTab === 'architecture' && (
-        <div className={styles.architectureWrapper}>
-          <div className={styles.archCard}>
-            <h3 className={styles.archTitle}>Guidora Çok Katmanlı Sözleşme Mimarisi</h3>
-            <p className={styles.archSub}>
-              İstemci tarafı (React SPA) ile sunucu tarafı arasındaki bağımlılık, standart REST/JSON sözleşmeleriyle soyutlanmıştır. Bu mimari backend teknolojisinin (Java, .NET, Node.js, Go) değişmesinden etkilenmez.
-            </p>
-
-            <div className={styles.archFlowDiagram}>
-              <div className={styles.archNode}>
-                <div className={styles.archNodeHeader}>İstemci (Client)</div>
-                <div className={styles.archNodeDesc}>React 18 SPA</div>
-                <div className={styles.archNodeTags}>
-                  <span>httpClient.js</span>
-                  <span>CircuitBreaker</span>
-                </div>
-              </div>
-
-              <div className={styles.archConnector}>
-                <span className={styles.archConnectorLabel}>HTTPS / JSON (/api/*)</span>
-                <div className={styles.archConnectorLine} />
-              </div>
-
-              <div className={styles.archNode}>
-                <div className={styles.archNodeHeader}>API Sözleşme Katmanı</div>
-                <div className={styles.archNodeDesc}>RESTful Endpoints</div>
-                <div className={styles.archNodeTags}>
-                  <span>OpenAPI/Swagger</span>
-                  <span>Stateless JWT</span>
-                </div>
-              </div>
-
-              <div className={styles.archConnector}>
-                <span className={styles.archConnectorLabel}>Data Access (ORM / Repository)</span>
-                <div className={styles.archConnectorLine} />
-              </div>
-
-              <div className={styles.archNode}>
-                <div className={styles.archNodeHeader}>Herhangi Bir Backend</div>
-                <div className={styles.archNodeDesc}>Java / .NET / Go / Node</div>
-                <div className={styles.archNodeTags}>
-                  <span>Entity Model</span>
-                  <span>Audit Trail</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Core Invariants */}
-            <div className={styles.invariantsGrid}>
-              <div className={styles.invariantCard}>
-                <div className={styles.invariantIcon}>
-                  <ShieldCheck size={20} className={styles.greenText} />
-                </div>
-                <div>
-                  <h4 className={styles.invariantTitle}>Stateless JWT & HttpOnly Çerezler</h4>
-                  <p className={styles.invariantDesc}>
-                    Access token'lar XSS sızıntılarını önlemek için sadece JavaScript bellek kapatmasında (closure) tutulur; yenileme token'ı HttpOnly çerez ile güvenli taşınır.
-                  </p>
-                </div>
-              </div>
-
-              <div className={styles.invariantCard}>
-                <div className={styles.invariantIcon}>
-                  <RefreshCw size={20} className={styles.blueText} />
-                </div>
-                <div>
-                  <h4 className={styles.invariantTitle}>Geri Alınabilir Denetim Kaydı (Audit Trail)</h4>
-                  <p className={styles.invariantDesc}>
-                    Her düzenleme işleminde `oldValues` ve `newValues` JSON delta formatında saklanır; istendiğinde tek tıkla geri alınabilir (Audit.Revert).
-                  </p>
-                </div>
-              </div>
-
-              <div className={styles.invariantCard}>
-                <div className={styles.invariantIcon}>
-                  <Sparkles size={20} className={styles.purpleText} />
-                </div>
-                <div>
-                  <h4 className={styles.invariantTitle}>Çok Dilli Taksonomi Mimarisi</h4>
-                  <p className={styles.invariantDesc}>
-                    Kategoriler ve etiketler TR, EN ve RU dil sözlükleriyle genişletilebilir esnek JSON alanlarına sahiptir; arayüz diline göre dinamik çözümlenir.
-                  </p>
-                </div>
-              </div>
-
-              <div className={styles.invariantCard}>
-                <div className={styles.invariantIcon}>
-                  <Database size={20} className={styles.amberText} />
-                </div>
-                <div>
-                  <h4 className={styles.invariantTitle}>Yumuşak Silme (Soft-Delete) Güvencesi</h4>
-                  <p className={styles.invariantDesc}>
-                    Silinen veya arşivlenen araçlar ve kategoriler kalıcı olarak yok edilmez; `isArchived` bayrağı ile arşivlenir ve istendiğinde tek tıkla geri yüklenir.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

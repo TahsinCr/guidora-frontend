@@ -16,7 +16,7 @@ import {
   adminDismissReport,
   adminAddLog,
 } from '@/services/adminService';
-import toastService from '@/services/toast/toastService';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from '../AdminDashboardPage.module.scss';
 
 export default function ReportsTab({
@@ -24,6 +24,7 @@ export default function ReportsTab({
   onRefreshReports,
   onOpenTool,
 }) {
+  const { t, language } = useLanguage();
   const [filter, setFilter] = useState('pending'); // 'pending' | 'resolved' | 'all'
   const [search, setSearch] = useState('');
   const [actionNotes, setActionNotes] = useState({});
@@ -52,7 +53,6 @@ export default function ReportsTab({
       category: 'GOVERNANCE',
       newValues: { actionTaken: note },
     });
-    toastService.success(`Şikayet çözüldü olarak işaretlendi: "${toolName || reportId}".`);
     if (onRefreshReports) onRefreshReports();
   };
 
@@ -61,7 +61,6 @@ export default function ReportsTab({
     adminAddLog('REPORT_DISMISSED', toolName || reportId, 'info', {
       category: 'GOVERNANCE',
     });
-    toastService.info(`Şikayet kapatıldı: "${toolName || reportId}".`);
     if (onRefreshReports) onRefreshReports();
   };
 
@@ -75,21 +74,21 @@ export default function ReportsTab({
             className={`${styles.filterTabBtn} ${filter === 'pending' ? styles.active : ''}`}
             onClick={() => setFilter('pending')}
           >
-            Bekleyenler ({reports.filter((r) => !r.status || r.status === 'pending').length})
+            {t('admin.statusPending')} ({reports.filter((r) => !r.status || r.status === 'pending').length})
           </button>
           <button
             type="button"
             className={`${styles.filterTabBtn} ${filter === 'resolved' ? styles.active : ''}`}
             onClick={() => setFilter('resolved')}
           >
-            Çözülenler ({reports.filter((r) => r.status === 'resolved' || r.status === 'dismissed').length})
+            {t('admin.statusResolved')} ({reports.filter((r) => r.status === 'resolved' || r.status === 'dismissed').length})
           </button>
           <button
             type="button"
             className={`${styles.filterTabBtn} ${filter === 'all' ? styles.active : ''}`}
             onClick={() => setFilter('all')}
           >
-            Tümü ({reports.length})
+            {t('admin.chipAll')} ({reports.length})
           </button>
         </div>
 
@@ -98,7 +97,7 @@ export default function ReportsTab({
           <input
             type="text"
             className={styles.searchInput}
-            placeholder="Şikayet nedeni veya araç ara..."
+            placeholder={t('admin.searchReports')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -110,8 +109,8 @@ export default function ReportsTab({
         {filteredReports.length === 0 ? (
           <div className={styles.emptyStateCard}>
             <CheckCircle2 size={36} color="#10b981" className={styles.emptyIcon} />
-            <h3 className={styles.emptyTitle}>Bekleyen Şikayet Yok</h3>
-            <p className={styles.emptyDesc}>Topluluk tarafından iletilen herhangi bir bekleyen bildirim bulunmamaktadır.</p>
+            <h3 className={styles.emptyTitle}>{t('admin.reportsEmpty')}</h3>
+            <p className={styles.emptyDesc}>{t('admin.reportsEmptyDesc', '0 pending user reports in the moderation queue.')}</p>
           </div>
         ) : (
           filteredReports.map((rep) => (
@@ -120,20 +119,20 @@ export default function ReportsTab({
                 <div className={styles.reportHeaderLeft}>
                   <div className={styles.reportBadges}>
                     <span className={`${styles.reasonBadge} ${styles[rep.reason] || styles.general}`}>
-                      {rep.reason || 'Genel Şikayet'}
+                      {rep.reason || 'General'}
                     </span>
                     <span className={`${styles.statusBadge} ${styles[rep.status || 'pending']}`}>
-                      {rep.status === 'resolved' ? 'Çözüldü' : rep.status === 'dismissed' ? 'Kapatıldı' : 'Bekliyor'}
+                      {rep.status === 'resolved' ? t('admin.statusResolved') : rep.status === 'dismissed' ? t('admin.statusDismissed') : t('admin.statusPending')}
                     </span>
                   </div>
                   <h4 className={styles.reportedToolTitle}>
-                    Hedef: <strong>{rep.toolName || rep.toolId || 'Bilinmeyen Araç'}</strong>
+                    {t('admin.colTool')}: <strong>{rep.toolName || rep.toolId || 'Unknown'}</strong>
                     {rep.toolId && onOpenTool && (
                       <button
                         type="button"
                         className={styles.toolLinkBtn}
                         onClick={() => onOpenTool(rep.toolId)}
-                        title="Aracı Görüntüle"
+                        title={rep.toolName}
                       >
                         <ExternalLink size={12} />
                       </button>
@@ -144,18 +143,18 @@ export default function ReportsTab({
                 <div className={styles.reportHeaderRight}>
                   <span className={styles.reportDate}>
                     <Clock size={12} />
-                    {rep.createdAt ? new Date(rep.createdAt).toLocaleString('tr-TR') : 'Bugün'}
+                    {rep.createdAt ? new Date(rep.createdAt).toLocaleString(language === 'en' ? 'en-US' : language === 'ru' ? 'ru-RU' : 'tr-TR') : 'Recent'}
                   </span>
                 </div>
               </div>
 
               <div className={styles.reportContent}>
                 <p className={styles.reportDetailsText}>
-                  "{rep.details || 'Açıklama girilmedi.'}"
+                  "{rep.details || '-'}"
                 </p>
                 {rep.email && (
                   <span className={styles.reporterEmail}>
-                    Bildiren: {rep.email}
+                    {rep.email}
                   </span>
                 )}
               </div>
@@ -166,7 +165,7 @@ export default function ReportsTab({
                   <input
                     type="text"
                     className={styles.actionNoteInput}
-                    placeholder="Alınan aksiyon notu (örn. Bağlantı güncellendi)..."
+                    placeholder={t('admin.reviewNotes')}
                     value={actionNotes[rep.id] || ''}
                     onChange={(e) =>
                       setActionNotes((prev) => ({ ...prev, [rep.id]: e.target.value }))
@@ -179,7 +178,7 @@ export default function ReportsTab({
                       className={styles.dismissBtn}
                       onClick={() => handleDismiss(rep.id, rep.toolName)}
                     >
-                      Kapat (Gözardı Et)
+                      {t('admin.dismissReport')}
                     </button>
                     <button
                       type="button"
@@ -187,16 +186,16 @@ export default function ReportsTab({
                       onClick={() => handleResolve(rep.id, rep.toolName)}
                     >
                       <CheckCircle2 size={14} />
-                      <span>Çözüldü Olarak İşaretle</span>
+                      <span>{t('admin.resolveReport')}</span>
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className={styles.resolvedNoteBlock}>
-                  <span>Sonuç: <strong>{rep.actionTaken || 'İncelendi'}</strong></span>
+                  <span>{t('admin.statusResolved')}: <strong>{rep.actionTaken || 'Reviewed'}</strong></span>
                   {rep.resolvedAt && (
                     <span className={styles.resolvedTime}>
-                      ({new Date(rep.resolvedAt).toLocaleString('tr-TR')})
+                      ({new Date(rep.resolvedAt).toLocaleString(language === 'en' ? 'en-US' : language === 'ru' ? 'ru-RU' : 'tr-TR')})
                     </span>
                   )}
                 </div>

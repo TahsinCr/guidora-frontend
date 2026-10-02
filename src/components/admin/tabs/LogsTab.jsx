@@ -35,6 +35,7 @@ const LEVEL_CHIPS = [
 
 export default function LogsTab({
   logs = [],
+  globalSearch = '',
   onRefreshLogs,
 }) {
   const safeLogs = Array.isArray(logs) ? logs : [];
@@ -67,8 +68,8 @@ export default function LogsTab({
       if (categoryFilter !== 'ALL' && log.category !== categoryFilter) {
         return false;
       }
-      if (searchTerm) {
-        const q = searchTerm.toLowerCase();
+      const q = (searchTerm || globalSearch || '').trim().toLowerCase();
+      if (q) {
         const actionMatch = (log.action || '').toLowerCase().includes(q);
         const targetMatch = (log.target || '').toLowerCase().includes(q);
         const actorMatch = (log.actor || '').toLowerCase().includes(q);
@@ -80,7 +81,7 @@ export default function LogsTab({
       }
       return true;
     });
-  }, [safeLogs, levelFilter, categoryFilter, searchTerm]);
+  }, [safeLogs, levelFilter, categoryFilter, searchTerm, globalSearch]);
 
   // Paginated logs
   const paginatedLogs = useMemo(() => {

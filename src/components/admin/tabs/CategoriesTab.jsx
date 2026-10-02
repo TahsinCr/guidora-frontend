@@ -22,6 +22,7 @@ import styles from '../AdminDashboardPage.module.scss';
 export default function CategoriesTab({
   categories = [],
   tools = [],
+  globalSearch = '',
   onRefreshCategories,
 }) {
   const [search, setSearch] = useState('');
@@ -46,8 +47,8 @@ export default function CategoriesTab({
   });
 
   const filteredCategories = categories.filter((c) => {
-    if (search) {
-      const q = search.toLowerCase();
+    const q = (search || globalSearch || '').trim().toLowerCase();
+    if (q) {
       return (
         c.name.toLowerCase().includes(q) ||
         (c.id || '').toLowerCase().includes(q)
@@ -68,7 +69,7 @@ export default function CategoriesTab({
     setEditingCat(cat);
     setCatName(cat.name);
     setCatColor(cat.color || '#8A38F5');
-    setCatPopular(Boolean(cat.popular));
+    setCatPopular(Boolean(cat.popular || cat.isPopular));
     setModalOpen(true);
   };
 
@@ -85,6 +86,7 @@ export default function CategoriesTab({
           name: catName.trim(),
           color: catColor,
           popular: catPopular,
+          isPopular: catPopular,
         });
         adminAddLog('CATEGORY_UPDATED', catName.trim(), 'info', {
           entityName: 'Category',
@@ -97,6 +99,7 @@ export default function CategoriesTab({
           name: catName.trim(),
           color: catColor,
           popular: catPopular,
+          isPopular: catPopular,
         });
         adminAddLog('CATEGORY_CREATED', catName.trim(), 'success', {
           entityName: 'Category',
@@ -216,7 +219,7 @@ export default function CategoriesTab({
                   <h4 className={styles.catCardName}>{cat.name}</h4>
                   <code className={styles.catIdCode}>{cat.id}</code>
                 </div>
-                {cat.popular && (
+                {(cat.popular || cat.isPopular) && (
                   <span className={styles.popularBadge}>
                     <Sparkles size={11} /> Popüler
                   </span>

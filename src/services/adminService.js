@@ -742,10 +742,10 @@ export function adminGetEntitySchemas() {
         { name: 'rating', type: 'numeric(3,2)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Kullanıcı ortalama puanı (0.0 - 5.0)', example: '4.85' },
         { name: 'views_count', type: 'integer', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Toplam görüntülenme sayısı', example: '12400' },
         { name: 'is_verified', type: 'boolean', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Doğrulama durumu', example: 'true' },
-        { name: 'metadata', type: 'jsonb', required: false, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Esnek JSON meta verileri', example: '{"platform": ["Web", "API"]}' },
-        { name: 'search_vector', type: 'tsvector', required: false, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Hızlı tam metin arama vektörü', example: 'GENERATED ALWAYS' },
-        { name: 'created_at', type: 'timestamptz', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Kayıt oluşturulma zaman damgası', example: '2026-01-15T00:00:00Z' },
-        { name: 'updated_at', type: 'timestamptz', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Son güncelleme zaman damgası', example: '2026-09-28T12:00:00Z' },
+        { name: 'metadata', type: 'json', required: false, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Esnek JSON meta verileri', example: '{"platform": ["Web", "API"]}' },
+        { name: 'search_vector', type: 'text', required: false, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Hızlı tam metin arama vektörü', example: 'GENERATED ALWAYS' },
+        { name: 'created_at', type: 'timestamp', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Kayıt oluşturulma zaman damgası', example: '2026-01-15T00:00:00Z' },
+        { name: 'updated_at', type: 'timestamp', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Son güncelleme zaman damgası', example: '2026-09-28T12:00:00Z' },
       ],
       relationships: [
         { targetEntity: 'categories', type: 'N:1', foreignKey: 'category_id', description: 'Her araç tek bir ana kategoriye aittir.' },
@@ -776,7 +776,7 @@ export function adminGetEntitySchemas() {
         { name: 'name', type: 'varchar(100)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Görünen kategori başlığı', example: 'Generative Art' },
         { name: 'color', type: 'varchar(30)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Arayüz aksan rengi', example: '#8A38F5' },
         { name: 'icon', type: 'varchar(50)', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'İkon bileşeni adı', example: 'Sparkles' },
-        { name: 'translations', type: 'jsonb', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'TR, EN, RU çevirileri', example: '{"tr": "Üretici Sanat", "ru": "Генеративное искусство"}' },
+        { name: 'translations', type: 'json', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'TR, EN, RU çevirileri', example: '{"tr": "Üretici Sanat", "ru": "Генеративное искусство"}' },
         { name: 'is_popular', type: 'boolean', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Ana sayfa öne çıkan vitrin rozeti', example: 'true' },
         { name: 'display_order', type: 'integer', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Görünüm sıralaması', example: '1' },
       ],
@@ -829,7 +829,7 @@ export function adminGetEntitySchemas() {
         { name: 'role', type: 'varchar(30)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'admin | moderator | creator | member', example: 'admin' },
         { name: 'is_banned', type: 'boolean', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Engellenme durumu', example: 'false' },
         { name: 'reputation', type: 'integer', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Topluluk itibar puanı', example: '980' },
-        { name: 'created_at', type: 'timestamptz', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Kayıt tarihi', example: '2024-09-01T00:00:00Z' },
+        { name: 'created_at', type: 'timestamp', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Kayıt tarihi', example: '2024-09-01T00:00:00Z' },
       ],
       relationships: [
         { targetEntity: 'reviews', type: '1:N', foreignKey: 'user_id', description: 'Kullanıcının yazdığı incelemeler.' },
@@ -856,9 +856,9 @@ export function adminGetEntitySchemas() {
         { name: 'product_id', type: 'uuid', required: true, isPrimaryKey: false, isForeignKey: true, isIndexed: true, description: 'İlgili araç slug kimliği', example: 'cursor-editor' },
         { name: 'proposer_id', type: 'uuid', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Teklifi sunan kullanıcı kimliği', example: 'usr_dev_03' },
         { name: 'status', type: 'varchar(20)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Pending | Approved | Rejected', example: 'Pending' },
-        { name: 'delta_changes', type: 'jsonb', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: '{ field: { old, new } } fark nesnesi', example: '{"pricing": {"old": "$20", "new": "$16"}}' },
+        { name: 'delta_changes', type: 'json', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: '{ field: { old, new } } fark nesnesi', example: '{"pricing": {"old": "$20", "new": "$16"}}' },
         { name: 'review_notes', type: 'text', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Moderatör değerlendirme notu', example: 'Fiyatlandırma doğrulandı.' },
-        { name: 'created_at', type: 'timestamptz', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Gönderim zamanı', example: '2026-09-28T18:00:00Z' },
+        { name: 'created_at', type: 'timestamp', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Gönderim zamanı', example: '2026-09-28T18:00:00Z' },
       ],
       relationships: [
         { targetEntity: 'products', type: 'N:1', foreignKey: 'product_id', description: 'Teklif belirli bir aracı hedefler.' },
@@ -885,7 +885,7 @@ export function adminGetEntitySchemas() {
         { name: 'rating', type: 'integer', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Verilen yıldız puanı (1 - 5)', example: '5' },
         { name: 'comment', type: 'text', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'İnceleme metni', example: 'Harika bir platform, latency süresi inanılmaz iyi.' },
         { name: 'helpful_count', type: 'integer', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Faydalı bulan kullanıcı sayısı', example: '14' },
-        { name: 'created_at', type: 'timestamptz', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Oluşturulma zamanı', example: '2026-09-27T10:00:00Z' },
+        { name: 'created_at', type: 'timestamp', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Oluşturulma zamanı', example: '2026-09-27T10:00:00Z' },
       ],
       relationships: [
         { targetEntity: 'products', type: 'N:1', foreignKey: 'tool_id', description: 'İncelemenin bağlı olduğu yapay zeka aracı.' },
@@ -914,7 +914,7 @@ export function adminGetEntitySchemas() {
         { name: 'details', type: 'text', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Kullanıcının eklediği detaylar', example: 'Web sitesi linki 404 dönüyor.' },
         { name: 'reporter_email', type: 'varchar(255)', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Bildirim yapan kişinin e-postası', example: 'user@example.com' },
         { name: 'status', type: 'varchar(30)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'pending | resolved | dismissed', example: 'pending' },
-        { name: 'created_at', type: 'timestamptz', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Bildirim zamanı', example: '2026-09-28T08:30:00Z' },
+        { name: 'created_at', type: 'timestamp', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'Bildirim zamanı', example: '2026-09-28T08:30:00Z' },
       ],
       relationships: [
         { targetEntity: 'products', type: 'N:1', foreignKey: 'tool_id', description: 'Şikayete konu olan araç.' },
@@ -942,9 +942,9 @@ export function adminGetEntitySchemas() {
         { name: 'level', type: 'varchar(20)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'INFO | AUDIT | WARN | ERROR', example: 'AUDIT' },
         { name: 'actor_name', type: 'varchar(100)', required: true, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Eylemi yapan kişi / servis', example: 'Tahsin Cr' },
         { name: 'trace_id', type: 'varchar(64)', required: false, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'OpenTelemetry dağıtık izleme kimliği', example: 'trace-guidora-b472c1a8' },
-        { name: 'old_values', type: 'jsonb', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Önceki durum delta nesnesi', example: '{"verified": false}' },
-        { name: 'new_values', type: 'jsonb', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Yeni durum delta nesnesi', example: '{"verified": true}' },
-        { name: 'created_at', type: 'timestamptz', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'İşlem zaman damgası', example: '2026-09-28T18:00:00Z' },
+        { name: 'old_values', type: 'json', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Önceki durum delta nesnesi', example: '{"verified": false}' },
+        { name: 'new_values', type: 'json', required: false, isPrimaryKey: false, isUnique: false, isIndexed: false, description: 'Yeni durum delta nesnesi', example: '{"verified": true}' },
+        { name: 'created_at', type: 'timestamp', required: true, isPrimaryKey: false, isUnique: false, isIndexed: true, description: 'İşlem zaman damgası', example: '2026-09-28T18:00:00Z' },
       ],
       relationships: [
         { targetEntity: 'users', type: 'N:1', foreignKey: 'actor_name', description: 'Eylemi yapan kullanıcı.' },
@@ -1208,9 +1208,9 @@ export function adminGetTableSchema(tableName) {
     }));
   }
   return [
-    { column: 'id', type: 'uuid', nullable: false, key: 'PK', default: 'gen_random_uuid()' },
+    { column: 'id', type: 'uuid', nullable: false, key: 'PK', default: 'UUID / Auto' },
     { column: 'name', type: 'varchar(255)', nullable: false, key: '', default: null },
-    { column: 'created_at', type: 'timestamptz', nullable: false, key: '', default: 'clock_timestamp()' },
+    { column: 'created_at', type: 'timestamp', nullable: false, key: '', default: 'CURRENT_TIMESTAMP' },
   ];
 }
 
@@ -1332,10 +1332,10 @@ export function adminExecuteQuery(query, context = {}) {
     // Default fallback sample query result
     columns = ['metric_key', 'metric_value', 'status'];
     rows = [
-      { metric_key: 'pg_active_connections', metric_value: '8 / 50', status: 'HEALTHY' },
+      { metric_key: 'db_active_connections', metric_value: '8 / 50', status: 'HEALTHY' },
       { metric_key: 'buffer_cache_hit_ratio', metric_value: '99.42%', status: 'OPTIMAL' },
       { metric_key: 'total_tables_count', metric_value: '10 tables', status: 'SYNCED' },
-      { metric_key: 'last_checkpoint_lsn', metric_value: '0/1F8A9020', status: 'COMMITTED' },
+      { metric_key: 'last_sync_txid', metric_value: '0/1F8A9020', status: 'COMMITTED' },
     ];
   }
 

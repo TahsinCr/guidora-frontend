@@ -2,20 +2,12 @@ import React, { useState, useMemo } from 'react';
 import {
   Wrench,
   CheckCircle2,
-  FolderTree,
-  Users,
-  Building2,
   AlertTriangle,
   GitPullRequest,
-  TrendingUp,
-  Activity,
-  Database,
   Layers,
   Server,
   ArrowUpRight,
   ShieldAlert,
-  Clock,
-  Sparkles,
   RefreshCw,
 } from 'lucide-react';
 import { adminGetTimeSeriesData } from '@/services/adminService';
@@ -48,26 +40,26 @@ export default function OverviewTab({
   // Compute SVG coordinates for the area chart
   const chartWidth = 720;
   const chartHeight = 220;
-  const paddingX = 40;
-  const paddingY = 30;
+  const paddingX = 52;
+  const paddingY = 28;
 
   const currentValues = useMemo(() => {
-    return timeSeries.map((d) => (activeMetric === 'requests' ? d.requestsK : d.p95Ms));
+    return timeSeries.map((d) => (activeMetric === 'requests' ? d.requestsK : (d.p95LatencyMs ?? d.p95Ms ?? 12)));
   }, [timeSeries, activeMetric]);
 
-  const maxVal = Math.max(...currentValues, activeMetric === 'requests' ? 20 : 15);
-  const minVal = Math.min(...currentValues, activeMetric === 'requests' ? 10 : 5);
+  const maxVal = Math.max(...currentValues, activeMetric === 'requests' ? 20 : 18);
+  const minVal = Math.min(...currentValues, activeMetric === 'requests' ? 10 : 8);
 
   const points = useMemo(() => {
     const usableW = chartWidth - paddingX * 2;
     const usableH = chartHeight - paddingY * 2;
 
     return timeSeries.map((d, idx) => {
-      const val = activeMetric === 'requests' ? d.requestsK : d.p95Ms;
+      const val = activeMetric === 'requests' ? d.requestsK : (d.p95LatencyMs ?? d.p95Ms ?? 12);
       const x = paddingX + (idx / Math.max(1, timeSeries.length - 1)) * usableW;
       const normalizedY = (val - minVal) / (maxVal - minVal || 1);
       const y = chartHeight - paddingY - normalizedY * usableH;
-      return { x, y, ...d, val };
+      return { x, y, ...d, val, p95Ms: val };
     });
   }, [timeSeries, activeMetric, maxVal, minVal]);
 
@@ -138,19 +130,19 @@ export default function OverviewTab({
 
         <div className={styles.kpiCard} onClick={() => onSelectTab('schema')} role="button" tabIndex={0}>
           <div className={styles.kpiTop}>
-            <span className={styles.kpiTitle}>Veri Mimarisi & API</span>
+            <span className={styles.kpiTitle}>REST API Sözleşmeleri</span>
             <div className={`${styles.kpiIconWrapper} ${styles.purple}`}>
               <Layers size={18} />
             </div>
           </div>
           <div className={styles.kpiValueRow}>
-            <span className={styles.kpiValue}>8 Model</span>
+            <span className={styles.kpiValue}>18 Endpoint</span>
             <span className={styles.kpiStatusOnline}>
               <CheckCircle2 size={12} />
-              12 REST API
+              4 Modül
             </span>
           </div>
-          <span className={styles.kpiSub}>Bağımsız Sözleşme Mimarisi</span>
+          <span className={styles.kpiSub}>Modüler Servis Entegrasyonu</span>
         </div>
 
         <div className={styles.kpiCard} onClick={() => onSelectTab('proposals')} role="button" tabIndex={0}>

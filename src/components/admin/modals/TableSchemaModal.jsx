@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Database, Key, Layers, Shield } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 import styles from '../AdminDashboardPage.module.scss';
 
 export default function TableSchemaModal({
@@ -7,7 +8,14 @@ export default function TableSchemaModal({
   schema = [],
   onClose,
 }) {
+  const { t } = useLanguage();
+
   if (!tableName) return null;
+
+  const pkColumn = schema.find((c) => c.key === 'PK')?.column || 'None';
+  const concurrencyToken = schema.find((c) => c.key === 'SYS' || c.column === 'xmin' || c.column === 'version')?.column
+    ? 'TxID / Version (Optimistic Concurrency)'
+    : 'Optimistic (Row Version)';
 
   return (
     <div className={styles.modalOverlay} onClick={onClose} role="dialog" aria-modal="true">
@@ -18,12 +26,12 @@ export default function TableSchemaModal({
             <div className={styles.modalBadgeRow}>
               <span className={styles.schemaDbBadge}>
                 <Database size={13} />
-                PostgreSQL 18.0
+                {t('admin.schemaContractBadge', 'İlişkisel Veri Sözleşmesi')}
               </span>
               <span className={styles.schemaSchemaBadge}>schema: public</span>
             </div>
             <h2 className={styles.modalTitle}>
-              Tablo Şeması: <span className={styles.tableNameHighlight}>{tableName}</span>
+              {t('admin.tableSchemaTitle', 'Tablo Şeması')}: <span className={styles.tableNameHighlight}>{tableName}</span>
             </h2>
           </div>
 
@@ -31,7 +39,7 @@ export default function TableSchemaModal({
             type="button"
             className={styles.modalCloseBtn}
             onClick={onClose}
-            aria-label="Kapat"
+            aria-label={t('admin.close', 'Kapat')}
           >
             <X size={20} />
           </button>
@@ -41,20 +49,16 @@ export default function TableSchemaModal({
         <div className={styles.modalBody}>
           <div className={styles.schemaInfoCard}>
             <div className={styles.schemaStat}>
-              <span className={styles.schemaStatLabel}>Sütun Sayısı:</span>
+              <span className={styles.schemaStatLabel}>{t('admin.schemaColumnCount', 'Sütun Sayısı:')}</span>
               <span className={styles.schemaStatVal}>{schema.length}</span>
             </div>
             <div className={styles.schemaStat}>
-              <span className={styles.schemaStatLabel}>Birincil Anahtar:</span>
-              <span className={styles.schemaStatVal}>
-                {schema.find((c) => c.key === 'PK')?.column || 'None'}
-              </span>
+              <span className={styles.schemaStatLabel}>{t('admin.schemaPrimaryKey', 'Birincil Anahtar:')}</span>
+              <span className={styles.schemaStatVal}>{pkColumn}</span>
             </div>
             <div className={styles.schemaStat}>
-              <span className={styles.schemaStatLabel}>Eşzamanlılık Belirteci (Concurrency):</span>
-              <span className={styles.schemaStatVal}>
-                {schema.find((c) => c.key === 'SYS')?.column ? 'xmin (PostgreSQL MVCC xid)' : 'Optimistic'}
-              </span>
+              <span className={styles.schemaStatLabel}>{t('admin.schemaConcurrencyToken', 'Eşzamanlılık Belirteci (Concurrency):')}</span>
+              <span className={styles.schemaStatVal}>{concurrencyToken}</span>
             </div>
           </div>
 
@@ -62,12 +66,12 @@ export default function TableSchemaModal({
             <table className={styles.schemaTable}>
               <thead>
                 <tr>
-                  <th>Sütun Adı</th>
-                  <th>Veri Tipi</th>
-                  <th>Boş Olabilir (Null)</th>
-                  <th>Anahtar</th>
-                  <th>Varsayılan</th>
-                  <th>İndeks / Açıklama</th>
+                  <th>{t('admin.schemaColName', 'Sütun Adı')}</th>
+                  <th>{t('admin.schemaColType', 'Veri Tipi')}</th>
+                  <th>{t('admin.schemaColNullable', 'Boş Olabilir (Null)')}</th>
+                  <th>{t('admin.schemaColKey', 'Anahtar')}</th>
+                  <th>{t('admin.schemaColDefault', 'Varsayılan')}</th>
+                  <th>{t('admin.schemaColIndexNotes', 'İndeks / Açıklama')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -101,7 +105,7 @@ export default function TableSchemaModal({
                     </td>
                     <td>
                       <span className={styles.indexInfo}>
-                        {col.index || col.note || '-'}
+                        {col.index || col.note || col.description || '-'}
                       </span>
                     </td>
                   </tr>
@@ -118,7 +122,7 @@ export default function TableSchemaModal({
             className={styles.cancelBtn}
             onClick={onClose}
           >
-            Kapat
+            {t('admin.close', 'Kapat')}
           </button>
         </div>
       </div>
