@@ -1,4 +1,3 @@
-import BackendAdminPage from './BackendAdminPage';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Lock } from 'lucide-react';
 import {
@@ -8,9 +7,15 @@ import {
   adminGetProposals,
   adminGetTagCategories,
   adminGetStats,
+  adminFetchAll,
+  adminFetchCategories,
+  adminFetchTagCategories,
+  adminFetchProposals,
+  adminFetchReports,
 } from '@/services/adminService';
-import { getAllTools, getAllReviews } from '@/services/toolsService';
+import { getAllTools, getAllReviews, loadBackendCatalog } from '@/services/toolsService';
 import { getOrganizations, getAllUsers, getCurrentUser } from '@/services/userService';
+import { isMockMode } from '@/services/config/modeService';
 import { useLanguage } from '@/context/LanguageContext';
 import { toast } from '@/services/toast/toastService';
 
@@ -36,11 +41,7 @@ import styles from './AdminDashboardPage.module.scss';
 
 const SIDEBAR_COLLAPSED_KEY = 'guidora_admin_sidebar_collapsed';
 
-export default function AdminDashboardPage(props) {
-  return import.meta.env.VITE_USE_MOCK === 'true' ? <DemoAdminDashboardPage {...props} /> : <BackendAdminPage {...props} />;
-}
-
-function DemoAdminDashboardPage({ onBack, onOpenTool }) {
+export default function AdminDashboardPage({ onBack, onOpenTool }) {
   const { t } = useLanguage();
   const rawUser = getCurrentUser();
   // Ensure the admin panel always loads: if no user is logged in or role is not admin/moderator, fallback to default admin
@@ -109,9 +110,10 @@ function DemoAdminDashboardPage({ onBack, onOpenTool }) {
   const [allReviews, setAllReviews] = useState([]);
   const [tagCategories, setTagCategories] = useState([]);
 
-  // Fetch all administrative data
-  const refreshAllData = useCallback(() => {
+  // Fetch all administrative data (instant local cache + background live sync)
+  const refreshAllData = useCallback(async () => {
     try {
+      // 1. Instant local/cached data display
       const allT = getAllTools();
       const allC = adminGetCategories();
       const allO = getOrganizations();
@@ -135,6 +137,24 @@ function DemoAdminDashboardPage({ onBack, onOpenTool }) {
         setAllReviews(allRev);
       }
       setTagCategories(allTC);
+
+      // 2. If live backend mode is active, fetch live data asynchronously
+      if (!isMockMode()) {
+        const [fetchedAdmin, catalogItems] = await Promise.allSettled([
+          adminFetchAll(),
+          loadBackendCatalog(),
+        ]);
+        if (fetchedAdmin.status === 'fulfilled' && fetchedAdmin.value) {
+          const { categories: liveCats, tagCategories: liveTags, proposals: liveProps, reports: liveReps } = fetchedAdmin.value;
+          if (liveCats?.length) setCategories(liveCats);
+          if (liveTags?.length) setTagCategories(liveTags);
+          if (liveProps) setProposals(liveProps);
+          if (liveReps) setReports(liveReps);
+        }
+        if (catalogItems.status === 'fulfilled' && Array.isArray(catalogItems.value)) {
+          setTools(catalogItems.value);
+        }
+      }
     } catch (err) {
       console.error('[AdminDashboardPage] Error loading data:', err);
     }
@@ -150,6 +170,12 @@ function DemoAdminDashboardPage({ onBack, onOpenTool }) {
     };
     window.addEventListener('guidora_taxonomy_change', handleTaxonomyChange);
 
+    // Listen for mode change (Live Backend vs Mock Demo)
+    const handleModeChange = () => {
+      refreshAllData();
+    };
+    window.addEventListener('guidora_mode_change', handleModeChange);
+
     // Keyboard shortcut for sidebar toggle (Ctrl+B / Cmd+B)
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
@@ -161,6 +187,7 @@ function DemoAdminDashboardPage({ onBack, onOpenTool }) {
 
     return () => {
       window.removeEventListener('guidora_taxonomy_change', handleTaxonomyChange);
+      window.removeEventListener('guidora_mode_change', handleModeChange);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [refreshAllData]);
@@ -261,7 +288,14 @@ function DemoAdminDashboardPage({ onBack, onOpenTool }) {
               tools={tools}
               categories={categories}
               globalSearch={globalSearch}
-              onRefreshTools={() => setTools(getAllTools())}
+              onRefreshTools={async () => {
+                if (!isMockMode()) {
+                  const t = await loadBackendCatalog();
+                  setTools(t);
+                } else {
+                  setTools(getAllTools());
+                }
+              }}
               onOpenTool={onOpenTool}
             />
           )}
@@ -270,8 +304,13 @@ function DemoAdminDashboardPage({ onBack, onOpenTool }) {
             <ProposalsTab
               proposals={proposals}
               globalSearch={globalSearch}
-              onRefreshProposals={() => {
-                setProposals(adminGetProposals());
+              onRefreshProposals={async () => {
+                if (!isMockMode()) {
+                  const p = await adminFetchProposals();
+                  setProposals(p);
+                } else {
+                  setProposals(adminGetProposals());
+                }
                 setTools(getAllTools());
               }}
               onOpenTool={onOpenTool}
@@ -283,8 +322,13 @@ function DemoAdminDashboardPage({ onBack, onOpenTool }) {
               categories={categories}
               tools={tools}
               globalSearch={globalSearch}
-              onRefreshCategories={() => {
-                setCategories(adminGetCategories());
+              onRefreshCategories={async () => {
+                if (!isMockMode()) {
+                  const c = await adminFetchCategories();
+                  setCategories(c);
+                } else {
+                  setCategories(adminGetCategories());
+                }
                 setTools(getAllTools());
               }}
             />
@@ -294,7 +338,14 @@ function DemoAdminDashboardPage({ onBack, onOpenTool }) {
             <TagsTab
               tagCategories={tagCategories}
               globalSearch={globalSearch}
-              onRefreshTags={() => setTagCategories(adminGetTagCategories())}
+              onRefreshTags={async () => {
+                if (!isMockMode()) {
+                  const t = await adminFetchTagCategories();
+                  setTagCategories(t);
+                } else {
+                  setTagCategories(adminGetTagCategories());
+                }
+              }}
             />
           )}
 
@@ -318,7 +369,14 @@ function DemoAdminDashboardPage({ onBack, onOpenTool }) {
             <ReportsTab
               reports={reports}
               globalSearch={globalSearch}
-              onRefreshReports={() => setReports(adminGetReports())}
+              onRefreshReports={async () => {
+                if (!isMockMode()) {
+                  const r = await adminFetchReports();
+                  setReports(r);
+                } else {
+                  setReports(adminGetReports());
+                }
+              }}
               onOpenTool={onOpenTool}
             />
           )}

@@ -1,3 +1,5 @@
+import { isMockMode } from './config/modeService';
+
 // Storage keys
 const USER_KEY = 'guidora_current_user';
 const ORGANIZATIONS_KEY = 'guidora_organizations';
@@ -143,7 +145,7 @@ export function getCurrentUser() {
 const ALL_USERS_KEY = 'guidora_all_users';
 
 export function getAllUsers() {
-  if (import.meta.env.VITE_USE_MOCK !== 'true') return getCurrentUser() ? [getCurrentUser()] : [];
+  if (!isMockMode()) return getCurrentUser() ? [getCurrentUser()] : [];
   try {
     const raw = localStorage.getItem(ALL_USERS_KEY);
     if (!raw) {
@@ -307,7 +309,7 @@ export function canUserPerformAction(user, actionKey) {
 
 
 export function getOrganizations() {
-  if (import.meta.env.VITE_USE_MOCK !== 'true') return [];
+  if (!isMockMode()) return [];
   try {
     const raw = localStorage.getItem(ORGANIZATIONS_KEY);
     if (!raw) {

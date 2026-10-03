@@ -1,8 +1,11 @@
 import * as productsApi from './api/productsApi';
 import * as taxonomiesApi from './api/taxonomiesApi';
-import { adaptProductDtoToTool, adaptToolToCreateProductRequest } from './api/toolAdapter';
-const useMock = () => import.meta.env.VITE_USE_MOCK === 'true';
+import { adaptProductDtoToTool } from './api/toolAdapter';
+import { isMockMode } from './config/modeService';
+const useMock = () => isMockMode();
 let backendTools = [];
+
+export { loadBackendCatalog };
 
 async function loadBackendCatalog() {
   const items = [];

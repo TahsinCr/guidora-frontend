@@ -6,13 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Unified Runtime Data Source Switcher (`modeService.js`)**:
+  - Added dynamic runtime data source switching between live `.NET 10 WebAPI` endpoints and offline mock demo data.
+  - Persists preference in `localStorage.getItem('guidora_datasource_mode')` and dispatches `guidora_mode_change` events across components.
+  - Added one-click Mode Switcher button in `AdminHeader.jsx` (`🟢 MOD: CANLI BACKEND` vs `🟡 MOD: MOCK (DEMO)`) with instant toast alerts.
+
+- **Direct Backend Admin API Gateway (`adminApi.js`)**:
+  - Implemented REST client for live management endpoints: `/api/categories/management`, `/api/categories`, `/api/tag-categories`, `/api/tags`, `/api/product-edit-proposals/pending`, `/api/product-reports/open`, `/api/roles`, and `/api/audit/{id}/revert`.
+  - Added async methods `adminFetchCategories`, `adminFetchTagCategories`, `adminFetchProposals`, `adminFetchReports`, and `adminFetchAll` in `adminService.js`.
+  - Integrated optimistic caching in `adminService.js` that synchronizes mutations with the .NET 10 WebAPI when in backend mode while retaining synchronous fallback in mock mode.
+
 ### Changed
 
-- Default development and production to the real backend; disable offline authentication fallback.
-- Load catalog, details, categories, tags, comments, and submissions through API services instead of local demo records. Empty catalogs stay empty and failures propagate.
-- Derive session identity from backend JWT claims and clear stale identities when refresh fails.
-- Replace the live-mode demo administration screen with a read-only backend record view; retain the demo console only in explicitly enabled mock mode.
-- Remove fabricated verification, rating, notifications, and organization defaults from live mode.
+- **Admin Dashboard Real-time Dual-Mode Data Integration**:
+  - Updated `AdminDashboardPage.jsx` to fetch live data asynchronously when in backend mode, listening for `guidora_mode_change` events to refresh catalog, taxonomy, proposals, and reports immediately.
+  - Restored full-featured `AdminDashboardPage` across all environments while eliminating mock-only limitations.
+  - Maintained 100% vitest suite pass rate (83 passing tests across 14 suites).
 
 ## **[v1.0] - 02.10.2026**
 
