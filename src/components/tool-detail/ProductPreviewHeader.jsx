@@ -15,9 +15,9 @@ export default function ProductPreviewHeader({ tool }) {
         <div className={styles.categoryRow}>
           <span className={styles.categoryPill}>{categoryName}</span>
           <div className={styles.trustBadges}>
-            <ShieldCheck size={16} color="#EAB308" title={t('filter.adminVerified', 'Admin Verified')} />
-            <Sparkles size={16} color="#10B981" title={t('filter.communityChoice', 'Community Choice')} />
-            <Bot size={16} color="#A855F7" title={t('filter.botAudited', 'Bot Verified')} />
+            {tool.verified?.admin && <ShieldCheck size={16} color="#EAB308" title={t('filter.adminVerified', 'Admin Verified')} />}
+            {tool.verified?.community && <Sparkles size={16} color="#10B981" title={t('filter.communityChoice', 'Community Choice')} />}
+            {tool.verified?.bot && <Bot size={16} color="#A855F7" title={t('filter.botAudited', 'Bot Verified')} />}
           </div>
         </div>
 

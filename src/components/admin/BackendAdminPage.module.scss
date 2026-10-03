@@ -1,0 +1,14 @@
+.page {
+  min-height: 100vh;
+  padding: 32px;
+  background: var(--bg-primary, #10141b);
+  color: var(--text-primary, #f3f4f6);
+  header, nav { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-bottom: 24px; }
+  header h1 { flex: 1; }
+  button { cursor: pointer; padding: 10px 16px; border: 1px solid #707887; border-radius: 8px; background: transparent; color: inherit; }
+  button[aria-pressed='true'] { background: #334768; color: white; }
+  p { margin: 20px 0; }
+  .table { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { padding: 12px; text-align: left; border-bottom: 1px solid #707887; max-width: 350px; overflow-wrap: anywhere; }
+}

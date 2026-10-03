@@ -9,7 +9,7 @@ export default function Tabs({ activeTab, onTabChange, reviewCount }) {
     { id: 'gallery', label: t('tabs.gallery', 'Gallery') },
     { id: 'changelog', label: t('tabs.changelog', 'Changelog') },
     { id: 'license', label: t('tabs.license', 'License') },
-    { id: 'reviews', label: t('tabs.reviews', 'Reviews'), count: reviewCount ? String(reviewCount) : '128' },
+    { id: 'reviews', label: t('tabs.reviews', 'Reviews'), count: reviewCount == null ? undefined : String(reviewCount) },
     { id: 'alternatives', label: t('tabs.alternatives', 'Alternatives') },
   ];
 

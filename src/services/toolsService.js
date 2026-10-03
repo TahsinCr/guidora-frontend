@@ -1,3 +1,22 @@
+import * as productsApi from './api/productsApi';
+import * as taxonomiesApi from './api/taxonomiesApi';
+import { adaptProductDtoToTool, adaptToolToCreateProductRequest } from './api/toolAdapter';
+const useMock = () => import.meta.env.VITE_USE_MOCK === 'true';
+let backendTools = [];
+
+async function loadBackendCatalog() {
+  const items = [];
+  let page = 1;
+  let result;
+  do {
+    result = await productsApi.fetchProducts({ page, pageSize: 100 });
+    items.push(...result.items.map(adaptProductDtoToTool));
+    page += 1;
+  } while (items.length < result.totalCount && result.items.length);
+  backendTools = items;
+  return items;
+}
+
 import { TOOLS_DATA, CATEGORIES, TAG_CATEGORIES, ALL_TAGS } from './mockData';
 import { adminGetCategories, adminGetTagCategories, getDeletedToolIds, getToolOverrides } from './adminService';
 import { sanitizePlainText, sanitizeUrl } from '@/utils/security';
@@ -24,6 +43,7 @@ function getStoredCustomTools() {
 }
 
 export function getAllTools() {
+  if (!useMock()) return backendTools;
   const custom = getStoredCustomTools();
   const deletedIds = getDeletedToolIds();
   const overrides = getToolOverrides();
@@ -64,7 +84,7 @@ export async function getTools({
 } = {}) {
   await simulateDelay(60);
 
-  let filtered = getAllTools();
+  let filtered = useMock() ? getAllTools() : await loadBackendCatalog();
 
   // Primary Category filter (from top hero/slider)
   if (category && category !== 'all') {
@@ -172,6 +192,15 @@ export async function getTools({
  * Fetch a single tool by its ID.
  */
 export async function getToolById(id) {
+  if (!useMock()) {
+    const cached = backendTools.find((t) => t.id === id || String(t.numericId) === String(id));
+    const numericId = cached?.numericId || (/^\d+$/.test(String(id)) ? Number(id) : (await loadBackendCatalog()).find((t) => t.id === id)?.numericId);
+    if (!numericId) throw new Error(`Tool not found: ${id}`);
+    const [dto, verification] = await Promise.all([productsApi.fetchProductById(numericId), productsApi.fetchProductVerificationSummary(numericId)]);
+    const tool = adaptProductDtoToTool(dto);
+    tool.verified = { admin: verification.adminVerified, community: verification.communityVerified, bot: false };
+    return tool;
+  }
   await simulateDelay(80);
   const all = getAllTools();
   const tool = all.find((t) => t.id === id);
@@ -230,6 +259,7 @@ export async function getToolById(id) {
  * Eliminates skeleton flashes and layout shift on instant card clicks.
  */
 export function getToolByIdSync(id) {
+  if (!useMock()) return backendTools.find((t) => t.id === id) || null;
   if (!id) return null;
   const all = getAllTools();
   const tool = all.find((t) => t.id === id);
@@ -284,6 +314,7 @@ export function getToolByIdSync(id) {
  * Add a new tool to the catalog and persist it in localStorage.
  */
 export async function addTool(toolData) {
+  if (!useMock()) return adaptProductDtoToTool(await productsApi.createProduct(adaptToolToCreateProductRequest(toolData)));
   await simulateDelay(100);
 
   const cleanName = sanitizePlainText(toolData.name || '');
@@ -431,6 +462,12 @@ export async function fetchGithubRepoData(repoUrl) {
  * Fetch reviews for a tool with localStorage persistence.
  */
 export async function getReviews(toolId) {
+  if (!useMock()) {
+    const tool = backendTools.find((t) => t.id === toolId);
+    if (!tool) return [];
+    const result = await productsApi.fetchProductComments(tool.numericId);
+    return result.items || [];
+  }
   await simulateDelay(40);
   const key = `${REVIEWS_KEY_PREFIX}${toolId}`;
   try {
@@ -487,6 +524,10 @@ export async function getReviews(toolId) {
  * Add a review to a tool.
  */
 export async function addReview(toolId, reviewData) {
+  if (!useMock()) {
+    const tool = await getToolById(toolId);
+    return await productsApi.addProductComment(tool.numericId, reviewData.content);
+  }
   await simulateDelay(60);
   const key = `${REVIEWS_KEY_PREFIX}${toolId}`;
   const existing = await getReviews(toolId);
@@ -519,6 +560,7 @@ export async function addReview(toolId, reviewData) {
  * Delete a review from a tool.
  */
 export async function deleteReview(toolId, reviewId) {
+  if (!useMock()) return await productsApi.deleteProductComment(reviewId);
   await simulateDelay(40);
   const key = `${REVIEWS_KEY_PREFIX}${toolId}`;
   const existing = await getReviews(toolId);
@@ -533,6 +575,7 @@ export async function deleteReview(toolId, reviewId) {
  * Get all reviews across all tools (for Admin Moderation Panel)
  */
 export async function getAllReviews() {
+  if (!useMock()) return [];
   await simulateDelay(50);
   const allTools = await getAllTools();
   let aggregated = [];
@@ -584,6 +627,10 @@ export async function getUserReviews(userId) {
  * Submit a report for a tool.
  */
 export async function submitReport(toolId, reportData) {
+  if (!useMock()) {
+    const tool = await getToolById(toolId);
+    return await productsApi.reportProduct(tool.numericId, reportData);
+  }
   await simulateDelay(80);
   
   // Try sending to .NET 10 API if numeric ID is available
@@ -626,6 +673,7 @@ export async function submitReport(toolId, reportData) {
  * Fetch list of categories (queries .NET 10 API first, falls back to local data)
  */
 export async function getCategories() {
+  if (!useMock()) return (await taxonomiesApi.fetchCategories()).map((c) => ({ id: c.slug || String(c.categoryId), numericId: c.categoryId, name: c.categoryName, count: 0 }));
   await simulateDelay(40);
   try {
     const { fetchCategories } = await import('./api/taxonomiesApi');
@@ -657,6 +705,7 @@ export async function getPopularCategories() {
  * Fetch hierarchical tag categories
  */
 export async function getTagCategories() {
+  if (!useMock()) return await taxonomiesApi.fetchTagCategories();
   await simulateDelay(40);
   return adminGetTagCategories();
 }
@@ -665,6 +714,7 @@ export async function getTagCategories() {
  * Fetch all available tags alphabetically
  */
 export async function getAllTags() {
+  if (!useMock()) return await taxonomiesApi.fetchTags();
   await simulateDelay(30);
   const tagCats = adminGetTagCategories();
   const allFlattened = [];

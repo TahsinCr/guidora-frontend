@@ -17,21 +17,22 @@ export async function login({ usernameOrEmail, password, rememberMe = false }) {
     });
 
     if (apiResult) {
-      const returnedUser = apiResult?.data?.user || apiResult?.user || apiResult?.data;
+      const returnedUser = apiResult?.data?.user || apiResult?.user || (import.meta.env.VITE_USE_MOCK === 'true' ? apiResult?.data : userFromAccessToken(apiResult.accessToken?.token));
       const user = {
         id: returnedUser?.id || `usr_${cleanInput.toLowerCase()}`,
         name: returnedUser?.name || cleanInput.split('@')[0],
         username: returnedUser?.username || cleanInput.split('@')[0],
         email: returnedUser?.email || cleanInput,
         role: returnedUser?.role || 'member',
+        permissions: returnedUser?.permissions || [],
         avatar: returnedUser?.avatar || cleanInput.slice(0, 2).toUpperCase(),
-        title: returnedUser?.title || (returnedUser?.role === 'admin' ? 'Lead AI Engineer & Product Architect' : 'Platform Member'),
-        bio: returnedUser?.bio || 'Verified Guidora User',
+        title: returnedUser?.title || '',
+        bio: returnedUser?.bio || '',
         location: returnedUser?.location || 'Global',
         joinedDate: returnedUser?.joinedDate || new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-        savedToolIds: returnedUser?.savedToolIds || ['neurogen-studio', 'cursor-editor', 'midjourney', 'v0-dev'],
-        submittedToolIds: returnedUser?.submittedToolIds || ['neurogen-studio'],
-        reputation: returnedUser?.reputation || (returnedUser?.role === 'admin' ? 980 : 500),
+        savedToolIds: returnedUser?.savedToolIds || [],
+        submittedToolIds: returnedUser?.submittedToolIds || [],
+        reputation: returnedUser?.reputation || 0,
       };
 
       localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
@@ -46,7 +47,7 @@ export async function login({ usernameOrEmail, password, rememberMe = false }) {
       throw new Error(apiErr.message || 'Geçersiz kullanıcı adı veya şifre.');
     }
     // If client is configured to disallow offline fallback, throw connection error
-    if (import.meta.env?.VITE_ALLOW_MOCK_FALLBACK === 'false') {
+    if (import.meta.env?.VITE_USE_MOCK !== 'true' || import.meta.env?.VITE_ALLOW_MOCK_FALLBACK !== 'true') {
       throw new Error(apiErr.message || 'Sunucuya bağlanılamadı.');
     }
   }
@@ -180,3 +181,36 @@ export function changePassword(oldPassword, newPassword) {
   return true;
 }
 
+
+// JWT claims supply display identity; the API enforces every permission.
+export function userFromAccessToken(token) {
+  if (!token) throw new Error('Sunucu oturum kimliği döndürmedi.');
+  const segment = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+  const claims = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(segment), (c) => c.charCodeAt(0))));
+  const prefix = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/';
+  const permissions = claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || claims.role || [];
+  const list = Array.isArray(permissions) ? permissions : [permissions];
+  return {
+    id: claims[prefix + 'nameidentifier'] || claims.sub,
+    name: claims[prefix + 'name'] || claims.unique_name || claims.name,
+    email: claims[prefix + 'emailaddress'] || claims.email,
+    role: list.includes('Role.Manage') ? 'admin' : list.includes('Product.Report.Review') ? 'moderator' : 'member',
+    permissions: list,
+    savedToolIds: [], submittedToolIds: [],
+  };
+}
+
+export async function restoreSession() {
+  try {
+    const result = await authApi.refreshSession();
+    const user = userFromAccessToken(result.accessToken?.token);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+    window.dispatchEvent(new CustomEvent('guidora_auth_change', { detail: user }));
+    return user;
+  } catch {
+    localStorage.removeItem(AUTH_USER_KEY);
+    clearAccessToken();
+    window.dispatchEvent(new CustomEvent('guidora_auth_change', { detail: null }));
+    return null;
+  }
+}

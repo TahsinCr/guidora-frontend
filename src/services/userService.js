@@ -143,6 +143,7 @@ export function getCurrentUser() {
 const ALL_USERS_KEY = 'guidora_all_users';
 
 export function getAllUsers() {
+  if (import.meta.env.VITE_USE_MOCK !== 'true') return getCurrentUser() ? [getCurrentUser()] : [];
   try {
     const raw = localStorage.getItem(ALL_USERS_KEY);
     if (!raw) {
@@ -306,6 +307,7 @@ export function canUserPerformAction(user, actionKey) {
 
 
 export function getOrganizations() {
+  if (import.meta.env.VITE_USE_MOCK !== 'true') return [];
   try {
     const raw = localStorage.getItem(ORGANIZATIONS_KEY);
     if (!raw) {

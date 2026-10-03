@@ -8,22 +8,22 @@ export default function StatusCardGroup({ tool }) {
   const widgets = [
     {
       label: t('tool.pricing', 'PRICING'),
-      value: tool.pricing || 'Freemium',
+      value: tool.pricing || '—',
       icon: <CreditCard size={17} />,
     },
     {
       label: t('tool.platform', 'PLATFORM'),
-      value: tool.platformDisplay || 'Web, API',
+      value: tool.platformDisplay || '—',
       icon: <Monitor size={17} />,
     },
     {
       label: t('tool.access', 'ACCESS'),
-      value: tool.access || 'Waitlist',
+      value: tool.access || '—',
       icon: <Cloud size={17} />,
     },
     {
       label: t('tool.updated', 'UPDATED'),
-      value: tool.updated || '2 days ago',
+      value: tool.updatedAt || tool.createdAt || '—',
       icon: <Clock size={17} />,
     },
   ];

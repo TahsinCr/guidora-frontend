@@ -152,11 +152,7 @@ export default function App() {
     getCategories().then(setCategories).catch(console.error);
 
     // Silent refresh to populate in-memory AccessToken on page reload/startup
-    import('@/services/api/authApi').then(({ refreshSession }) => {
-      refreshSession().catch(() => {
-        // No active persistent session or cookie expired, normal guest flow
-      });
-    });
+    import('@/services/authService').then(({ restoreSession }) => restoreSession());
 
     // Warm up chunks during browser idle time for zero-latency interactions
     const prefetchIdle = () => {

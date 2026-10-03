@@ -1,3 +1,4 @@
+import BackendAdminPage from './BackendAdminPage';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Lock } from 'lucide-react';
 import {
@@ -35,7 +36,11 @@ import styles from './AdminDashboardPage.module.scss';
 
 const SIDEBAR_COLLAPSED_KEY = 'guidora_admin_sidebar_collapsed';
 
-export default function AdminDashboardPage({ onBack, onOpenTool }) {
+export default function AdminDashboardPage(props) {
+  return import.meta.env.VITE_USE_MOCK === 'true' ? <DemoAdminDashboardPage {...props} /> : <BackendAdminPage {...props} />;
+}
+
+function DemoAdminDashboardPage({ onBack, onOpenTool }) {
   const { t } = useLanguage();
   const rawUser = getCurrentUser();
   // Ensure the admin panel always loads: if no user is logged in or role is not admin/moderator, fallback to default admin

@@ -6,7 +6,7 @@ import path from 'path';
 import { createMockApiHandler } from './infra/mock-server/mockHandler.js';
 
 function guidoraMockPlugin(env) {
-  const useMock = env.VITE_USE_MOCK !== 'false';
+  const useMock = env.VITE_USE_MOCK === 'true';
   if (!useMock) return null;
 
   const mockHandler = createMockApiHandler({

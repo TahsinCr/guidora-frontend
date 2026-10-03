@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Default development and production to the real backend; disable offline authentication fallback.
+- Load catalog, details, categories, tags, comments, and submissions through API services instead of local demo records. Empty catalogs stay empty and failures propagate.
+- Derive session identity from backend JWT claims and clear stale identities when refresh fails.
+- Replace the live-mode demo administration screen with a read-only backend record view; retain the demo console only in explicitly enabled mock mode.
+- Remove fabricated verification, rating, notifications, and organization defaults from live mode.
+
 ## **[v1.0] - 02.10.2026**
 
 ### Changed

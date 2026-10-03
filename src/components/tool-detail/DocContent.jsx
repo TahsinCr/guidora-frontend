@@ -1,10 +1,15 @@
+import BackendDocContent from './BackendDocContent';
 import { FileText, Tag, CheckCircle2, Scale } from 'lucide-react';
 import MarkdownRenderer from '@/components/common/MarkdownRenderer';
 import ReviewsTab from './ReviewsTab';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './DocContent.module.scss';
 
-export default function DocContent({ tool, activeTab, onReviewCountChange }) {
+export default function DocContent(props) {
+  return import.meta.env.VITE_USE_MOCK === 'true' ? <DemoDocContent {...props} /> : <BackendDocContent {...props} />;
+}
+
+function DemoDocContent({ tool, activeTab, onReviewCountChange }) {
   const { t, translateTag } = useLanguage();
   const overviewLead = tool.overviewText?.lead || `${tool.name} is a cutting-edge platform designed to bridge the gap between creative ideation and final production. Unlike standard LLM wrappers, ${tool.name} provides a context-aware workspace where your code repositories, design assets, and marketing guidelines live together.`;
   const overviewDetail = tool.overviewText?.detail || `Whether you are a developer looking to auto-generate unit tests or a marketer crafting a month's worth of social content, our fine-tuned models adapt to your specific brand voice and coding standards.`;

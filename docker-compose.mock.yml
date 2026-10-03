@@ -1,0 +1,59 @@
+# ========================================================
+# Guidora Frontend - Isolated Module Docker Orchestration
+# Runs standalone frontend Nginx reverse proxy + optional mock backend
+# ========================================================
+name: guidora-demo
+
+services:
+  # ------------------------------------------------------
+  # Frontend Client (Nginx SPA + Reverse Proxy)
+  # ------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: dockerfile
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    volumes:
+      # Mount runtime config.json directly from host without rebuilding container!
+      - ./public/config.json:/usr/share/nginx/html/config.json:ro
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - guidora-net
+
+  # ------------------------------------------------------
+  # Demo / Mock Backend Container (Emulates .NET 10 WebAPI)
+  # When connecting to the real backend, replace this service
+  # or point Nginx proxy to your remote/unified backend.
+  # ------------------------------------------------------
+  backend:
+    build:
+      context: ./infra/mock-server
+      dockerfile: dockerfile
+    restart: unless-stopped
+    ports:
+      - "${MOCK_API_PORT:-8080}:8080"
+    environment:
+      - PORT=8080
+      - MOCK_ADMIN_USERNAME=${MOCK_ADMIN_USERNAME:-tahsincr}
+      - MOCK_ADMIN_EMAIL=${MOCK_ADMIN_EMAIL:-tahsincrs@gmail.com}
+      - MOCK_ADMIN_PASSWORD=${MOCK_ADMIN_PASSWORD:?Set MOCK_ADMIN_PASSWORD for the explicit demo stack}
+      - BOOTSTRAP_ADMIN_USERNAME=${MOCK_ADMIN_USERNAME:-tahsincr}
+      - BOOTSTRAP_ADMIN_EMAIL=${MOCK_ADMIN_EMAIL:-tahsincrs@gmail.com}
+      - BOOTSTRAP_ADMIN_PASSWORD=${MOCK_ADMIN_PASSWORD:?Set MOCK_ADMIN_PASSWORD for the explicit demo stack}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health/live || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - guidora-net
+
+networks:
+  guidora-net:
+    driver: bridge

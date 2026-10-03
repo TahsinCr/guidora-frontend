@@ -61,9 +61,9 @@ describe('Tool Adapter - .NET 10 DTO Mapping Layer', () => {
     expect(tool.website).toBe('#');
     expect(tool.logo).toBeNull();
     expect(tool.category).toBe('developer-tools');
-    expect(tool.rating).toBe(4.8);
-    expect(tool.tags).toEqual(['productivity', 'developer']);
-    expect(tool.verified.admin).toBe(true);
+    expect(tool.rating).toBeNull();
+    expect(tool.tags).toEqual([]);
+    expect(tool.verified.admin).toBe(false);
     expect(tool.verified.community).toBe(false);
   });
 

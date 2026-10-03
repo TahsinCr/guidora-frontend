@@ -13,6 +13,9 @@ RUN npm ci --no-audit --prefer-offline
 COPY . .
 
 # Run production build (generates optimized dist/ with pre-compressed Brotli & Gzip)
+ENV VITE_USE_MOCK=false
+ENV VITE_ALLOW_MOCK_FALLBACK=false
+ENV VITE_API_BASE_URL=/api
 RUN npm run build
 
 # ========================================================

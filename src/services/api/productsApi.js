@@ -50,7 +50,7 @@ export async function fetchProductComments(productId, { page = 1, pageSize = 20 
 export async function addProductComment(productId, commentText) {
   return await apiRequest(`products/${productId}/comments`, {
     method: 'POST',
-    body: JSON.stringify({ commentText }),
+    body: JSON.stringify({ content: commentText }),
   });
 }
 
@@ -66,13 +66,16 @@ export async function fetchProductVerificationSummary(productId) {
   return await apiRequest(`products/${productId}/verification`, { method: 'GET' });
 }
 
-export async function reportProduct(productId, { reason, details, contactEmail = '' }) {
+export async function reportProduct(productId, { reason, details, reasonId }) {
+  const reasons = { broken_link: 3, outdated_info: 3, spam_malicious: 1, inappropriate: 2, spam: 1, inaccurate: 3 };
+  const selectedReason = reasonId || reasons[reason];
+  if (!selectedReason) throw new Error('Desteklenmeyen rapor nedeni.');
   return await apiRequest(`product-reports/products/${productId}`, {
     method: 'POST',
-    body: JSON.stringify({
-      reason,
-      details,
-      contactEmail,
-    }),
+    body: JSON.stringify({ reasonId: selectedReason, description: details || '' }),
   });
+}
+
+export async function deleteProductComment(id) {
+  return await apiRequest(`comments/${id}`, { method: 'DELETE' });
 }

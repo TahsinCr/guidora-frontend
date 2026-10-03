@@ -5,6 +5,8 @@ import { getAccessToken } from '@/services/api/tokenManager';
 
 describe('AuthService - Identity & Session Management', () => {
   beforeEach(() => {
+    vi.stubEnv('VITE_USE_MOCK', 'true');
+    vi.stubEnv('VITE_ALLOW_MOCK_FALLBACK', 'true');
     localStorage.clear();
     vi.restoreAllMocks();
   });
@@ -12,6 +14,7 @@ describe('AuthService - Identity & Session Management', () => {
   afterEach(() => {
     localStorage.clear();
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it('successfully logs in via authApi, stores session in localStorage, and dispatches event', async () => {

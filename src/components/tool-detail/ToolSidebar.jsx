@@ -11,21 +11,21 @@ export default function ToolSidebar({ tool, onSelectTool }) {
   const [isCompared, setIsCompared] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
 
-  const ratingValue = tool.rating ? Number(tool.rating).toFixed(1) : '4.8';
-  const rankValue = tool.rank || '#4';
-  const monthlyVisits = tool.monthlyVisits || '1.2M';
+  const ratingValue = tool.rating ? Number(tool.rating).toFixed(1) : '—';
+  const rankValue = tool.rank || '—';
+  const monthlyVisits = tool.monthlyVisits || '—';
   const license = tool.license || 'Proprietary';
 
-  const creator = tool.creator || {
+  const creator = tool.creator || (import.meta.env.VITE_USE_MOCK !== 'true' ? { name: '—', initials: '', verified: false } : {
     name: 'NeuroLabs Inc.',
     initials: 'NL',
     verified: true,
-  };
+  });
 
-  const similarTools = tool.similarTools || [
+  const similarTools = tool.similarTools || (import.meta.env.VITE_USE_MOCK !== 'true' ? [] : [
     { id: 'codewizard-ai', name: 'CodeWizard', category: 'Coding', pricing: 'Free' },
     { id: 'figma', name: 'DataMind', category: 'Analytics', pricing: 'Paid' },
-  ];
+  ]);
 
   return (
     <aside className={styles.sidebarWrapper} aria-label="Tool Actions and Info">

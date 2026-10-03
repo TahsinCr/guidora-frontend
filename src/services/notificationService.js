@@ -29,6 +29,7 @@ const INITIAL_NOTIFICATIONS = [
 ];
 
 export function getNotifications() {
+  if (import.meta.env.VITE_USE_MOCK !== 'true') return [];
   try {
     const raw = localStorage.getItem(NOTIFICATIONS_KEY);
     if (!raw) {

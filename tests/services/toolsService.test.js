@@ -12,12 +12,15 @@ import * as taxonomiesApi from '@/services/api/taxonomiesApi';
 
 describe('ToolsService - Catalog Query & Filtering Engine', () => {
   beforeEach(() => {
+    vi.stubEnv('VITE_USE_MOCK', 'true');
+    vi.stubEnv('VITE_ALLOW_MOCK_FALLBACK', 'true');
     localStorage.clear();
     vi.spyOn(taxonomiesApi, 'fetchCategories').mockResolvedValue([]);
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it('retrieves all catalog tools combined', () => {
