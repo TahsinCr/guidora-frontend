@@ -11,7 +11,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Unified Runtime Data Source Switcher (`modeService.js`)**:
   - Added dynamic runtime data source switching between live `.NET 10 WebAPI` endpoints and offline mock demo data.
   - Persists preference in `localStorage.getItem('guidora_datasource_mode')` and dispatches `guidora_mode_change` events across components.
-  - Added one-click Mode Switcher button in `AdminHeader.jsx` (`🟢 MOD: CANLI BACKEND` vs `🟡 MOD: MOCK (DEMO)`) with instant toast alerts.
+  - Added one-click Mode Switcher button in `AdminHeader.jsx` (`MOD: CANLI BACKEND` vs `MOD: MOCK (DEMO)`) with instant toast alerts.
+  - Resolved dynamic import warnings in `App.jsx` and `toolsService.js` by standardizing on static references, optimizing Rollup vendor chunking.
 
 - **Direct Backend Admin API Gateway (`adminApi.js`)**:
   - Implemented REST client for live management endpoints: `/api/categories/management`, `/api/categories`, `/api/tag-categories`, `/api/tags`, `/api/product-edit-proposals/pending`, `/api/product-reports/open`, `/api/roles`, and `/api/audit/{id}/revert`.

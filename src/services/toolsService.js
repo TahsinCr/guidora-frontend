@@ -641,8 +641,7 @@ export async function submitReport(toolId, reportData) {
     const all = getAllTools();
     const targetTool = all.find((t) => t.id === toolId);
     if (targetTool?.numericId) {
-      const { reportProduct } = await import('./api/productsApi');
-      await reportProduct(targetTool.numericId, {
+      await productsApi.reportProduct(targetTool.numericId, {
         reason: reportData.reason,
         details: reportData.details,
         contactEmail: reportData.email || '',
@@ -679,8 +678,7 @@ export async function getCategories() {
   if (!useMock()) return (await taxonomiesApi.fetchCategories()).map((c) => ({ id: c.slug || String(c.categoryId), numericId: c.categoryId, name: c.categoryName, count: 0 }));
   await simulateDelay(40);
   try {
-    const { fetchCategories } = await import('./api/taxonomiesApi');
-    const apiCats = await fetchCategories();
+    const apiCats = await taxonomiesApi.fetchCategories();
     if (Array.isArray(apiCats) && apiCats.length > 0) {
       return apiCats.map((c) => ({
         id: c.slug || String(c.categoryId),

@@ -57,9 +57,9 @@ export default function AdminHeader({
     const nextMode = toggleDataSourceMode();
     setDataSourceMode(nextMode);
     if (nextMode === 'backend') {
-      toastService.success('🟢 Canlı Backend Modu Aktif: .NET 10 WebAPI verileri yükleniyor.');
+      toastService.success('Canlı Backend Modu Aktif: .NET 10 WebAPI verileri yükleniyor.');
     } else {
-      toastService.warning('🟡 Mock Demo Modu Aktif: Yerel örnek veriler yükleniyor.');
+      toastService.warning('Mock Demo Modu Aktif: Yerel örnek veriler yükleniyor.');
     }
   };
 

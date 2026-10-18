@@ -13,6 +13,7 @@ import MaintenancePage from '@/components/common/MaintenancePage';
 import { isMaintenanceActive, getScheduledMaintenanceDetails } from '@/services/config/maintenanceHelper';
 import { networkTracker } from '@/services/api/networkTracker';
 import { toast } from '@/services/toast/toastService';
+import { restoreSession } from '@/services/authService';
 
 import AdminDashboardPage from '@/components/admin/AdminDashboardPage';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
@@ -152,7 +153,7 @@ export default function App() {
     getCategories().then(setCategories).catch(console.error);
 
     // Silent refresh to populate in-memory AccessToken on page reload/startup
-    import('@/services/authService').then(({ restoreSession }) => restoreSession());
+    restoreSession();
 
     // Warm up chunks during browser idle time for zero-latency interactions
     const prefetchIdle = () => {
