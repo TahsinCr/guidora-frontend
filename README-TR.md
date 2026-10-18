@@ -238,7 +238,7 @@ npm test
 npm run test:watch
 ```
 
-Vitest ve Happy-DOM kullanarak bellek içi token güvenliği, mutex kilitli sessiz 401 oturum yenileme, mock API sözleşmeleri, devre kesici durum geçişleri, çoklu dil paritesi (TR, EN, RU), veri mimarisi ve REST API sözleşme doğrulamaları, denetim günlüğü geri alma ve hız sınırı denetimlerini kapsayan **78 kritik testi** <700ms içinde yürütür.
+Vitest ve Happy-DOM kullanarak bellek içi token güvenliği, mutex kilitli sessiz 401 oturum yenileme, mock API sözleşmeleri, devre kesici durum geçişleri, çoklu dil paritesi (TR, EN, RU), veri mimarisi ve REST API sözleşme doğrulamaları, denetim günlüğü geri alma ve hız sınırı denetimlerini kapsayan **14 test paketindeki 83 kritik testi** <700ms içinde yürütür.
 
 ### Kurumsal Yönetici Çalışma Alanı & Veri Mimarisi Gezgini
 

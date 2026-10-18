@@ -240,7 +240,7 @@ npm test
 npm run test:watch
 ```
 
-Executes **78 automated tests** covering in-memory token security, silent 401 refresh with mutex concurrency locks, mock API contract handling, circuit breaker state transitions, multi-language parity (TR, EN, RU), domain entity architecture & REST API contracts, safe read-only SQL execution, audit rollback, and rate limiting in <700ms via Vitest and Happy-DOM.
+Executes **83 automated tests across 14 suites** covering in-memory token security, silent 401 refresh with mutex concurrency locks, mock API contract handling, circuit breaker state transitions, multi-language parity (TR, EN, RU), domain entity architecture & REST API contracts, safe read-only SQL execution, audit rollback, and rate limiting in <700ms via Vitest and Happy-DOM.
 
 ### Enterprise Admin Workspace & Data Architecture Explorer
 
