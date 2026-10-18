@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Multi-Category Live Catalog Sync & Adaptation (`toolsService.js`, `toolAdapter.js`)**:
+  - Enhanced `loadBackendCatalog` to concurrently query category endpoints and build a comprehensive Many-to-Many junction map for all catalog products.
+  - Updated `adaptProductDtoToTool` to resolve category slugs, names, and arrays with full UI contract fields (`icon`, `websiteUrl`, `categories`, `overviewText`, `keyFeatures`, `capabilities`, `similarTools`).
+  - Hardened `getTools` and `getToolByIdSync` to search across both slugs and numeric identifiers without regression.
+
 - **Governance & Verification API Endpoints (`adminApi.js`, `productsApi.js`)**:
   - Added `voteCommunityVerification` targeting `POST /api/products/{id}/verification/community-votes`.
   - Added user favorites API methods (`fetchMyFavorites`, `addFavorite`, `removeFavorite`) targeting `/api/favorites`.

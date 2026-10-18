@@ -7,6 +7,7 @@
 export function adaptProductDtoToTool(dto, categoryMap = {}) {
   if (!dto) return null;
 
+  const mapping = categoryMap[dto.productId] || {};
   const id = dto.slug || String(dto.productId);
   const numericId = dto.productId;
   const name = dto.name || 'İsimsiz Araç';
@@ -14,6 +15,9 @@ export function adaptProductDtoToTool(dto, categoryMap = {}) {
   const description = dto.description || dto.shortDescription || '';
   const website = dto.websiteUrl || '#';
   const logo = dto.logoUrl || null;
+  const categorySlug = mapping.categorySlug || dto.categorySlug || 'developer-tools';
+  const categoryName = mapping.categoryName || dto.categoryName || 'Developer Tools';
+  const categories = mapping.categorySlugs || (dto.categorySlug ? [dto.categorySlug] : [categorySlug]);
 
   return {
     id,
@@ -23,16 +27,18 @@ export function adaptProductDtoToTool(dto, categoryMap = {}) {
     description,
     website,
     websiteUrl: website,
-    categoryId: dto.categorySlug || null,
-    platforms: dto.platform || [],
+    categoryId: mapping.categorySlug || dto.categorySlug || null,
+    platforms: dto.platform || ['Web', 'API'],
+    icon: logo,
     logo,
-    category: dto.categorySlug || 'developer-tools',
-    categoryName: dto.categoryName || 'Developer Tools',
-    tags: dto.tags || [],
+    category: categorySlug,
+    categoryName,
+    categories,
+    tags: dto.tags || mapping.tags || [],
     rating: dto.rating ?? null,
     reviewCount: dto.reviewCount ?? 0,
-    pricing: dto.pricing || '',
-    pricingModel: dto.pricingModel || '',
+    pricing: dto.pricing || mapping.pricing || '',
+    pricingModel: dto.pricingModel || mapping.pricingModel || '',
     verified: {
       admin: dto.isAdminVerified ?? false,
       community: dto.isCommunityVerified ?? false,

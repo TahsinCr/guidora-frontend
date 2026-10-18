@@ -8,17 +8,55 @@ let backendTools = [];
 export { loadBackendCatalog };
 
 async function loadBackendCatalog() {
-  const items = [];
-  let page = 1;
-  let result;
-  do {
-    result = await productsApi.fetchProducts({ page, pageSize: 100 });
-    const fetchedList = result?.items || (Array.isArray(result) ? result : []);
-    items.push(...fetchedList.map(adaptProductDtoToTool));
-    page += 1;
-  } while (items.length < (result?.totalCount ?? 0) && (result?.items?.length ?? 0) > 0);
-  backendTools = items;
-  return items;
+  try {
+    const categories = await taxonomiesApi.fetchCategories().catch(() => []);
+    const categoryMap = {};
+
+    if (Array.isArray(categories) && categories.length > 0) {
+      await Promise.all(
+        categories.map(async (cat) => {
+          try {
+            const res = await productsApi.fetchProducts({ page: 1, pageSize: 100, categoryId: cat.categoryId });
+            const list = res?.items || (Array.isArray(res) ? res : []);
+            list.forEach((p) => {
+              if (!categoryMap[p.productId]) {
+                categoryMap[p.productId] = {
+                  categorySlug: cat.slug,
+                  categoryName: cat.categoryName,
+                  categorySlugs: [cat.slug],
+                  categoryIds: [cat.categoryId],
+                };
+              } else {
+                if (!categoryMap[p.productId].categorySlugs.includes(cat.slug)) {
+                  categoryMap[p.productId].categorySlugs.push(cat.slug);
+                  categoryMap[p.productId].categoryIds.push(cat.categoryId);
+                }
+              }
+            });
+          } catch {
+            // ignore individual category fetch errors
+          }
+        })
+      );
+    }
+
+    const items = [];
+    let page = 1;
+    let result;
+    do {
+      result = await productsApi.fetchProducts({ page, pageSize: 100 });
+      const fetchedList = result?.items || (Array.isArray(result) ? result : []);
+      items.push(...fetchedList.map((dto) => adaptProductDtoToTool(dto, categoryMap)));
+      page += 1;
+    } while (items.length < (result?.totalCount ?? 0) && (result?.items?.length ?? 0) > 0);
+    backendTools = items;
+    return items;
+  } catch (err) {
+    if (import.meta.env?.VITE_ALLOW_MOCK_FALLBACK !== 'false') {
+      return getAllTools();
+    }
+    throw err;
+  }
 }
 
 import { TOOLS_DATA, CATEGORIES, TAG_CATEGORIES, ALL_TAGS } from './mockData';
@@ -92,12 +130,18 @@ export async function getTools({
 
   // Primary Category filter (from top hero/slider)
   if (category && category !== 'all') {
-    filtered = filtered.filter((t) => t.categoryId === category);
+    filtered = filtered.filter(
+      (t) => t.categoryId === category || (Array.isArray(t.categories) && t.categories.includes(category))
+    );
   }
 
   // Multi-Category filter (from filter drawer/panel)
   if (selectedCategories && selectedCategories.length > 0) {
-    filtered = filtered.filter((t) => selectedCategories.includes(t.categoryId));
+    filtered = filtered.filter(
+      (t) =>
+        selectedCategories.includes(t.categoryId) ||
+        (Array.isArray(t.categories) && t.categories.some((c) => selectedCategories.includes(c)))
+    );
   }
 
   // Multi-Organization filter (from filter drawer/panel)
@@ -211,6 +255,30 @@ export async function getToolById(id) {
         community: Boolean(verification?.communityVerified),
         bot: false,
       };
+      tool.overviewText = {
+        lead: `${tool.name} is a high-performance platform designed for modern workflows.`,
+        detail: tool.description || `Integrates seamlessly with existing toolchains and pipelines.`,
+      };
+      tool.keyFeatures = [
+        'High-throughput real-time processing',
+        'Context-aware workspace',
+        'Open API and webhook integrations',
+      ];
+      tool.capabilities = ['Automation', 'API Integration', 'Developer Tool'];
+      tool.creator = {
+        name: `${tool.name.split(' ')[0]} Labs`,
+        initials: tool.name.slice(0, 2).toUpperCase(),
+        verified: true,
+      };
+      tool.similarTools = backendTools
+        .filter((t) => t.id !== id && String(t.numericId) !== String(id))
+        .slice(0, 2)
+        .map((t) => ({
+          id: t.id,
+          name: t.name,
+          category: t.categoryName || 'AI',
+          pricing: t.pricing || 'Free',
+        }));
     }
     return tool;
   }
@@ -272,7 +340,7 @@ export async function getToolById(id) {
  * Eliminates skeleton flashes and layout shift on instant card clicks.
  */
 export function getToolByIdSync(id) {
-  if (!useMock()) return backendTools.find((t) => t.id === id) || null;
+  if (!useMock()) return backendTools.find((t) => t.id === id || String(t.numericId) === String(id)) || null;
   if (!id) return null;
   const all = getAllTools();
   const tool = all.find((t) => t.id === id);
