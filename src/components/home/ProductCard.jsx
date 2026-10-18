@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, Eye, Bookmark, ArrowUpRight, ShieldCheck, Sparkles, Bot } from 'lucide-react';
+import { Star, Eye, Bookmark, ArrowUpRight, ShieldCheck, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { safeOpenExternal } from '@/utils/security';
 import styles from './ProductCard.module.scss';
@@ -27,7 +27,7 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
         .join('')
         .slice(0, 2)
         .toUpperCase()
-    : 'AI';
+    : 'TL';
 
   // Translate pricing if possible
   const pricingKey = tool.pricing ? tool.pricing.toLowerCase().replace(/[^a-z0-9]/g, '-') : '';
@@ -71,7 +71,7 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
                       <Sparkles size={14} color="#10B981" title={t('filter.communityChoice', 'Community Choice')} />
                     )}
                     {tool.verified?.audited && (
-                      <Bot size={14} color="#A855F7" title={t('filter.botAudited', 'Bot Verified')} />
+                      <CheckCircle2 size={14} color="#8B5CF6" title={t('filter.botAudited', 'Technical Audit')} />
                     )}
                   </div>
                 )}

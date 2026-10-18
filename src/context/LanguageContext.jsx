@@ -17,7 +17,7 @@ export const TRANSLATIONS = {
     'hero.titlePart1': 'Discover the',
     'hero.titleHighlight': 'Perfect Tool',
     'hero.titlePart2': 'for Any Task',
-    'hero.subtitle': 'The most advanced directory with deep filtering, real-time community verification, and bot-assisted updates.',
+    'hero.subtitle': 'The definitive software and developer tools directory with deep filtering, community verification, and audited catalog data.',
     'hero.allTools': 'All Tools',
 
     // Categories
@@ -42,7 +42,7 @@ export const TRANSLATIONS = {
     'filter.verification': 'Verification',
     'filter.adminVerified': 'Admin Verified',
     'filter.communityChoice': 'Community Choice',
-    'filter.botAudited': 'Bot Audited',
+    'filter.botAudited': 'Technical Audit',
     'filter.organizations': 'Organizations',
     'filter.showMore': 'Show More',
     'filter.showLess': 'Show Less',
@@ -494,8 +494,8 @@ export const TRANSLATIONS = {
     'report.reasonOtherDesc': 'Duplicate listing or general policy issue',
 
     // Submit Tool
-    'submit.title': 'Submit a New AI Tool',
-    'submit.subtitle': 'Contribute to the directory with automated GitHub extraction and bot auditing.',
+    'submit.title': 'Submit a New Software Tool',
+    'submit.subtitle': 'Contribute to the directory with automated GitHub extraction and technical verification.',
     'submit.importGithub': 'Automated GitHub Import',
     'submit.fetchRepo': 'Fetch Repo Data',
     'submit.fetching': 'Fetching...',
@@ -672,7 +672,7 @@ export const TRANSLATIONS = {
     'admin.verifiedUserBadge': 'Verified User Badge',
     'admin.adminVerifiedBadge': 'Admin Verified Badge',
     'admin.communityChoiceBadge': 'Community Choice Badge',
-    'admin.botAuditedBadge': 'Bot Audited Badge',
+    'admin.botAuditedBadge': 'Technical Audit Badge',
     'admin.markFeatured': 'Mark as Featured Tool',
     'admin.saveToolChanges': 'Save Tool Changes',
 
@@ -838,9 +838,9 @@ export const TRANSLATIONS = {
     'admin.systemResetConfirmMsg': 'This will delete all custom tools, categories, taxonomy changes, and moderation notes. Are you sure?',
 
     // Auth Extras
-    'auth.artBadge': 'Guidora Intelligence',
-    'auth.artTitle': 'Unleash AI Innovation',
-    'auth.artSubtitle': 'Curating high-precision models, developer workflows, and verified generative tooling.',
+    'auth.artBadge': 'Guidora Platform',
+    'auth.artTitle': 'Developer & Software Directory',
+    'auth.artSubtitle': 'Curating professional developer tooling, modern infrastructure, and verified software catalogs.',
     'auth.usernamePlaceholder': 'e.g. admin@guidora.io or username',
     'auth.regUsernamePlaceholder': 'e.g. johndoe',
     'auth.regEmailPlaceholder': 'you@example.com',
@@ -940,7 +940,7 @@ export const TRANSLATIONS = {
     'hero.titlePart1': 'Her Görev İçin',
     'hero.titleHighlight': 'Mükemmel Aracı',
     'hero.titlePart2': 'Keşfedin',
-    'hero.subtitle': 'Derin filtreleme, gerçek zamanlı topluluk doğrulaması ve yapay zeka destekli güncellemeler içeren en gelişmiş dizin.',
+    'hero.subtitle': 'Gelişmiş filtreleme, gerçek zamanlı topluluk doğrulaması ve teknik denetimli katalog verileri içeren yazılım ve geliştirici araçları dizini.',
     'hero.allTools': 'Tüm Araçlar',
 
     // Categories
@@ -965,7 +965,7 @@ export const TRANSLATIONS = {
     'filter.verification': 'Doğrulama',
     'filter.adminVerified': 'Admin Doğrulamalı',
     'filter.communityChoice': 'Topluluk Seçimi',
-    'filter.botAudited': 'Bot Denetimli',
+    'filter.botAudited': 'Teknik Denetimli',
     'filter.organizations': 'Kuruluşlar',
     'filter.showMore': 'Daha Fazla Göster',
     'filter.showLess': 'Daha Az Göster',
@@ -1417,8 +1417,8 @@ export const TRANSLATIONS = {
     'report.reasonOtherDesc': 'Mükerrer listeleme veya genel politika sorunu',
 
     // Submit Tool
-    'submit.title': 'Yeni Yapay Zeka Aracı Ekle',
-    'submit.subtitle': 'Otomatik GitHub veri çekme ve bot denetimi ile dizine katkıda bulunun.',
+    'submit.title': 'Yeni Yazılım & Araç Ekle',
+    'submit.subtitle': 'Otomatik GitHub veri çekme ve teknik katalog denetimi ile dizine katkıda bulunun.',
     'submit.importGithub': 'Otomatik GitHub İçe Aktarımı',
     'submit.fetchRepo': 'Repo Bilgilerini Çek',
     'submit.fetching': 'Çekiliyor...',
@@ -1595,7 +1595,7 @@ export const TRANSLATIONS = {
     'admin.verifiedUserBadge': 'Doğrulanmış Kullanıcı Rozeti',
     'admin.adminVerifiedBadge': 'Admin Doğrulaması Rozeti',
     'admin.communityChoiceBadge': 'Topluluk Seçimi Rozeti',
-    'admin.botAuditedBadge': 'Bot Denetimli Rozeti',
+    'admin.botAuditedBadge': 'Teknik Denetim Rozeti',
     'admin.markFeatured': 'Öne Çıkarılan Olarak İşaretle',
     'admin.saveToolChanges': 'Değişiklikleri Kaydet',
 
@@ -1761,9 +1761,9 @@ export const TRANSLATIONS = {
     'admin.systemResetConfirmMsg': 'Bu işlem tüm özel araçları, kategorileri, taksonomi değişikliklerini ve denetim notlarını silecektir. Emin misiniz?',
 
     // Auth Extras
-    'auth.artBadge': 'Guidora Zekası',
-    'auth.artTitle': 'Yapay Zeka İnovasyonunu Başlatın',
-    'auth.artSubtitle': 'Yüksek hassasiyetli modeller, geliştirici iş akışları ve doğrulanmış üretken araçlar.',
+    'auth.artBadge': 'Guidora Platformu',
+    'auth.artTitle': 'Yazılım ve Geliştirici Kataloğu',
+    'auth.artSubtitle': 'Geliştirici araçları, modern mühendislik altyapıları ve doğrulanmış yazılım katalogları.',
     'auth.usernamePlaceholder': 'Örn: admin@guidora.io veya kullanıcı adı',
     'auth.regUsernamePlaceholder': 'Örn: tahsincr',
     'auth.regEmailPlaceholder': 'adiniz@ornek.com',
@@ -1863,7 +1863,7 @@ export const TRANSLATIONS = {
     'hero.titlePart1': 'Найдите',
     'hero.titleHighlight': 'Идеальный инструмент',
     'hero.titlePart2': 'для любой задачи',
-    'hero.subtitle': 'Самый передовой каталог с глубокой фильтрацией, верификацией сообществом и автообновлениями.',
+    'hero.subtitle': 'Профессиональный каталог инструментов разработки с глубокой фильтрацией, верификацией сообществом и проверенными данными.',
     'hero.allTools': 'Все инструменты',
 
     // Categories
@@ -1888,7 +1888,7 @@ export const TRANSLATIONS = {
     'filter.verification': 'Верификация',
     'filter.adminVerified': 'Проверено админом',
     'filter.communityChoice': 'Выбор сообщества',
-    'filter.botAudited': 'Проверено ботом',
+    'filter.botAudited': 'Технический аудит',
     'filter.organizations': 'Организации',
     'filter.showMore': 'Показать больше',
     'filter.showLess': 'Показать меньше',
@@ -2340,8 +2340,8 @@ export const TRANSLATIONS = {
     'report.reasonOtherDesc': 'Дубликат или нарушение правил',
 
     // Submit Tool
-    'submit.title': 'Добавить новый AI-инструмент',
-    'submit.subtitle': 'Внесите вклад в каталог с автоматическим извлечением данных из GitHub.',
+    'submit.title': 'Добавить новый инструмент',
+    'submit.subtitle': 'Внесите вклад в каталог с автоматическим извлечением данных из GitHub и технической верификацией.',
     'submit.importGithub': 'Автоматический импорт из GitHub',
     'submit.fetchRepo': 'Получить данные репозитория',
     'submit.fetching': 'Загрузка...',
@@ -2518,7 +2518,7 @@ export const TRANSLATIONS = {
     'admin.verifiedUserBadge': 'Значок верифицированного пользователя',
     'admin.adminVerifiedBadge': 'Значок проверки администратором',
     'admin.communityChoiceBadge': 'Значок выбора сообщества',
-    'admin.botAuditedBadge': 'Значок аудита ботом',
+    'admin.botAuditedBadge': 'Значок технического аудита',
     'admin.markFeatured': 'Отметить как рекомендуемое',
     'admin.saveToolChanges': 'Сохранить изменения',
 
@@ -2684,9 +2684,9 @@ export const TRANSLATIONS = {
     'admin.systemResetConfirmMsg': 'Это приведет к удалению всех пользовательских инструментов, категорий, тегов и заметок модерации. Вы уверены?',
 
     // Auth Extras
-    'auth.artBadge': 'Интеллект Guidora',
-    'auth.artTitle': 'Откройте инновации ИИ',
-    'auth.artSubtitle': 'Высокоточные модели, рабочие процессы разработчиков и проверенные генеративные инструменты.',
+    'auth.artBadge': 'Платформа Guidora',
+    'auth.artTitle': 'Каталог инструментов разработки',
+    'auth.artSubtitle': 'Профессиональные инструменты разработки, современная инженерная инфраструктура и проверенные каталоги.',
     'auth.usernamePlaceholder': 'напр: admin@guidora.io или имя пользователя',
     'auth.regUsernamePlaceholder': 'напр: johndoe',
     'auth.regEmailPlaceholder': 'you@example.com',

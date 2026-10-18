@@ -245,7 +245,7 @@ export function adminCreateUser(userData) {
     password: userData.password?.trim() || 'password123',
     role: userData.role || 'member',
     avatar: userData.avatar?.trim() || initials,
-    title: userData.title?.trim() || 'AI Platform Explorer',
+    title: userData.title?.trim() || 'Software Engineer & Contributor',
     bio: userData.bio?.trim() || '',
     location: userData.location?.trim() || 'Global',
     website: userData.website?.trim() || '',

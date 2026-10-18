@@ -533,12 +533,22 @@ export default function App() {
               />
             </ErrorBoundary>
           ) : isProfileView ? (
-            <UserProfilePage
-              userId={profileUserId}
-              onBack={handleCloseTool}
-              onOpenTool={handleOpenTool}
-              onOpenAdmin={handleOpenAdmin}
-            />
+            <ErrorBoundary
+              title="Kullanıcı Profili Yüklenemedi"
+              onReset={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('view');
+                url.searchParams.delete('user');
+                window.location.href = url.pathname;
+              }}
+            >
+              <UserProfilePage
+                userId={profileUserId}
+                onBack={handleCloseTool}
+                onOpenTool={handleOpenTool}
+                onOpenAdmin={handleOpenAdmin}
+              />
+            </ErrorBoundary>
           ) : isSubmitView ? (
             <SubmitToolPage
               onBack={handleCloseTool}

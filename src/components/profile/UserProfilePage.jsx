@@ -13,6 +13,7 @@ import {
   Award,
   ExternalLink,
   Edit2,
+  Edit3,
   Trash2,
   CheckCircle2,
   Share2,
@@ -20,9 +21,24 @@ import {
   Wrench,
   X,
   Lock,
+  LayoutDashboard,
+  Sparkles,
+  MessageSquare,
 } from 'lucide-react';
-import { getUserById, getCurrentUser, adminUpdateUserDetails } from '@/services/userService';
-import { getToolById, getAllReviews, deleteReview } from '@/services/toolsService';
+import {
+  getUserById,
+  getCurrentUser,
+  updateCurrentUser,
+  adminUpdateUserDetails,
+} from '@/services/userService';
+import {
+  getTools,
+  getToolById,
+  getAllReviews,
+  getUserReviews,
+  deleteReview,
+} from '@/services/toolsService';
+import ProductCard from '@/components/home/ProductCard';
 import { useLanguage } from '@/context/LanguageContext';
 import { sanitizeUrl, sanitizePlainText } from '@/utils/security';
 import styles from './UserProfilePage.module.scss';
@@ -212,7 +228,7 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
               </span>
             </div>
 
-            <p className={styles.titleText}>{user.title || 'AI Directory Contributor'}</p>
+            <p className={styles.titleText}>{user.title || t('user.defaultTitle', 'Software & Tools Contributor')}</p>
 
             {/* Quick Meta Items */}
             <div className={styles.metaRow}>
@@ -312,7 +328,7 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
               <h3>{t('user.savedTools', 'Saved Tools')}</h3>
               <p>{t('sorter.tryAdjusting', 'Tools you bookmark while browsing will appear here for easy reference.')}</p>
               <button type="button" className={styles.browseBtn} onClick={onBack}>
-                {t('hero.allTools', 'Explore AI Directory')}
+                {t('hero.allTools', 'Explore Directory')}
               </button>
             </div>
           )
@@ -349,7 +365,7 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
                       tabIndex={0}
                     >
                       <div className={styles.toolThumb}>
-                        {(rev.toolName || 'AI').slice(0, 2).toUpperCase()}
+                        {(rev.toolName || 'TL').slice(0, 2).toUpperCase()}
                       </div>
                       <div className={styles.toolMetaInfo}>
                         <h4 className={styles.toolTitle}>{rev.toolName || 'Tool'}</h4>
@@ -404,7 +420,7 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
               <h3>{t('user.noReviews', 'No reviews posted yet')}</h3>
               <p>{t('user.noReviewsDesc', 'When you review tools in the directory, your ratings and evaluations will appear here.')}</p>
               <button type="button" className={styles.browseBtn} onClick={onBack}>
-                {t('hero.allTools', 'Explore AI Directory')}
+                {t('hero.allTools', 'Explore Directory')}
               </button>
             </div>
           )

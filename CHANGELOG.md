@@ -31,12 +31,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- **User Profile View Resilience & Dependency Resolution (`UserProfilePage.jsx`, `App.jsx`)**:
+  - Resolved missing icon (`Edit3`, `LayoutDashboard`, `Sparkles`, `MessageSquare`) and component (`ProductCard`) imports in `UserProfilePage.jsx`.
+  - Added missing service bindings (`getTools`, `getUserReviews`, `updateCurrentUser`) from `toolsService.js` and `userService.js`.
+  - Wrapped `UserProfilePage` in a defensive `ErrorBoundary` with reset fallback in `App.jsx`.
 - **Proposal Review Contract Alignment (`adminApi.js`)**:
   - Updated `acceptProposal` to pass a review note payload matching backend `ReviewNoteRequest` expectations.
 - **Defensive Catalog & Verification Hydration (`toolsService.js`)**:
   - Hardened `loadBackendCatalog` against empty or non-array items responses and safe fallback on verification summary fetching in `getToolById`.
 
 ### Changed
+
+- **Admin Header Mode Switcher Streamlining (`AdminHeader.jsx`)**:
+  - Removed runtime mode switcher toggle button from admin header to respect environment-driven configuration.
+- **Professional Software Catalog Tone & Verification Branding (`LanguageContext.jsx`, `ProductCard.jsx`, `FilterBar.jsx`, `ProductPreviewHeader.jsx`)**:
+  - Replaced artificial intelligence hype tropes with clean, professional corporate software and developer tools catalog messaging.
+  - Updated verification badge icon from `Bot` to `CheckCircle2` and rebranded "Bot Audited" to "Technical Audit".
 
 - **Admin Dashboard Real-time Dual-Mode Data Integration**:
   - Updated `AdminDashboardPage.jsx` to fetch live data asynchronously when in backend mode, listening for `guidora_mode_change` events to refresh catalog, taxonomy, proposals, and reports immediately.

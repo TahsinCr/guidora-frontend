@@ -363,8 +363,8 @@ export default function FilterBar({
               <div className={`${styles.squareBox} ${verification.bot ? styles.checked : ''}`}>
                 {verification.bot && <Check size={11} strokeWidth={3} />}
               </div>
-              <Bot size={14} color="#A855F7" />
-              <span className={styles.label}>{t('filter.botAudited', 'Bot Verified')}</span>
+              <CheckCircle2 size={14} color="#8B5CF6" />
+              <span className={styles.label}>{t('filter.botAudited', 'Technical Audit')}</span>
             </div>
           </div>
         )}

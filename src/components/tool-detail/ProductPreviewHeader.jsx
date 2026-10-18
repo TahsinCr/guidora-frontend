@@ -1,11 +1,11 @@
 import React from 'react';
-import { ShieldCheck, Sparkles, Bot } from 'lucide-react';
+import { ShieldCheck, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './ProductPreviewHeader.module.scss';
 
 export default function ProductPreviewHeader({ tool }) {
   const { t, translateCategory } = useLanguage();
-  const categoryName = translateCategory(tool.categoryId, tool.category || 'Generative AI').toUpperCase();
+  const categoryName = translateCategory(tool.categoryId, tool.category || 'Software Tool').toUpperCase();
 
   return (
     <div className={styles.heroCard}>
@@ -17,7 +17,7 @@ export default function ProductPreviewHeader({ tool }) {
           <div className={styles.trustBadges}>
             {tool.verified?.admin && <ShieldCheck size={16} color="#EAB308" title={t('filter.adminVerified', 'Admin Verified')} />}
             {tool.verified?.community && <Sparkles size={16} color="#10B981" title={t('filter.communityChoice', 'Community Choice')} />}
-            {tool.verified?.bot && <Bot size={16} color="#A855F7" title={t('filter.botAudited', 'Bot Verified')} />}
+            {tool.verified?.bot && <CheckCircle2 size={16} color="#8B5CF6" title={t('filter.botAudited', 'Technical Audit')} />}
           </div>
         </div>
 

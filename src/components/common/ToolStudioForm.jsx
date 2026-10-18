@@ -648,7 +648,7 @@ export default function ToolStudioForm({
                       checked={botAudited}
                       onChange={(e) => setBotAudited(e.target.checked)}
                     />
-                    <span>Bot Audited</span>
+                    <span>Technical Audit</span>
                   </label>
 
                   <label className={styles.checkboxLabel}>
@@ -1004,7 +1004,7 @@ export default function ToolStudioForm({
         </button>
         <span className={styles.crumbDivider}>/</span>
         <span className={styles.crumbActive}>
-          {t('submit.title', 'Submit AI Platform & Tool')}
+          {t('submit.title', 'Submit Software Tool')}
         </span>
       </nav>
 

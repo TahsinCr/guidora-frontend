@@ -22,14 +22,11 @@ const TAB_TITLES = {
   categories: { title: 'Kategori Taksonomisi', breadcrumb: 'Yönetişim / Kategoriler' },
   tags: { title: 'Etiket Grupları & Sınıflandırma', breadcrumb: 'Yönetişim / Etiketler' },
   users: { title: 'Kullanıcı Hesapları & Rol İzinleri', breadcrumb: 'Topluluk / Kullanıcılar' },
-  organizations: { title: 'Yapay Zeka Kuruluşları & Doğrulama', breadcrumb: 'Topluluk / Kuruluşlar' },
+  organizations: { title: 'Kuruluşlar & Doğrulama Kataloğu', breadcrumb: 'Topluluk / Kuruluşlar' },
   reports: { title: 'Kullanıcı Şikayetleri & Moderasyon', breadcrumb: 'Güvenlik / Şikayetler' },
   reviews: { title: 'Topluluk İncelemeleri & Yorumlar', breadcrumb: 'Topluluk / Değerlendirmeler' },
   system: { title: 'Sistem Yapılandırması & Bakım', breadcrumb: 'Platform / Sistem & Bakım' },
 };
-
-import { getDataSourceMode, toggleDataSourceMode } from '@/services/config/modeService';
-import toastService from '@/services/toast/toastService';
 
 export default function AdminHeader({
   activeTab,
@@ -42,26 +39,6 @@ export default function AdminHeader({
   const { theme, toggleTheme } = useTheme();
   const { lang, setLang, supportedLanguages } = useLanguage();
   const activeMeta = TAB_TITLES[activeTab] || { title: 'Yönetim Paneli', breadcrumb: 'Admin' };
-
-  const [dataSourceMode, setDataSourceMode] = React.useState(getDataSourceMode);
-
-  React.useEffect(() => {
-    const handleModeChange = (e) => {
-      setDataSourceMode(e.detail || getDataSourceMode());
-    };
-    window.addEventListener('guidora_mode_change', handleModeChange);
-    return () => window.removeEventListener('guidora_mode_change', handleModeChange);
-  }, []);
-
-  const handleToggleMode = () => {
-    const nextMode = toggleDataSourceMode();
-    setDataSourceMode(nextMode);
-    if (nextMode === 'backend') {
-      toastService.success('Canlı Backend Modu Aktif: .NET 10 WebAPI verileri yükleniyor.');
-    } else {
-      toastService.warning('Mock Demo Modu Aktif: Yerel örnek veriler yükleniyor.');
-    }
-  };
 
   return (
     <header className={styles.adminHeader}>
@@ -84,20 +61,6 @@ export default function AdminHeader({
 
       {/* Center: Live Architecture & Telemetry Gauges */}
       <div className={styles.headerCenter}>
-        {/* Real-time Data Source Mode Switcher */}
-        <button
-          type="button"
-          className={`${styles.modeSwitchBtn} ${dataSourceMode === 'backend' ? styles.backendMode : styles.mockMode}`}
-          onClick={handleToggleMode}
-          title="Veri Kaynağı Modunu Değiştir (.NET 10 API vs Yerel Mock)"
-          aria-label="Veri Kaynağı Modunu Değiştir"
-        >
-          <span
-            className={`${styles.statusDot} ${dataSourceMode === 'backend' ? styles.online : ''}`}
-            style={dataSourceMode === 'mock' ? { backgroundColor: '#f59e0b', boxShadow: '0 0 8px rgba(245, 158, 11, 0.6)' } : {}}
-          />
-          <span>{dataSourceMode === 'backend' ? 'MOD: CANLI BACKEND' : 'MOD: MOCK (DEMO)'}</span>
-        </button>
 
         <div className={styles.statusPill} title="REST API ve Servis Katmanı Sağlığı">
           <span className={`${styles.statusDot} ${dbStatus.isOnline ? styles.online : styles.offline}`} />
