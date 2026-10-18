@@ -66,6 +66,26 @@ export async function fetchProductVerificationSummary(productId) {
   return await apiRequest(`products/${productId}/verification`, { method: 'GET' });
 }
 
+export async function voteCommunityVerification(productId, approved = true) {
+  return await apiRequest(`products/${productId}/verification/community-votes`, {
+    method: 'POST',
+    body: JSON.stringify({ approved: Boolean(approved) }),
+  });
+}
+
+// --- Favorites ---
+export async function fetchMyFavorites({ page = 1, pageSize = 50 } = {}) {
+  return await apiRequest(`favorites/mine?page=${page}&pageSize=${pageSize}`, { method: 'GET' });
+}
+
+export async function addFavorite(productId) {
+  return await apiRequest(`favorites/products/${productId}`, { method: 'POST' });
+}
+
+export async function removeFavorite(productId) {
+  return await apiRequest(`favorites/products/${productId}`, { method: 'DELETE' });
+}
+
 export async function reportProduct(productId, { reason, details, reasonId }) {
   const reasons = { broken_link: 3, outdated_info: 3, spam_malicious: 1, inappropriate: 2, spam: 1, inaccurate: 3 };
   const selectedReason = reasonId || reasons[reason];

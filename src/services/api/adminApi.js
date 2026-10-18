@@ -50,12 +50,58 @@ export async function fetchPendingProposals({ page = 1, pageSize = 100 } = {}) {
   return result?.data?.items || result?.items || (Array.isArray(result) ? result : []);
 }
 
-export async function acceptProposal(id) {
-  return await apiRequest(`product-edit-proposals/${id}/accept`, { method: 'POST' });
+export async function acceptProposal(id, note = '') {
+  return await apiRequest(`product-edit-proposals/${id}/accept`, {
+    method: 'POST',
+    body: JSON.stringify({ note: note || 'Accepted by moderator/admin' }),
+  });
 }
 
 export async function rejectProposal(id, note = '') {
   return await apiRequest(`product-edit-proposals/${id}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ note: note || 'Rejected by moderator/admin' }),
+  });
+}
+
+// --- Product Verification Moderation ---
+export async function verifyProductAsAdmin(productId, note = '') {
+  return await apiRequest(`products/${productId}/verification/admin`, {
+    method: 'POST',
+    body: JSON.stringify({ note: note || 'Verified by admin' }),
+  });
+}
+
+export async function revokeAdminVerification(productId, note = '') {
+  return await apiRequest(`products/${productId}/verification/admin`, {
+    method: 'DELETE',
+    body: JSON.stringify({ note: note || 'Admin verification revoked' }),
+  });
+}
+
+export async function revokeCommunityVerification(productId, note = '') {
+  return await apiRequest(`products/${productId}/verification/community`, {
+    method: 'DELETE',
+    body: JSON.stringify({ note: note || 'Community verification revoked' }),
+  });
+}
+
+export async function fetchPendingCommunityReviews({ page = 1, pageSize = 50 } = {}) {
+  const result = await apiRequest(`community-verification-reviews/pending?page=${page}&pageSize=${pageSize}`, {
+    method: 'GET',
+  });
+  return result?.data?.items || result?.items || (Array.isArray(result) ? result : []);
+}
+
+export async function approveCommunityReview(productId, note = '') {
+  return await apiRequest(`community-verification-reviews/${productId}/approve`, {
+    method: 'POST',
+    body: JSON.stringify({ note: note || 'Approved by moderator/admin' }),
+  });
+}
+
+export async function rejectCommunityReview(productId, note = '') {
+  return await apiRequest(`community-verification-reviews/${productId}/reject`, {
     method: 'POST',
     body: JSON.stringify({ note: note || 'Rejected by moderator/admin' }),
   });

@@ -13,9 +13,10 @@ async function loadBackendCatalog() {
   let result;
   do {
     result = await productsApi.fetchProducts({ page, pageSize: 100 });
-    items.push(...result.items.map(adaptProductDtoToTool));
+    const fetchedList = result?.items || (Array.isArray(result) ? result : []);
+    items.push(...fetchedList.map(adaptProductDtoToTool));
     page += 1;
-  } while (items.length < result.totalCount && result.items.length);
+  } while (items.length < (result?.totalCount ?? 0) && (result?.items?.length ?? 0) > 0);
   backendTools = items;
   return items;
 }
@@ -199,9 +200,18 @@ export async function getToolById(id) {
     const cached = backendTools.find((t) => t.id === id || String(t.numericId) === String(id));
     const numericId = cached?.numericId || (/^\d+$/.test(String(id)) ? Number(id) : (await loadBackendCatalog()).find((t) => t.id === id)?.numericId);
     if (!numericId) throw new Error(`Tool not found: ${id}`);
-    const [dto, verification] = await Promise.all([productsApi.fetchProductById(numericId), productsApi.fetchProductVerificationSummary(numericId)]);
+    const [dto, verification] = await Promise.all([
+      productsApi.fetchProductById(numericId),
+      productsApi.fetchProductVerificationSummary(numericId).catch(() => null),
+    ]);
     const tool = adaptProductDtoToTool(dto);
-    tool.verified = { admin: verification.adminVerified, community: verification.communityVerified, bot: false };
+    if (tool) {
+      tool.verified = {
+        admin: Boolean(verification?.adminVerified),
+        community: Boolean(verification?.communityVerified),
+        bot: false,
+      };
+    }
     return tool;
   }
   await simulateDelay(80);
