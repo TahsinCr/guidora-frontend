@@ -1072,7 +1072,9 @@
 .chartSvgWrapper {
   position: relative;
   width: 100%;
-  height: 200px;
+  flex: 1;
+  min-height: 280px;
+  display: flex;
 }
 
 .areaChartSvg {

@@ -14,26 +14,45 @@
 .card {
   @include layout.width(fill);
   @include layout.box(
-    $padding: 20px,
+    $padding: 18px 20px 14px 20px,
     $border: 1px solid var(--border-card),
     $radius: var(--radius-md)
   );
-  background: var(--bg-card);
-  @include layout.flex(column, flex-start, stretch, 14px);
+  background: linear-gradient(180deg, var(--bg-card) 0%, rgba(15, 23, 42, 0.94) 100%);
+  @include layout.flex(column, flex-start, stretch, 11px);
   cursor: pointer;
   position: relative;
   content-visibility: auto;
   contain-intrinsic-size: auto 220px;
   animation: cardEntrance 0.3s ease both;
-  will-change: transform, border-color, box-shadow;
-  transition: transform 0.2s ease,
-              border-color 0.2s ease,
-              box-shadow 0.2s ease;
+  will-change: transform, border-color, box-shadow, background;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.22s ease,
+              box-shadow 0.22s ease,
+              background 0.22s ease;
 
   &:hover {
-    transform: translateY(-2px);
-    border-color: var(--border-card-hover);
-    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-3px);
+    border-color: rgba(168, 85, 247, 0.45);
+    box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.5),
+                0 0 20px -2px rgba(147, 51, 234, 0.16);
+    background: linear-gradient(
+      165deg,
+      rgba(26, 20, 42, 0.95) 0%,
+      rgba(15, 23, 42, 0.98) 65%
+    );
+
+    .thumbnail {
+      border-color: rgba(168, 85, 247, 0.4);
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.22);
+    }
+  }
+
+  &:active {
+    transform: translateY(-1px) scale(0.995);
+    border-color: rgba(192, 132, 252, 0.65);
+    box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.4),
+                0 0 16px 0 rgba(147, 51, 234, 0.25);
   }
 
   @media (max-width: 640px) {
@@ -357,15 +376,63 @@
   overflow: hidden;
 }
 
+.cardTagsWrapper {
+  width: 100%;
+  margin-top: 2px;
+}
+
+.cardTagsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  max-height: 48px;
+  overflow: hidden;
+  align-items: center;
+}
+
+.cardTagPill {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-card);
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  line-height: 1.35;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(139, 92, 246, 0.14);
+    border-color: rgba(139, 92, 246, 0.35);
+    color: #c4b5fd;
+  }
+}
+
+.cardTagMore {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #a78bfa;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  line-height: 1.35;
+  white-space: nowrap;
+  cursor: default;
+}
+
 .divider {
   @include layout.width(fill);
   height: 1px;
   background: var(--border-card);
   margin-top: auto;
+  opacity: 0.5;
 }
 
 .bottomRow {
   @include layout.flex(row, space-between, center);
+  padding-top: 2px;
 }
 
 .metrics {

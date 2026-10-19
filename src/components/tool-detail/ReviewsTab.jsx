@@ -25,12 +25,14 @@ export default function ReviewsTab({ toolId, onReviewCountChange }) {
     setIsLoading(true);
     getReviews(toolId)
       .then((data) => {
-        setReviews(data);
+        const safeData = Array.isArray(data) ? data : [];
+        setReviews(safeData);
         setIsLoading(false);
-        if (onReviewCountChange) onReviewCountChange(data.length);
+        if (onReviewCountChange) onReviewCountChange(safeData.length);
       })
       .catch((err) => {
         console.error('Failed to load reviews:', err);
+        setReviews([]);
         setIsLoading(false);
       });
   }, [toolId, onReviewCountChange]);
@@ -47,8 +49,9 @@ export default function ReviewsTab({ toolId, onReviewCountChange }) {
     if (window.confirm(t('reviews.deleteConfirm', 'Delete this review?'))) {
       try {
         const updated = await deleteReview(toolId, revId);
-        setReviews(updated);
-        if (onReviewCountChange) onReviewCountChange(updated.length);
+        const nextList = Array.isArray(updated) ? updated : [];
+        setReviews(nextList);
+        if (onReviewCountChange) onReviewCountChange(nextList.length);
       } catch (err) {
         console.error('Failed to delete review:', err);
       }
@@ -70,11 +73,12 @@ export default function ReviewsTab({ toolId, onReviewCountChange }) {
         rating,
         content: content.trim(),
       });
-      setReviews(updated);
+      const nextList = Array.isArray(updated) ? updated : [];
+      setReviews(nextList);
       setContent('');
       setReviewTitle('');
       setIsWriting(false);
-      if (onReviewCountChange) onReviewCountChange(updated.length);
+      if (onReviewCountChange) onReviewCountChange(nextList.length);
     } catch (err) {
       console.error('Failed to submit review:', err);
     } finally {
@@ -83,11 +87,15 @@ export default function ReviewsTab({ toolId, onReviewCountChange }) {
   };
 
   // Calculate statistics
-  const total = reviews.length;
-  const average = total > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / total).toFixed(1) : '5.0';
+  const reviewList = Array.isArray(reviews) ? reviews : [];
+  const total = reviewList.length;
+  const validRatings = reviewList.map((r) => (typeof r.rating === 'number' && !isNaN(r.rating) ? r.rating : 5));
+  const average = total > 0 && validRatings.length > 0
+    ? (validRatings.reduce((acc, r) => acc + r, 0) / total).toFixed(1)
+    : '5.0';
 
   const distribution = [5, 4, 3, 2, 1].map((stars) => {
-    const count = reviews.filter((r) => Math.round(r.rating) === stars).length;
+    const count = reviewList.filter((r) => Math.round(typeof r.rating === 'number' && !isNaN(r.rating) ? r.rating : 5) === stars).length;
     const percentage = total > 0 ? (count / total) * 100 : 0;
     return { stars, count, percentage };
   });
@@ -269,12 +277,12 @@ export default function ReviewsTab({ toolId, onReviewCountChange }) {
             <div className={styles.skelLine} />
             <div className={styles.skelLine} />
           </div>
-        ) : reviews.length === 0 ? (
+        ) : reviewList.length === 0 ? (
           <div className={styles.emptyState}>
             <p>{t('reviews.noReviewsYet', 'No reviews yet. Be the first to share your experience!')}</p>
           </div>
         ) : (
-          reviews.map((rev) => (
+          reviewList.map((rev) => (
             <div key={rev.id} className={styles.reviewCard}>
               <div className={styles.revHeader}>
                 <div className={styles.authorAvatar}>

@@ -39,7 +39,7 @@ export default function OverviewTab({
 
   // Compute SVG coordinates for the area chart
   const chartWidth = 720;
-  const chartHeight = 220;
+  const chartHeight = 310;
   const paddingX = 52;
   const paddingY = 28;
 
@@ -234,7 +234,11 @@ export default function OverviewTab({
           </div>
 
           <div className={styles.chartSvgWrapper}>
-            <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className={styles.areaChartSvg}>
+            <svg
+              viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+              className={styles.areaChartSvg}
+              preserveAspectRatio="none"
+            >
               <defs>
                 <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#6366f1" stopOpacity="0.45" />

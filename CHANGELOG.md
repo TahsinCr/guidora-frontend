@@ -8,6 +8,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- **Card Gradient & Interaction (`ProductCard.jsx`, `ProductCard.module.scss`)**:
+  - Implemented refined purple/violet linear-gradient transition, subtle hover elevation, and responsive active press state on tool cards.
+  - Added two-row secondary tag chips with overflow badge (`+N`) directly above the compacted card footer.
+  - Compacted card footer margins to maximize information density.
+
+- **Hero Atmospheric Ambiance & Kicker Removal (`InformationCard.jsx`, `InformationCard.module.scss`)**:
+  - Removed top kicker badge pill from the hero section.
+  - Added ambient violet/purple atmospheric radial gradient backdrop behind hero and category slider.
+  - Enhanced hero title with violet-indigo gradient text accent.
+
+- **Admin Analytics Chart Stretch (`OverviewTab.jsx`, `AdminDashboardPage.module.scss`)**:
+  - Made `.chartSvgWrapper` flex-grow to fill available card height seamlessly (`min-height: 280px`).
+  - Added `preserveAspectRatio="none"` and increased viewBox height to 310, eliminating empty vertical gaps next to category list.
+
+### Fixed
+
+- **Breadcrumb Category Localization Bug (`Header.jsx`, `toolsService.js`)**:
+  - Fixed category fallback in `getToolById` by preserving category mapping from cached catalog products.
+  - Updated `Header.jsx` to resolve and localize category name (`translateCategory(activeTool.categoryId, activeTool.categoryName)`), eliminating the default `developer-tools` slug display.
+
+- **Product Comments & Reviews Normalization (`toolsService.js`, `ReviewsTab.jsx`)**:
+  - Normalized backend comment entities with safe defaults for `author`, `role`, `rating`, and `date`.
+  - Guarded average score calculation against `NaN` when numeric ratings are absent.
+  - Fixed `addReview` and `deleteReview` to re-fetch and return the updated review array, preventing runtime crashes in `ToolDialog`.
+
 - **Clean Corporate Design System & Aesthetic Refinement (`_theme.scss`, `InformationCard`, `CategorySlider`, `ProductCard`, `ProductGrid`, `Header`, `UserMenu`)**:
   - Replaced high-saturation neon purple palette tokens with refined corporate indigo and slate tones.
   - Eliminated artificial glowing box shadows, electric neon borders, and cosmic background gradient blobs across hero, navbar, and cards.

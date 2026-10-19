@@ -40,9 +40,9 @@ export default function Header({
             <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
               <span
                 className={styles.crumbItem}
-                onClick={() => onSelectCategory && onSelectCategory(activeTool.categoryId || 'all')}
+                onClick={() => onSelectCategory && onSelectCategory(activeTool.categoryId || activeTool.category || 'all')}
               >
-                {translateCategory(activeTool.categoryId, activeTool.category || 'Generative AI')}
+                {translateCategory(activeTool.categoryId || activeTool.category, activeTool.categoryName || activeTool.category || 'Tüm Araçlar')}
               </span>
               <ChevronRight size={13} className={styles.crumbSep} />
               <span className={styles.crumbCurrent}>{activeTool.name}</span>

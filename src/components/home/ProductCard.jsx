@@ -33,6 +33,20 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
   const pricingKey = tool.pricing ? tool.pricing.toLowerCase().replace(/[^a-z0-9]/g, '-') : '';
   const localizedPricing = tool.pricing ? t(`tag.${pricingKey}`, tool.pricing) : '';
 
+  // Extract secondary tags for display above the footer (max 2 rows with +N)
+  const rawTags = (Array.isArray(tool.tags) && tool.tags.length > 0)
+    ? tool.tags
+    : (Array.isArray(tool.capabilities) && tool.capabilities.length > 0)
+    ? tool.capabilities
+    : (Array.isArray(tool.platforms) ? tool.platforms : []);
+
+  const cleanTags = rawTags.filter(
+    (tg) => tg && typeof tg === 'string' && tg.trim().length > 0 && tg.toLowerCase() !== (tool.category || '').toLowerCase()
+  );
+  const maxVisibleTags = 3;
+  const visibleTags = cleanTags.slice(0, maxVisibleTags);
+  const remainingCount = cleanTags.length - maxVisibleTags;
+
   return (
     <article
       className={`${styles.card} ${viewMode === 'list' ? styles.listView : ''}`}
@@ -109,6 +123,26 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
           </div>
         )}
       </div>
+
+      {cleanTags.length > 0 && viewMode !== 'list' && (
+        <div className={styles.cardTagsWrapper}>
+          <div className={styles.cardTagsList}>
+            {visibleTags.map((tg, idx) => {
+              const tagSlug = tg.toLowerCase().replace(/[^a-z0-9]/g, '-');
+              return (
+                <span key={idx} className={styles.cardTagPill}>
+                  #{translateTag(tagSlug, tg)}
+                </span>
+              );
+            })}
+            {remainingCount > 0 && (
+              <span className={styles.cardTagMore} title={cleanTags.slice(maxVisibleTags).join(', ')}>
+                +{remainingCount}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className={styles.divider} />
 

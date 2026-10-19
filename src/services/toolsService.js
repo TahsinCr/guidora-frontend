@@ -241,14 +241,27 @@ export async function getTools({
  */
 export async function getToolById(id) {
   if (!useMock()) {
-    const cached = backendTools.find((t) => t.id === id || String(t.numericId) === String(id));
-    const numericId = cached?.numericId || (/^\d+$/.test(String(id)) ? Number(id) : (await loadBackendCatalog()).find((t) => t.id === id)?.numericId);
+    let cached = backendTools.find((t) => t.id === id || String(t.numericId) === String(id));
+    if (!cached && backendTools.length === 0) {
+      await loadBackendCatalog();
+      cached = backendTools.find((t) => t.id === id || String(t.numericId) === String(id));
+    }
+    const numericId = cached?.numericId || (/^\d+$/.test(String(id)) ? Number(id) : null);
     if (!numericId) throw new Error(`Tool not found: ${id}`);
     const [dto, verification] = await Promise.all([
       productsApi.fetchProductById(numericId),
       productsApi.fetchProductVerificationSummary(numericId).catch(() => null),
     ]);
-    const tool = adaptProductDtoToTool(dto);
+    const categoryMap = cached ? {
+      [numericId]: {
+        categorySlug: cached.categoryId || cached.category,
+        categoryName: cached.categoryName,
+        categorySlugs: cached.categories || [cached.categoryId || cached.category],
+        tags: cached.tags,
+        pricing: cached.pricing,
+      }
+    } : {};
+    const tool = adaptProductDtoToTool(dto, categoryMap);
     if (tool) {
       tool.verified = {
         admin: Boolean(verification?.adminVerified),
@@ -544,10 +557,32 @@ export async function fetchGithubRepoData(repoUrl) {
  */
 export async function getReviews(toolId) {
   if (!useMock()) {
-    const tool = backendTools.find((t) => t.id === toolId);
-    if (!tool) return [];
-    const result = await productsApi.fetchProductComments(tool.numericId);
-    return result.items || [];
+    let tool = backendTools.find((t) => t.id === toolId || String(t.numericId) === String(toolId));
+    if (!tool && backendTools.length === 0) {
+      await loadBackendCatalog();
+      tool = backendTools.find((t) => t.id === toolId || String(t.numericId) === String(toolId));
+    }
+    const numericId = tool?.numericId || (/^\d+$/.test(String(toolId)) ? Number(toolId) : null);
+    if (!numericId) return [];
+    try {
+      const result = await productsApi.fetchProductComments(numericId);
+      const rawList = Array.isArray(result) ? result : (result?.items || []);
+      return rawList.map((c, idx) => ({
+        id: c.commentId || c.id || `comment-${idx}`,
+        userId: c.userId || null,
+        author: c.author || c.userName || (c.userId ? `Üye #${c.userId}` : 'Doğrulanmış Üye'),
+        role: c.role || 'Topluluk Üyesi',
+        rating: typeof c.rating === 'number' && !isNaN(c.rating) ? c.rating : 5,
+        date: c.createdAt ? new Date(c.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Son zamanlarda',
+        content: c.content || c.text || '',
+        title: c.title || '',
+        helpful: c.helpful || 0,
+        verified: true,
+      }));
+    } catch (e) {
+      console.warn('Failed to fetch backend comments:', e);
+      return [];
+    }
   }
   await simulateDelay(40);
   const key = `${REVIEWS_KEY_PREFIX}${toolId}`;
@@ -606,8 +641,12 @@ export async function getReviews(toolId) {
  */
 export async function addReview(toolId, reviewData) {
   if (!useMock()) {
-    const tool = await getToolById(toolId);
-    return await productsApi.addProductComment(tool.numericId, reviewData.content);
+    let tool = backendTools.find((t) => t.id === toolId || String(t.numericId) === String(toolId));
+    if (!tool) {
+      tool = await getToolById(toolId);
+    }
+    await productsApi.addProductComment(tool.numericId, reviewData.content);
+    return await getReviews(toolId);
   }
   await simulateDelay(60);
   const key = `${REVIEWS_KEY_PREFIX}${toolId}`;
@@ -641,7 +680,10 @@ export async function addReview(toolId, reviewData) {
  * Delete a review from a tool.
  */
 export async function deleteReview(toolId, reviewId) {
-  if (!useMock()) return await productsApi.deleteProductComment(reviewId);
+  if (!useMock()) {
+    await productsApi.deleteProductComment(reviewId);
+    return await getReviews(toolId);
+  }
   await simulateDelay(40);
   const key = `${REVIEWS_KEY_PREFIX}${toolId}`;
   const existing = await getReviews(toolId);
