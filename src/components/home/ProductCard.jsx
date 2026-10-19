@@ -51,6 +51,7 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
             style={!tool.icon ? {
               background: `linear-gradient(135deg, ${catColor} 0%, #6366f1 100%)`,
               borderColor: 'transparent',
+              padding: 0,
             } : undefined}
           >
             {tool.icon ? (
@@ -91,8 +92,8 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
               <span
                 className={styles.categoryTag}
                 style={{
-                  backgroundColor: `${catColor}1c`,
-                  borderColor: `${catColor}40`,
+                  backgroundColor: `${catColor}14`,
+                  borderColor: `${catColor}35`,
                   color: catColor,
                 }}
               >
@@ -125,8 +126,6 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
           </div>
         )}
       </div>
-
-      <div className={styles.divider} />
 
       <div className={styles.bottomRow}>
         <div className={styles.metrics}>

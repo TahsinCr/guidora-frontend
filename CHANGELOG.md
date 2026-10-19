@@ -8,8 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- **Modern App Store / Raycast Style Tool Card Overhaul (`ProductCard.jsx`, `ProductCard.module.scss`)**:
+  - Re-architected tool cards into an airy, modern squircle design inspired by modern developer directories and App Store aesthetics.
+  - Implemented 52px squircle logo container with generous padding (`8px`) and `object-fit: contain`, preventing logo distortion and clipping.
+  - Aligned tool title, verification badges, category tags, and pricing tags into a clean, uncrowded two-tier header hierarchy.
+  - Removed harsh 1px divider line; integrated a soft, subtle separator (`border-top: 1px solid var(--border-subtle)`) directly into the footer.
+  - Styled footer action controls into tactile squircle pill buttons (`30px`, `border-radius: 8px`) with soft hover and active bookmark states.
+  - Enhanced card surface with smooth 14px rounded corners and subtle depth shadows in both light and dark themes.
+
 - **Category Color Badges & Vibrant Accent Restoration (`ProductCard.jsx`, `CategorySlider.module.scss`, `FilterBar.module.scss`, `ProductPreviewHeader.jsx`, `_theme.scss`)**:
-  - Restored category-specific accent colors to tool card category tags with matching tinted backgrounds (`${catColor}1c`), subtle borders, and indicator dots.
+  - Restored category-specific accent colors to tool card category tags with matching tinted backgrounds (`${catColor}14`), subtle borders, and indicator dots.
   - Added category-color gradient fallback monogram avatars for tools without custom image icons.
   - Restored dynamic category color styling to CategorySlider active pills, hover states, and category icons.
   - Restored category color dots and brand purple checked tags in FilterBar.

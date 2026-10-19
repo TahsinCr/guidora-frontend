@@ -14,40 +14,55 @@
 .card {
   @include layout.width(fill);
   @include layout.box(
-    $padding: 20px,
+    $padding: 18px 20px 16px 20px,
     $border: 1px solid var(--border-card),
-    $radius: var(--radius-md)
+    $radius: 14px
   );
   background: var(--bg-card);
-  @include layout.flex(column, flex-start, stretch, 14px);
+  @include layout.flex(column, flex-start, stretch, 13px);
   cursor: pointer;
   position: relative;
   content-visibility: auto;
-  contain-intrinsic-size: auto 220px;
+  contain-intrinsic-size: auto 210px;
   animation: cardEntrance 0.3s ease both;
   will-change: transform, border-color, box-shadow;
-  transition: transform 0.2s ease,
-              border-color 0.2s ease,
-              box-shadow 0.2s ease;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.22s ease,
+              box-shadow 0.22s ease;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
 
   &:hover {
     transform: translateY(-2px);
     border-color: var(--border-card-hover);
-    box-shadow: var(--shadow-card-hover);
+    box-shadow: 0 10px 24px -4px rgba(0, 0, 0, 0.07), 0 4px 8px -2px rgba(0, 0, 0, 0.03);
+
+    .thumbnail {
+      transform: scale(1.02);
+    }
+  }
+
+  :global([data-theme='dark']) & {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+
+    &:hover {
+      border-color: rgba(139, 92, 246, 0.35);
+      box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.45);
+    }
   }
 
   @media (max-width: 640px) {
     padding: 16px;
     gap: 12px;
-    border-radius: var(--radius-md);
+    border-radius: 12px;
 
     .thumbnail {
       width: 44px;
       height: 44px;
+      padding: 6px;
       border-radius: 10px;
 
       .thumbInitials {
-        font-size: 15px;
+        font-size: 14px;
       }
     }
 
@@ -56,7 +71,7 @@
     }
 
     .description {
-      font-size: 13px;
+      font-size: 12.5px;
     }
   }
 
@@ -182,26 +197,28 @@
 
 .leftHead {
   @include layout.width(fill);
-  @include layout.flex(row, start, center, 16px);
+  @include layout.flex(row, start, center, 14px);
 }
 
 .thumbnail {
-  @include layout.square(48px);
-  border-radius: 10px;
-  background: var(--bg-input);
+  @include layout.square(52px);
+  border-radius: 13px;
+  background: var(--bg-secondary);
   border: 1px solid var(--border-card);
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 8px;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .thumbInitials {
-  color: var(--text-secondary);
-  font-size: 15px;
-  font-weight: 600;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
   letter-spacing: 0.5px;
   user-select: none;
 }
@@ -209,8 +226,8 @@
 .thumbImg {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  border-radius: inherit;
+  object-fit: contain;
+  border-radius: 4px;
   display: block;
 }
 
@@ -270,7 +287,7 @@
 
 .info {
   @include layout.width(fill);
-  @include layout.flex(column, start, start, 6px);
+  @include layout.flex(column, start, start, 4px);
   min-width: 0;
 }
 
@@ -287,13 +304,14 @@
 }
 
 .title {
-  font-size: 17px;
+  font-size: 16.5px;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .verifiedIcons {
@@ -328,13 +346,14 @@
   gap: 5px;
   font-size: 11px;
   font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 4px;
+  padding: 2px 7.5px;
+  border-radius: 5px;
   background: var(--bg-secondary);
   color: var(--text-secondary);
   border: 1px solid var(--border-card);
   white-space: nowrap;
   flex-shrink: 0;
+  line-height: 1.25;
 }
 
 .categoryDot {
@@ -346,7 +365,7 @@
 
 .versionText {
   color: var(--text-faint);
-  font-size: 11.5px;
+  font-size: 11px;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -358,81 +377,84 @@
 }
 
 .description {
-  font-size: 13.5px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.5;
   color: var(--text-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  margin: 0;
 }
 
 .divider {
-  @include layout.width(fill);
-  height: 1px;
-  background: var(--border-card);
-  margin-top: auto;
+  display: none;
 }
 
 .bottomRow {
   @include layout.flex(row, space-between, center);
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .metrics {
-  @include layout.flex(row, start, center, 14px);
+  @include layout.flex(row, start, center, 12px);
 }
 
 .rating {
   @include layout.flex(row, start, center, 4px);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
-  color: var(--brand-yellow);
+  color: #f59e0b;
 }
 
 .reviewCount {
   font-size: 11.5px;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--text-muted);
 }
 
 .views {
   @include layout.flex(row, start, center, 4px);
   font-size: 12px;
+  font-weight: 500;
   color: var(--text-muted);
 }
 
 .actions {
-  @include layout.flex(row, end, center, 8px);
+  @include layout.flex(row, end, center, 6px);
 
   .actionBtn {
-    @include layout.square(32px);
+    @include layout.square(30px);
     @include layout.flex(row, center, center);
     color: var(--text-muted);
-    border-radius: var(--radius-xs);
-    border: 1px solid transparent;
-    background: transparent;
+    border-radius: 8px;
+    border: 1px solid var(--border-card);
+    background: var(--bg-secondary);
     cursor: pointer;
     transition: all var(--transition-fast);
 
     &:hover {
       color: var(--text-primary);
       background: var(--bg-input-hover);
-      border-color: var(--border-color);
+      border-color: var(--border-card-hover);
+      transform: translateY(-1px);
     }
 
     &.bookmarked {
       color: var(--primary-color);
+      background: var(--primary-light);
+      border-color: rgba(139, 92, 246, 0.35);
     }
   }
 
   @media (max-width: 640px) {
-    gap: 10px;
+    gap: 8px;
 
     .actionBtn {
-      @include layout.square(36px);
-      border-radius: var(--radius-sm);
-      background: var(--bg-secondary);
-      border-color: var(--border-card);
+      @include layout.square(32px);
+      border-radius: 8px;
     }
   }
 }
