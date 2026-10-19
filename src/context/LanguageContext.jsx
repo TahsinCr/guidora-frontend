@@ -507,6 +507,12 @@ export const TRANSLATIONS = {
     'submit.pricingType': 'Pricing Model',
     'submit.platforms': 'Supported Platforms',
     'submit.submitBtn': 'Submit Tool to Directory',
+    'submit.logoUrl': 'Logo / Icon URL',
+    'submit.authNotice': 'Please sign in to submit your tool and register in the verified catalog.',
+    'submit.authRequiredError': 'You must be signed in to submit a tool to the catalog.',
+    'submit.sessionExpired': 'Your session has expired. Please sign in again.',
+    'submit.submitting': 'Submitting...',
+    'submit.submitButton': 'Submit Tool to Directory',
 
     // TagPicker
     'tagPicker.tagsAndCapabilities': 'Tags & Capabilities (Unlimited)',
@@ -1431,6 +1437,12 @@ export const TRANSLATIONS = {
     'submit.pricingType': 'Fiyatlandırma Modeli',
     'submit.platforms': 'Desteklenen Platformlar',
     'submit.submitBtn': 'Aracı Dizine Gönder',
+    'submit.logoUrl': 'Logo / İkon URL',
+    'submit.authNotice': 'Kataloğa yeni araç eklemek ve doğrulanmış yayıncı olmak için lütfen oturum açın.',
+    'submit.authRequiredError': 'Araç eklemek için öncelikle hesabınıza giriş yapmalısınız.',
+    'submit.sessionExpired': 'Oturum süreniz doldu. Lütfen tekrar giriş yapın.',
+    'submit.submitting': 'Kaydediliyor...',
+    'submit.submitButton': 'Kataloğa Ekle',
 
     // TagPicker
     'tagPicker.tagsAndCapabilities': 'Etiketler ve Yetenekler (Sınırsız)',
@@ -2355,6 +2367,12 @@ export const TRANSLATIONS = {
     'submit.pricingType': 'Модель монетизации',
     'submit.platforms': 'Поддерживаемые платформы',
     'submit.submitBtn': 'Отправить в каталог',
+    'submit.logoUrl': 'URL логотипа / иконки',
+    'submit.authNotice': 'Пожалуйста, войдите, чтобы отправить инструмент в проверенный каталог.',
+    'submit.authRequiredError': 'Для добавления инструмента необходимо войти в систему.',
+    'submit.sessionExpired': 'Срок действия сессии истек. Пожалуйста, войдите снова.',
+    'submit.submitting': 'Отправка...',
+    'submit.submitButton': 'Отправить в каталог',
 
     // TagPicker
     'tagPicker.tagsAndCapabilities': 'Теги и возможности (Без ограничений)',

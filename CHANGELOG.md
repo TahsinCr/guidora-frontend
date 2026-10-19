@@ -42,6 +42,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- **Tool Submission & Contract Resilience (`SubmitToolPage.jsx`, `ToolStudioForm.jsx`, `toolAdapter.js`, `App.jsx`)**:
+  - Resolved `ReferenceError: Plus is not defined` crash in `ToolStudioForm.jsx`.
+  - Added dedicated `logoUrl` input field and robust fallback in `adaptToolToCreateProductRequest` to satisfy mandatory backend URL validation (`RuleFor(LogoUrl).NotEmpty().Must(HttpUrlPolicy.IsValid)`).
+  - Resolved category and tag ID translation between frontend taxonomy models and backend database numeric identifiers, mapping slugs to valid PostgreSQL IDs (`categoryIds`, `tagIds`).
+  - Added authentication gate and informative login banner to `SubmitToolPage.jsx` ensuring unauthenticated users are guided to authenticate instead of receiving unhandled 401 errors.
+  - Wrapped `SubmitToolPage` inside an `ErrorBoundary` within `App.jsx`.
+  - Added unit test coverage in `tests/submitTool.test.jsx` verifying unauthenticated prompt, authenticated view, and request adapter contracts.
+
 - **User Profile View Resilience & Dependency Resolution (`UserProfilePage.jsx`, `App.jsx`)**:
   - Resolved missing icon (`Edit3`, `LayoutDashboard`, `Sparkles`, `MessageSquare`) and component (`ProductCard`) imports in `UserProfilePage.jsx`.
   - Added missing service bindings (`getTools`, `getUserReviews`, `updateCurrentUser`) from `toolsService.js` and `userService.js`.

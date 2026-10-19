@@ -22,10 +22,11 @@ import {
   Save,
   Scale,
   Loader2,
+  Plus,
 } from 'lucide-react';
 import MarkdownRenderer from '@/components/common/MarkdownRenderer';
 import TagPicker from '@/components/submit/TagPicker';
-import { fetchGithubRepoData } from '@/services/toolsService';
+import { fetchGithubRepoData, getCategories } from '@/services/toolsService';
 import { CATEGORIES, TAG_CATEGORIES } from '@/services/mockData';
 import { getOrganizations } from '@/services/userService';
 import { useLanguage } from '@/context/LanguageContext';
@@ -136,8 +137,11 @@ export default function ToolStudioForm({
 
   // 1. Core Form State
   const [name, setName] = useState(initialData?.name || '');
+  const [categoriesList, setCategoriesList] = useState(() =>
+    CATEGORIES.filter((c) => c.id !== 'all')
+  );
   const [categoryId, setCategoryId] = useState(() => {
-    if (initialData?.categoryId) return initialData.categoryId;
+    if (initialData?.categoryId) return String(initialData.categoryId);
     if (initialData?.category) {
       const match = CATEGORIES.find(
         (c) =>
@@ -154,11 +158,28 @@ export default function ToolStudioForm({
   const [websiteUrl, setWebsiteUrl] = useState(
     initialData?.websiteUrl || initialData?.url || ''
   );
+  const [logoUrl, setLogoUrl] = useState(
+    initialData?.logoUrl || initialData?.icon || initialData?.logo || ''
+  );
   const [organizations] = useState(getOrganizations());
   const [organizationId, setOrganizationId] = useState(
     initialData?.organizationId || 'org_neurolabs'
   );
   const [selectedTags, setSelectedTags] = useState(() => getInitialTags(initialData));
+
+  useEffect(() => {
+    let isMounted = true;
+    getCategories()
+      .then((cats) => {
+        if (isMounted && Array.isArray(cats) && cats.length > 0) {
+          setCategoriesList(cats.filter((c) => c.id !== 'all'));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // 2. Bot Sync Hook Settings
   const [webhookUrl, setWebhookUrl] = useState(initialData?.webhookUrl || '');
@@ -311,13 +332,22 @@ export default function ToolStudioForm({
         .map((t) => t.name);
 
       const selectedOrg = organizations.find((o) => o.id === organizationId);
+      const selectedCategoryObj = categoriesList.find(
+        (c) =>
+          String(c.id).toLowerCase() === String(categoryId).toLowerCase() ||
+          String(c.numericId) === String(categoryId) ||
+          c.name.toLowerCase() === String(categoryId).toLowerCase()
+      );
 
       const payload = {
         name: name.trim(),
-        categoryId,
-        category: CATEGORIES.find((c) => c.id === categoryId)?.name || 'Generative AI',
+        categoryId: selectedCategoryObj?.id || categoryId,
+        category: selectedCategoryObj?.name || 'Developer Tools',
+        categoryIds: selectedCategoryObj?.numericId ? [selectedCategoryObj.numericId] : [],
+        tagline: tagline.trim(),
         description: tagline.trim(),
         websiteUrl: websiteUrl.trim(),
+        logoUrl: logoUrl.trim(),
         organizationId: selectedOrg?.id || null,
         creatorName: selectedOrg
           ? selectedOrg.name
@@ -330,7 +360,7 @@ export default function ToolStudioForm({
         license: licenseType || licenseTag || 'MIT',
         licenseText: licenseContent,
         platforms: platformTags.length > 0 ? platformTags : ['Web'],
-        tags: selectedTags.map((t) => t.id),
+        tags: selectedTags.map((t) => (typeof t === 'string' ? t : t.id)),
         tagObjects: selectedTags,
         repoUrl: repoUrl.trim(),
         readme: readmeContent,
@@ -355,12 +385,22 @@ export default function ToolStudioForm({
         await onSave(payload);
       }
     } catch (err) {
-      setErrorMsg(err.message || 'Submission failed. Please check inputs.');
+      const msg =
+        err.data?.message ||
+        (Array.isArray(err.data?.errors)
+          ? err.data.errors.map((e) => e.errorMessage).join(', ')
+          : null) ||
+        err.message ||
+        'Kayıt işlemi tamamlanamadı. Lütfen girdiğiniz bilgileri kontrol edin.';
+      setErrorMsg(msg);
     }
   };
 
   // Filter categories for dropdown (exclude 'all')
-  const validCategories = CATEGORIES.filter((c) => c.id !== 'all');
+  const validCategories =
+    categoriesList.length > 0
+      ? categoriesList
+      : CATEGORIES.filter((c) => c.id !== 'all');
 
   // Form markup
   const formContent = (
@@ -480,11 +520,11 @@ export default function ToolStudioForm({
               />
             </div>
 
-            {/* Website URL & Creator */}
+            {/* Website URL & Logo URL */}
             <div className={styles.inputRow}>
               <div className={styles.inputGroup}>
                 <label className={styles.label}>
-                  {t('submit.websiteUrl', 'Website URL')}
+                  {t('submit.websiteUrl', 'Website URL')} *
                 </label>
                 <input
                   type="url"
@@ -492,13 +532,30 @@ export default function ToolStudioForm({
                   placeholder="https://example.com"
                   value={websiteUrl}
                   onChange={(e) => setWebsiteUrl(e.target.value)}
+                  required
                 />
               </div>
               <div className={styles.inputGroup}>
                 <label className={styles.label}>
+                  {t('submit.logoUrl', 'Logo / Icon URL')}
+                </label>
+                <input
+                  type="url"
+                  className={styles.textInput}
+                  placeholder="https://example.com/logo.svg"
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Creator / Organization */}
+            <div className={styles.inputRow}>
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>
                   {t('tool.createdBy', 'Organization / Creator')}
                   <span className={styles.labelHint}>
-                    (Admin or Bot Verified)
+                    (Verified Profile)
                   </span>
                 </label>
                 <select
@@ -509,7 +566,7 @@ export default function ToolStudioForm({
                   <option value="">Independent Creator / Self-published</option>
                   {organizations.map((org) => (
                     <option key={org.id} value={org.id}>
-                      {org.name} {org.verified ? '✓ (Verified)' : ''}
+                      {org.name} {org.verified ? '(Verified)' : ''}
                     </option>
                   ))}
                 </select>
@@ -922,11 +979,11 @@ export default function ToolStudioForm({
             </>
           ) : (
             <>
-              <Sparkles size={16} />
+              <Plus size={16} />
               <span>
                 {isSubmitting
-                  ? 'Registering Tool...'
-                  : 'Submit Tool to Directory'}
+                  ? t('submit.submitting', 'Kaydediliyor...')
+                  : t('submit.submitButton', 'Kataloğa Ekle')}
               </span>
             </>
           )}
@@ -1013,16 +1070,16 @@ export default function ToolStudioForm({
         <header className={styles.studioHeader}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIconBox}>
-              <Sparkles size={22} />
+              <Wrench size={20} />
             </div>
             <div className={styles.headerTitles}>
               <h1 className={styles.mainTitle}>
-                {t('submit.title', 'Add AI Tool to Directory')}
+                {t('submit.title', 'Kataloğa Yeni Araç Ekle')}
               </h1>
               <p className={styles.subTitle}>
                 {t(
                   'submit.subtitle',
-                  'Register your AI platform with automated GitHub synchronization, hierarchical tag taxonomy, and live Markdown documentation.'
+                  'Geliştirici aracınızı, açık kaynaklı projenizi veya kütüphanenizi Guidora dizinine kaydedin.'
                 )}
               </p>
             </div>

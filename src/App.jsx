@@ -550,10 +550,21 @@ export default function App() {
               />
             </ErrorBoundary>
           ) : isSubmitView ? (
-            <SubmitToolPage
-              onBack={handleCloseTool}
-              onToolCreated={handleToolCreated}
-            />
+            <ErrorBoundary
+              title="Araç Ekleme Ekranı Yüklenemedi"
+              onReset={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('view');
+                window.location.href = url.pathname;
+              }}
+            >
+              <SubmitToolPage
+                currentUser={currentUser}
+                onOpenAuth={handleOpenAuth}
+                onBack={handleCloseTool}
+                onToolCreated={handleToolCreated}
+              />
+            </ErrorBoundary>
           ) : activeToolId ? (
             <ToolDialog
               toolId={activeToolId}
