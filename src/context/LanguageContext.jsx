@@ -14,9 +14,10 @@ export const TRANSLATIONS = {
     'header.backToDirectory': 'Back to Directory',
 
     // Hero / InformationCard
-    'hero.titlePart1': 'Discover the',
-    'hero.titleHighlight': 'Perfect Tool',
-    'hero.titlePart2': 'for Any Task',
+    'hero.kicker': 'Software & Developer Tools Directory',
+    'hero.titlePart1': 'Find the',
+    'hero.titleHighlight': 'Right Tools',
+    'hero.titlePart2': 'for Modern Engineering',
     'hero.subtitle': 'The definitive software and developer tools directory with deep filtering, community verification, and audited catalog data.',
     'hero.allTools': 'All Tools',
 
@@ -937,8 +938,9 @@ export const TRANSLATIONS = {
     'header.backToDirectory': 'Dizine Geri Dön',
 
     // Hero / InformationCard
-    'hero.titlePart1': 'Her Görev İçin',
-    'hero.titleHighlight': 'Mükemmel Aracı',
+    'hero.kicker': 'Doğrulanmış Yazılım & Geliştirici Kataloğu',
+    'hero.titlePart1': 'Projeleriniz İçin',
+    'hero.titleHighlight': 'Doğru Araçları',
     'hero.titlePart2': 'Keşfedin',
     'hero.subtitle': 'Gelişmiş filtreleme, gerçek zamanlı topluluk doğrulaması ve teknik denetimli katalog verileri içeren yazılım ve geliştirici araçları dizini.',
     'hero.allTools': 'Tüm Araçlar',
@@ -1860,9 +1862,10 @@ export const TRANSLATIONS = {
     'header.backToDirectory': 'Назад в каталог',
 
     // Hero / InformationCard
+    'hero.kicker': 'Каталог проверенных инструментов',
     'hero.titlePart1': 'Найдите',
-    'hero.titleHighlight': 'Идеальный инструмент',
-    'hero.titlePart2': 'для любой задачи',
+    'hero.titleHighlight': 'Лучшие инструменты',
+    'hero.titlePart2': 'для ваших задач',
     'hero.subtitle': 'Профессиональный каталог инструментов разработки с глубокой фильтрацией, верификацией сообществом и проверенными данными.',
     'hero.allTools': 'Все инструменты',
 

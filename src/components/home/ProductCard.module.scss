@@ -14,26 +14,26 @@
 .card {
   @include layout.width(fill);
   @include layout.box(
-    $padding: 24px,
+    $padding: 20px,
     $border: 1px solid var(--border-card),
-    $radius: var(--radius-lg)
+    $radius: var(--radius-md)
   );
   background: var(--bg-card);
-  @include layout.flex(column, flex-start, stretch, 16px);
+  @include layout.flex(column, flex-start, stretch, 14px);
   cursor: pointer;
   position: relative;
   content-visibility: auto;
-  contain-intrinsic-size: auto 240px;
-  animation: cardEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  contain-intrinsic-size: auto 220px;
+  animation: cardEntrance 0.3s ease both;
   will-change: transform, border-color, box-shadow;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease;
 
   &:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     border-color: var(--border-card-hover);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-card-hover);
   }
 
   @media (max-width: 640px) {
@@ -186,20 +186,22 @@
 }
 
 .thumbnail {
-  @include layout.square(56px);
-  border-radius: 14px;
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  @include layout.square(48px);
+  border-radius: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-card);
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(78, 92, 226, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .thumbInitials {
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: 800;
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 600;
   letter-spacing: 0.5px;
   user-select: none;
 }
@@ -214,39 +216,39 @@
 
 .pricingBadge {
   font-size: 10.5px;
-  font-weight: 600;
+  font-weight: 500;
   padding: 1.5px 7px;
-  border-radius: 5px;
+  border-radius: 4px;
   background: var(--bg-secondary);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border: 1px solid var(--border-card);
   letter-spacing: 0.02em;
   white-space: nowrap;
   flex-shrink: 0;
 
   &.free {
-    background: rgba(16, 185, 129, 0.12);
-    color: #059669;
-    border-color: rgba(16, 185, 129, 0.25);
+    background: rgba(16, 185, 129, 0.08);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.2);
   }
 
   &.freemium {
-    background: rgba(78, 92, 226, 0.12);
-    color: #4f46e5;
-    border-color: rgba(78, 92, 226, 0.25);
+    background: rgba(99, 102, 241, 0.08);
+    color: #818cf8;
+    border-color: rgba(99, 102, 241, 0.2);
   }
 
   &.paid,
   &.paidenterprise {
-    background: rgba(245, 158, 11, 0.12);
-    color: #b45309;
-    border-color: rgba(245, 158, 11, 0.25);
+    background: rgba(245, 158, 11, 0.08);
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.2);
   }
 
   &.opensource {
-    background: rgba(14, 165, 233, 0.12);
-    color: #0284c7;
-    border-color: rgba(14, 165, 233, 0.25);
+    background: rgba(14, 165, 233, 0.08);
+    color: #38bdf8;
+    border-color: rgba(14, 165, 233, 0.2);
   }
 }
 
@@ -302,13 +304,13 @@
 
 .newBadge {
   font-size: 10px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: var(--primary-light);
-  border: 1px solid var(--primary-color);
-  color: var(--primary-color);
-  letter-spacing: 0.04em;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  color: #10b981;
+  letter-spacing: 0.02em;
   flex-shrink: 0;
 }
 
@@ -323,11 +325,11 @@
 .categoryTag {
   font-size: 11px;
   font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 6px;
-  background: var(--primary-light);
-  color: var(--primary-color);
-  border: 1px solid rgba(138, 56, 245, 0.2);
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-card);
   white-space: nowrap;
   flex-shrink: 0;
 }

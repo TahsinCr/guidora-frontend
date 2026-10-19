@@ -6,23 +6,22 @@
 }
 
 .avatarTrigger {
-  @include layout.square(36px);
+  @include layout.square(34px);
   @include layout.flex(row, center, center);
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%);
-  color: #042f2e;
-  font-size: 13px;
-  font-weight: 800;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-card);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
   cursor: pointer;
-  border: 2px solid transparent;
-  box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
   transition: all var(--transition-fast);
   overflow: hidden;
 
   &:hover,
   &.triggerActive {
-    transform: scale(1.05);
-    border-color: var(--primary-color);
+    border-color: var(--border-card-hover);
+    color: var(--text-primary);
   }
 }
 
@@ -35,21 +34,19 @@
 
 .loginTriggerBtn {
   @include layout.inline-flex(row, center, center, 6px);
-  padding: 8px 16px;
+  padding: 7px 14px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-  color: #ffffff;
+  background: var(--text-primary);
+  color: var(--bg-primary);
   font-size: 13px;
-  font-weight: 700;
-  border: none;
+  font-weight: 600;
+  border: 1px solid var(--text-primary);
   cursor: pointer;
   transition: all var(--transition-fast);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 
   &:hover {
-    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    opacity: 0.9;
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
   }
 }
 

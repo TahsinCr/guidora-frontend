@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import ProductSorterBar from './ProductSorterBar';
 import FilterBar from './FilterBar';
-import { Sparkles } from 'lucide-react';
+import { SearchX } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './ProductGrid.module.scss';
 
@@ -141,7 +141,7 @@ export default function ProductGrid({
           </div>
         ) : tools.length === 0 ? (
           <div className={styles.emptyState}>
-            <Sparkles size={32} color="var(--brand-blue)" />
+            <SearchX size={32} color="var(--text-muted)" />
             <h3 className={styles.emptyTitle}>
               {t('sorter.noToolsFound', 'No tools match your criteria')}
             </h3>

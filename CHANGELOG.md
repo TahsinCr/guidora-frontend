@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Clean Corporate Design System & Aesthetic Refinement (`_theme.scss`, `InformationCard`, `CategorySlider`, `ProductCard`, `ProductGrid`, `Header`, `UserMenu`)**:
+  - Replaced high-saturation neon purple palette tokens with refined corporate indigo and slate tones.
+  - Eliminated artificial glowing box shadows, electric neon borders, and cosmic background gradient blobs across hero, navbar, and cards.
+  - Replaced electric gradient thumbnail boxes with clean neutral monogram avatars with subtle borders and balanced letter spacing.
+  - Redesigned active category pills with high-contrast solid styling aligned with modern developer directory standards.
+  - Refined hero banner with a structured verified catalog badge and grounded typography.
+  - Replaced glowing admin button with a clean standard navbar control.
+  - Removed decorative sparkle icons and glows from search empty states and user profile views.
+
 ### Added
 
 - **Multi-Category Live Catalog Sync & Adaptation (`toolsService.js`, `toolAdapter.js`)**:

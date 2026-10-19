@@ -76,13 +76,13 @@
 }
 
 .editProfileBtn {
-  border-color: rgba(138, 56, 245, 0.3);
-  color: var(--primary-color);
-  background: rgba(138, 56, 245, 0.08);
+  border-color: var(--border-card);
+  color: var(--text-primary);
+  background: var(--bg-input);
 
   &:hover {
-    background: rgba(138, 56, 245, 0.16);
-    border-color: var(--primary-color);
+    background: var(--bg-input-hover);
+    border-color: var(--border-card-hover);
   }
 }
 
@@ -90,12 +90,12 @@
 .headerCard {
   position: relative;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
   padding: 28px 32px;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-card);
 
   @media (max-width: 768px) {
     padding: 20px;
@@ -103,14 +103,7 @@
 }
 
 .bannerGlow {
-  position: absolute;
-  top: -120px;
-  right: -80px;
-  width: 380px;
-  height: 380px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(78, 92, 226, 0.12) 0%, rgba(159, 106, 240, 0.04) 50%, transparent 70%);
-  pointer-events: none;
+  display: none;
 }
 
 .profileMain {
@@ -131,18 +124,19 @@
 }
 
 .avatarLarge {
-  width: 80px;
-  height: 80px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #4E5CE2 0%, #9F6AF0 100%);
-  color: #ffffff;
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-card);
+  color: var(--text-primary);
   font-weight: 700;
-  font-size: 28px;
+  font-size: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
-  letter-spacing: 0.5px;
-  box-shadow: 0 8px 24px rgba(78, 92, 226, 0.28);
+  user-select: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .adminBadgeIcon {

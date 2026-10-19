@@ -3,31 +3,32 @@
 .heroCard {
   @include layout.width(fill);
   @include layout.box(
-    $padding: 28px 32px,
+    $padding: 24px 28px,
     $border: 1px solid var(--border-card),
-    $radius: var(--radius-lg)
+    $radius: var(--radius-md)
   );
   background: var(--bg-card);
   box-shadow: var(--shadow-card);
-  @include layout.flex(row, start, center, 24px);
+  @include layout.flex(row, start, center, 20px);
 
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: flex-start;
-    padding: 20px;
-    gap: 16px;
+    padding: 18px;
+    gap: 14px;
   }
 }
 
 .largeIcon {
-  @include layout.square(84px);
-  border-radius: 18px;
-  background: linear-gradient(145deg, #cbd5e1 0%, #94a3b8 100%);
+  @include layout.square(72px);
+  border-radius: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-card);
   flex-shrink: 0;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 
   @media (max-width: 768px) {
-    @include layout.square(64px);
+    @include layout.square(56px);
   }
 }
 
@@ -38,18 +39,18 @@
 }
 
 .categoryRow {
-  @include layout.flex(row, start, center, 12px);
+  @include layout.flex(row, start, center, 10px);
 }
 
 .categoryPill {
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  background: var(--primary-light);
-  color: var(--primary-color);
-  border: 1px solid rgba(138, 56, 245, 0.25);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-card);
 }
 
 .trustBadges {

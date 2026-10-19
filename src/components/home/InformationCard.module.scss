@@ -4,31 +4,15 @@
   width: 100%;
   position: relative;
   margin-bottom: 12px;
-  overflow: hidden;
   text-align: center;
   will-change: opacity, transform;
   transition: opacity 0.45s cubic-bezier(0.25, 1, 0.5, 1),
               transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 45%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 680px;
-    height: 380px;
-    background: radial-gradient(ellipse at center, rgba(78, 92, 226, 0.16) 0%, rgba(159, 106, 240, 0.08) 50%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-    transition: opacity 0.45s ease;
-  }
 }
 
 .heroInner {
   min-height: 0;
   width: 100%;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -37,7 +21,6 @@
   padding: 24px 0 12px 0;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
               padding 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  transform: translateY(0) scale(1);
 
   @media (max-width: 850px) {
     padding: 12px 0 6px 0;
@@ -48,35 +31,60 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  max-height: 200px;
+  gap: 10px;
+  max-height: 220px;
   opacity: 1;
   transform: translateY(0);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
               opacity 0.3s ease,
               margin-bottom 0.35s ease,
               transform 0.35s ease;
-  overflow: hidden;
+}
+
+.kickerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  margin-bottom: 2px;
+
+  .kickerDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+  }
 }
 
 .title {
-  font-size: clamp(23px, 5.5vw, 42px);
-  font-weight: 800;
-  letter-spacing: -0.04em;
+  font-size: clamp(24px, 4.5vw, 38px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
   color: var(--text-primary);
-  line-height: 1.18;
+  line-height: 1.22;
+  margin: 0;
 
   .accent {
-    color: var(--brand-blue);
+    color: var(--text-primary);
+    font-weight: 800;
   }
 }
 
 .description {
-  font-size: clamp(13px, 3.5vw, 15px);
+  font-size: clamp(13px, 2vw, 15px);
   color: var(--text-muted);
-  max-width: 640px;
-  line-height: 1.5;
+  max-width: 580px;
+  line-height: 1.55;
+  margin: 0;
   padding: 0 16px;
 }
 

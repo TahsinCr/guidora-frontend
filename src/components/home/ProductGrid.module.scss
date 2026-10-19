@@ -87,15 +87,18 @@
   }
 
   .clearBtn {
-    @include layout.box($padding: 8px 18px, $radius: var(--radius-md));
+    @include layout.box($padding: 8px 16px, $border: 1px solid var(--border-card), $radius: var(--radius-sm));
     background: var(--bg-input);
-    color: var(--brand-blue);
+    color: var(--text-primary);
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     margin-top: 6px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
 
     &:hover {
       background: var(--bg-input-hover);
+      border-color: var(--border-card-hover);
     }
   }
 }
@@ -113,11 +116,11 @@
   padding: 28px 0 16px 0;
 
   .pulsingDot {
-    @include layout.square(10px);
+    @include layout.square(18px);
     border-radius: var(--radius-full);
-    background: var(--brand-blue);
-    box-shadow: 0 0 12px var(--brand-blue);
-    animation: pulseDot 1.2s infinite ease-in-out;
+    border: 2px solid var(--border-card);
+    border-top-color: var(--text-primary);
+    animation: spinLoader 0.7s linear infinite;
   }
 
   .loadingText {
@@ -127,14 +130,9 @@
   }
 }
 
-@keyframes pulseDot {
-  0%, 100% {
-    transform: scale(0.8);
-    opacity: 0.5;
-  }
-  50% {
-    transform: scale(1.3);
-    opacity: 1;
+@keyframes spinLoader {
+  to {
+    transform: rotate(360deg);
   }
 }
 

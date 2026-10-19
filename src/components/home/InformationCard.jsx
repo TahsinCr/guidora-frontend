@@ -156,15 +156,19 @@ export default function InformationCard({ categories = [], selectedCategory, onS
     >
       <div className={styles.heroInner}>
         <div className={styles.headingSection}>
+          <div className={styles.kickerBadge}>
+            <span className={styles.kickerDot} />
+            <span>{t('hero.kicker', 'Software & Developer Tools Directory')}</span>
+          </div>
           <h1 className={styles.title}>
-            {t('hero.titlePart1', 'Discover the')}{' '}
-            <span className={styles.accent}>{t('hero.titleHighlight', 'Perfect Tool')}</span>{' '}
-            {t('hero.titlePart2', 'for Any Task')}
+            {t('hero.titlePart1', 'Find the')}{' '}
+            <span className={styles.accent}>{t('hero.titleHighlight', 'Right Tools')}</span>{' '}
+            {t('hero.titlePart2', 'for Modern Engineering')}
           </h1>
           <p className={styles.description}>
             {t(
               'hero.subtitle',
-              'The most advanced directory with deep filtering, real-time community verification, and bot-assisted updates.'
+              'The definitive software and developer tools directory with deep filtering, community verification, and audited catalog data.'
             )}
           </p>
         </div>

@@ -70,32 +70,36 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 20px;
+  padding: 8px 18px;
   border-radius: var(--radius-full);
   background: var(--bg-card);
   border: 1px solid var(--border-card);
   color: var(--text-secondary);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
   cursor: pointer;
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: all var(--transition-fast);
 
   &:hover {
     background: var(--bg-input-hover);
     color: var(--text-primary);
-    border-color: var(--cat-color, var(--border-card-hover));
-    transform: translateY(-1px);
+    border-color: var(--border-card-hover);
   }
 
   &.pillActive {
-    border-color: var(--cat-color, var(--primary-color));
-    background: rgba(129, 140, 248, 0.14);
-    color: var(--text-primary);
+    border-color: var(--text-primary);
+    background: var(--text-primary);
+    color: var(--bg-primary);
     font-weight: 600;
-    box-shadow: 0 0 14px rgba(129, 140, 248, 0.25);
+    box-shadow: none;
+
+    .iconDot svg {
+      color: var(--bg-primary) !important;
+      stroke: var(--bg-primary) !important;
+    }
   }
 }
 
@@ -103,6 +107,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .catName {

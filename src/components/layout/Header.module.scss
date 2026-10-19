@@ -44,10 +44,10 @@
   }
 
   .logoIcon {
-    @include layout.square(38px);
+    @include layout.square(36px);
     @include layout.flex(row, center, center);
     border-radius: 9px;
-    box-shadow: 0 4px 14px rgba(79, 92, 226, 0.32);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     overflow: hidden;
     flex-shrink: 0;
 
@@ -117,14 +117,14 @@
 .submitBtn {
   @include layout.inline-flex(row, center, center, 6px);
   @include layout.box(
-    $padding: 8px 16px,
+    $padding: 7px 14px,
     $border: 1px solid var(--border-card),
     $radius: var(--radius-full)
   );
   background: var(--bg-input);
   color: var(--text-primary);
-  font-weight: 600;
-  font-size: 13.5px;
+  font-weight: 500;
+  font-size: 13px;
   transition: all var(--transition-fast);
 
   &:hover {
@@ -137,7 +137,7 @@
     .btnText {
       display: none;
     }
-    padding: 8px 10px;
+    padding: 7px 10px;
     border-radius: var(--radius-full);
   }
 }
@@ -145,28 +145,27 @@
 .adminTriggerBtn {
   @include layout.inline-flex(row, center, center, 6px);
   @include layout.box(
-    $padding: 7px 14px,
-    $border: 1px solid rgba(139, 92, 246, 0.4),
+    $padding: 6px 12px,
+    $border: 1px solid var(--border-card),
     $radius: var(--radius-full)
   );
-  background: rgba(139, 92, 246, 0.12);
-  color: #c4b5fd;
-  font-weight: 700;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-weight: 500;
   font-size: 13px;
   cursor: pointer;
   transition: all var(--transition-fast);
   flex-shrink: 0;
 
   &:hover {
-    background: rgba(139, 92, 246, 0.24);
-    border-color: rgba(139, 92, 246, 0.8);
-    color: #ffffff;
-    box-shadow: 0 0 12px rgba(139, 92, 246, 0.35);
+    background: var(--bg-input-hover);
+    border-color: var(--border-card-hover);
+    color: var(--text-primary);
     transform: translateY(-1px);
   }
 
   .adminTriggerText {
-    letter-spacing: 0.03em;
+    letter-spacing: 0.02em;
   }
 }
 
@@ -188,8 +187,8 @@
   }
 
   .pinkDot {
-    @include layout.square(7px);
-    background: #ec4899;
+    @include layout.square(6px);
+    background: #10b981;
     border-radius: var(--radius-full);
     position: absolute;
     top: 8px;
@@ -198,18 +197,19 @@
 }
 
 .userAvatar {
-  @include layout.square(36px);
+  @include layout.square(34px);
   @include layout.flex(row, center, center);
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%);
-  color: #042f2e;
-  font-size: 13px;
-  font-weight: 800;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-card);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
-  transition: transform var(--transition-fast);
+  transition: all var(--transition-fast);
 
   &:hover {
-    transform: scale(1.05);
+    border-color: var(--border-card-hover);
+    color: var(--text-primary);
   }
 }

@@ -3,22 +3,22 @@
   --secondary-font: 'Roboto', sans-serif;
   --tertiary-font: 'DM Sans', sans-serif;
 
-  // Figma Accents
-  --brand-purple: #8a38f5;
-  --brand-blue: #4c82fb;
+  // Refined Corporate Accents
+  --brand-purple: #6366f1;
+  --brand-blue: #3b82f6;
   --brand-cyan: #06b6d4;
   --brand-green: #10b981;
-  --brand-yellow: #eab308;
+  --brand-yellow: #f59e0b;
   --brand-pink: #ec4899;
 
-  --primary-color: #8a38f5;
-  --primary-hover: #7c2deb;
-  --primary-light: rgba(138, 56, 245, 0.15);
-  --primary-glow: rgba(138, 56, 245, 0.35);
+  --primary-color: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-light: rgba(99, 102, 241, 0.08);
+  --primary-glow: rgba(99, 102, 241, 0.15);
 
-  --accent-purple: #8a38f5;
-  --accent-purple-hover: #7c2deb;
-  --accent-purple-glow: rgba(138, 56, 245, 0.2);
+  --accent-purple: #6366f1;
+  --accent-purple-hover: #4f46e5;
+  --accent-purple-glow: rgba(99, 102, 241, 0.12);
 
   --radius-xs: 4px;
   --radius-sm: 8px;
@@ -45,36 +45,36 @@
 :root,
 .theme-dark,
 [data-theme='dark'] {
-  // Figma exact deep navy palette
-  --bg-primary: #070c18;
-  --bg-secondary: #0b1120;
-  --bg-tertiary: #10192d;
-  --bg-input: #151e32;
-  --bg-input-hover: #1c2742;
-  --bg-card: #0d1527;
-  --bg-card-hover: #131e36;
-  --bg-pill: #16192b;
+  // Refined deep slate/zinc dark palette
+  --bg-primary: #090d16;
+  --bg-secondary: #0e1422;
+  --bg-tertiary: #141c2e;
+  --bg-input: #121927;
+  --bg-input-hover: #192337;
+  --bg-card: #0f172a;
+  --bg-card-hover: #152037;
+  --bg-pill: #131b2e;
 
-  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.06);
   --border-card: rgba(255, 255, 255, 0.08);
-  --border-card-hover: rgba(255, 255, 255, 0.18);
-  --border-active: #8a38f5;
+  --border-card-hover: rgba(255, 255, 255, 0.15);
+  --border-active: #6366f1;
 
-  --text-primary: #ffffff;
+  --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
   --text-faint: #64748b;
 
-  --header-bg: rgba(7, 12, 24, 0.88);
-  --header-border: rgba(255, 255, 255, 0.08);
+  --header-bg: rgba(9, 13, 22, 0.9);
+  --header-border: rgba(255, 255, 255, 0.07);
 
-  --modal-backdrop: rgba(4, 7, 15, 0.85);
-  --modal-bg: #0c1322;
-  --modal-border: #1e2c4a;
+  --modal-backdrop: rgba(5, 8, 15, 0.82);
+  --modal-bg: #0f172a;
+  --modal-border: rgba(255, 255, 255, 0.1);
 
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.35);
-  --shadow-card-hover: 0 12px 28px rgba(0, 0, 0, 0.5);
-  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.8);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.12);
+  --shadow-card-hover: 0 10px 25px -3px rgba(0, 0, 0, 0.35);
+  --shadow-modal: 0 20px 50px rgba(0, 0, 0, 0.7);
 }
 
 .theme-light,
