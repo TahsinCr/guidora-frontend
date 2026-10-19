@@ -76,13 +76,13 @@
 }
 
 .editProfileBtn {
-  border-color: var(--border-card);
-  color: var(--text-primary);
-  background: var(--bg-input);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: var(--primary-color);
+  background: var(--primary-light);
 
   &:hover {
-    background: var(--bg-input-hover);
-    border-color: var(--border-card-hover);
+    background: rgba(139, 92, 246, 0.18);
+    border-color: var(--primary-color);
   }
 }
 
@@ -127,16 +127,15 @@
   width: 72px;
   height: 72px;
   border-radius: 14px;
-  background: var(--bg-input);
-  border: 1px solid var(--border-card);
-  color: var(--text-primary);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #ffffff;
   font-weight: 700;
   font-size: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
 }
 
 .adminBadgeIcon {

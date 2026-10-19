@@ -86,19 +86,19 @@
   &:hover {
     background: var(--bg-input-hover);
     color: var(--text-primary);
-    border-color: var(--border-card-hover);
+    border-color: var(--cat-color, var(--border-card-hover));
   }
 
   &.pillActive {
-    border-color: var(--text-primary);
-    background: var(--text-primary);
-    color: var(--bg-primary);
+    border-color: var(--cat-color, var(--primary-color));
+    background: color-mix(in srgb, var(--cat-color) 15%, var(--bg-card));
+    color: var(--cat-color, var(--text-primary));
     font-weight: 600;
-    box-shadow: none;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--cat-color) 18%, transparent);
 
     .iconDot svg {
-      color: var(--bg-primary) !important;
-      stroke: var(--bg-primary) !important;
+      color: var(--cat-color) !important;
+      stroke: var(--cat-color) !important;
     }
   }
 }

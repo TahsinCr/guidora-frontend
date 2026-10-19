@@ -1,6 +1,7 @@
 import * as productsApi from './api/productsApi';
 import * as taxonomiesApi from './api/taxonomiesApi';
 import { adaptProductDtoToTool } from './api/toolAdapter';
+import { getCategoryColor } from '@/constants/categoryIcons';
 import { isMockMode } from './config/modeService';
 const useMock = () => isMockMode();
 let backendTools = [];
@@ -795,22 +796,41 @@ export async function submitReport(toolId, reportData) {
  * Fetch list of categories (queries .NET 10 API first, falls back to local data)
  */
 export async function getCategories() {
-  if (!useMock()) return (await taxonomiesApi.fetchCategories()).map((c) => ({ id: c.slug || String(c.categoryId), numericId: c.categoryId, name: c.categoryName, count: 0 }));
+  if (!useMock()) {
+    const apiCats = await taxonomiesApi.fetchCategories();
+    return apiCats.map((c) => {
+      const slug = c.slug || String(c.categoryId);
+      return {
+        id: slug,
+        numericId: c.categoryId,
+        name: c.categoryName,
+        count: 0,
+        color: c.color || getCategoryColor(slug),
+      };
+    });
+  }
   await simulateDelay(40);
   try {
     const apiCats = await taxonomiesApi.fetchCategories();
     if (Array.isArray(apiCats) && apiCats.length > 0) {
-      return apiCats.map((c) => ({
-        id: c.slug || String(c.categoryId),
-        numericId: c.categoryId,
-        name: c.categoryName,
-        count: 0,
-      }));
+      return apiCats.map((c) => {
+        const slug = c.slug || String(c.categoryId);
+        return {
+          id: slug,
+          numericId: c.categoryId,
+          name: c.categoryName,
+          count: 0,
+          color: c.color || getCategoryColor(slug),
+        };
+      });
     }
   } catch (e) {
     // API offline, fallback to local categories
   }
-  return adminGetCategories();
+  return adminGetCategories().map((c) => ({
+    ...c,
+    color: c.color || getCategoryColor(c.id),
+  }));
 }
 
 /**

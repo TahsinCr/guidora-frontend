@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Star, Eye, Bookmark, ArrowUpRight, ShieldCheck, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { safeOpenExternal } from '@/utils/security';
+import { getCategoryColor } from '@/constants/categoryIcons';
 import styles from './ProductCard.module.scss';
 
 function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
@@ -32,6 +33,7 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
   // Translate pricing if possible
   const pricingKey = tool.pricing ? tool.pricing.toLowerCase().replace(/[^a-z0-9]/g, '-') : '';
   const localizedPricing = tool.pricing ? t(`tag.${pricingKey}`, tool.pricing) : '';
+  const catColor = getCategoryColor(tool.categoryId || tool.category);
 
   return (
     <article
@@ -44,7 +46,13 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
     >
       <div className={styles.header}>
         <div className={styles.leftHead}>
-          <div className={styles.thumbnail}>
+          <div
+            className={styles.thumbnail}
+            style={!tool.icon ? {
+              background: `linear-gradient(135deg, ${catColor} 0%, #6366f1 100%)`,
+              borderColor: 'transparent',
+            } : undefined}
+          >
             {tool.icon ? (
               <img
                 src={tool.icon}
@@ -54,7 +62,7 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
                 className={styles.thumbImg}
               />
             ) : (
-              <span className={styles.thumbInitials}>{initials}</span>
+              <span className={styles.thumbInitials} style={{ color: '#ffffff' }}>{initials}</span>
             )}
           </div>
 
@@ -80,7 +88,15 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
             </div>
 
             <div className={styles.tagRow}>
-              <span className={styles.categoryTag}>
+              <span
+                className={styles.categoryTag}
+                style={{
+                  backgroundColor: `${catColor}1c`,
+                  borderColor: `${catColor}40`,
+                  color: catColor,
+                }}
+              >
+                <span className={styles.categoryDot} style={{ backgroundColor: catColor }} />
                 {tool.category ? translateCategory(tool.category, tool.tag || tool.category) : tool.tag}
               </span>
               {tool.pricing && (

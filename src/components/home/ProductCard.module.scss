@@ -323,14 +323,24 @@
 }
 
 .categoryTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 11px;
-  font-weight: 500;
-  padding: 2px 7px;
+  font-weight: 600;
+  padding: 2px 8px;
   border-radius: 4px;
   background: var(--bg-secondary);
   color: var(--text-secondary);
   border: 1px solid var(--border-card);
   white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.categoryDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 

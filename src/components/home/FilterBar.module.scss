@@ -222,12 +222,12 @@
 
   .orgInitialsPill {
     font-size: 9.5px;
-    font-weight: 600;
+    font-weight: 700;
     padding: 1.5px 5.5px;
     border-radius: var(--radius-xs);
-    background: var(--bg-card);
-    border: 1px solid var(--border-card);
-    color: var(--text-secondary);
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    color: var(--primary-color);
     flex-shrink: 0;
   }
 
@@ -297,9 +297,9 @@
   }
 
   &.tagChecked {
-    background: var(--text-primary);
-    border-color: var(--text-primary);
-    color: var(--bg-primary);
+    background: var(--primary-light);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
     font-weight: 600;
   }
 }

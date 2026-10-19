@@ -146,21 +146,21 @@
   @include layout.inline-flex(row, center, center, 6px);
   @include layout.box(
     $padding: 6px 12px,
-    $border: 1px solid var(--border-card),
+    $border: 1px solid rgba(139, 92, 246, 0.35),
     $radius: var(--radius-full)
   );
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  font-weight: 500;
+  background: rgba(139, 92, 246, 0.12);
+  color: #a78bfa;
+  font-weight: 600;
   font-size: 13px;
   cursor: pointer;
   transition: all var(--transition-fast);
   flex-shrink: 0;
 
   &:hover {
-    background: var(--bg-input-hover);
-    border-color: var(--border-card-hover);
-    color: var(--text-primary);
+    background: rgba(139, 92, 246, 0.22);
+    border-color: rgba(139, 92, 246, 0.6);
+    color: #c4b5fd;
     transform: translateY(-1px);
   }
 
@@ -187,12 +187,13 @@
   }
 
   .pinkDot {
-    @include layout.square(6px);
-    background: #10b981;
+    @include layout.square(7px);
+    background: #ec4899;
     border-radius: var(--radius-full);
     position: absolute;
-    top: 8px;
-    right: 9px;
+    top: 7px;
+    right: 8px;
+    box-shadow: 0 0 6px rgba(236, 72, 153, 0.5);
   }
 }
 
@@ -200,16 +201,16 @@
   @include layout.square(34px);
   @include layout.flex(row, center, center);
   border-radius: var(--radius-full);
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-card);
-  color: var(--text-primary);
+  background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  color: #ffffff;
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all var(--transition-fast);
 
   &:hover {
-    border-color: var(--border-card-hover);
-    color: var(--text-primary);
+    transform: scale(1.05);
+    border-color: #06b6d4;
   }
 }

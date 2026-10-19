@@ -8,12 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- **Restored Clean Minimalist Tool Cards (`ProductCard.jsx`, `ProductCard.module.scss`)**:
-  - Reverted tool cards back to their clean, minimalist corporate design matching commit `62a4471`.
-  - Restored standard theme token `var(--bg-card)` ensuring pristine white cards in light mode and deep slate in dark mode.
-  - Removed hardcoded dark purple gradients and extra tag clutter from tool cards.
-  - Retained subtle, professional hover interactions (`translateY(-2px)`, card border, and soft elevation).
-  - Maintained high-contrast theme-specific title gradient in hero section.
+- **Category Color Badges & Vibrant Accent Restoration (`ProductCard.jsx`, `CategorySlider.module.scss`, `FilterBar.module.scss`, `ProductPreviewHeader.jsx`, `_theme.scss`)**:
+  - Restored category-specific accent colors to tool card category tags with matching tinted backgrounds (`${catColor}1c`), subtle borders, and indicator dots.
+  - Added category-color gradient fallback monogram avatars for tools without custom image icons.
+  - Restored dynamic category color styling to CategorySlider active pills, hover states, and category icons.
+  - Restored category color dots and brand purple checked tags in FilterBar.
+  - Restored category color pill and monogram fallback in tool detail modal preview.
+  - Restored vibrant brand button gradients, avatar accents, and notification badges across Header and UserMenu.
+  - Maintained clean corporate card backgrounds (`var(--bg-card)`) preserving light and dark theme fidelity.
 
 - **Compact Category Bar (`CategorySlider.module.scss`, `InformationCard.module.scss`)**:
   - Tightened vertical margins and padding on category slider wrapper and pill controls to eliminate excessive height.
