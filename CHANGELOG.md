@@ -8,11 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- **Tool Card Category Accent & Persistent Gradient (`ProductCard.jsx`, `ProductCard.module.scss`, `categoryIcons.js`)**:
-  - Bound dynamic category accent colors directly to the card's category badge with tinted background, matching border, and indicator dot.
-  - Implemented persistent dark violet-indigo gradient at rest (`linear-gradient(160deg, rgba(27, 20, 48, 0.95), rgba(12, 16, 28, 0.98))`).
-  - Calmed hover effects to eliminate jumpy transform transitions.
-  - Streamlined card height with compact description, sleek single-row secondary tags, and integrated top border on footer.
+- **Restored Clean Minimalist Tool Cards (`ProductCard.jsx`, `ProductCard.module.scss`)**:
+  - Reverted tool cards back to their clean, minimalist corporate design matching commit `62a4471`.
+  - Restored standard theme token `var(--bg-card)` ensuring pristine white cards in light mode and deep slate in dark mode.
+  - Removed hardcoded dark purple gradients and extra tag clutter from tool cards.
+  - Retained subtle, professional hover interactions (`translateY(-2px)`, card border, and soft elevation).
+  - Maintained high-contrast theme-specific title gradient in hero section.
 
 - **Compact Category Bar (`CategorySlider.module.scss`, `InformationCard.module.scss`)**:
   - Tightened vertical margins and padding on category slider wrapper and pill controls to eliminate excessive height.
