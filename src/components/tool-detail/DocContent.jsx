@@ -6,6 +6,18 @@ import { useLanguage } from '@/context/LanguageContext';
 import styles from './DocContent.module.scss';
 
 export default function DocContent(props) {
+  const { t } = useLanguage();
+  if (props.activeTab === 'reviews') {
+    return (
+      <div className={styles.contentCard}>
+        <h2 className={styles.cardHeader}>
+          <FileText size={18} className={styles.headerIcon} />
+          <span>{t('tabs.reviews', 'Community Reviews')}</span>
+        </h2>
+        <ReviewsTab toolId={props.tool?.id} onReviewCountChange={props.onReviewCountChange} />
+      </div>
+    );
+  }
   return import.meta.env.VITE_USE_MOCK === 'true' ? <DemoDocContent {...props} /> : <BackendDocContent {...props} />;
 }
 

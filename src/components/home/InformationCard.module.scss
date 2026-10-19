@@ -38,12 +38,12 @@
   align-items: center;
   position: relative;
   z-index: 1;
-  padding: 24px 0 12px 0;
+  padding: 16px 0 8px 0;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
               padding 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 
   @media (max-width: 850px) {
-    padding: 12px 0 6px 0;
+    padding: 10px 0 4px 0;
   }
 }
 
@@ -51,11 +51,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  max-height: 220px;
+  gap: 8px;
+  max-height: 200px;
   opacity: 1;
   transform: translateY(0);
-  margin-bottom: 18px;
+  margin-bottom: 12px;
   transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
               opacity 0.3s ease,
               margin-bottom 0.35s ease,

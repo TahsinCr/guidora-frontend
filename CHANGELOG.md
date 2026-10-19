@@ -8,10 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- **Card Gradient & Interaction (`ProductCard.jsx`, `ProductCard.module.scss`)**:
-  - Implemented refined purple/violet linear-gradient transition, subtle hover elevation, and responsive active press state on tool cards.
-  - Added two-row secondary tag chips with overflow badge (`+N`) directly above the compacted card footer.
-  - Compacted card footer margins to maximize information density.
+- **Tool Card Category Accent & Persistent Gradient (`ProductCard.jsx`, `ProductCard.module.scss`, `categoryIcons.js`)**:
+  - Bound dynamic category accent colors directly to the card's category badge with tinted background, matching border, and indicator dot.
+  - Implemented persistent dark violet-indigo gradient at rest (`linear-gradient(160deg, rgba(27, 20, 48, 0.95), rgba(12, 16, 28, 0.98))`).
+  - Calmed hover effects to eliminate jumpy transform transitions.
+  - Streamlined card height with compact description, sleek single-row secondary tags, and integrated top border on footer.
+
+- **Compact Category Bar (`CategorySlider.module.scss`, `InformationCard.module.scss`)**:
+  - Tightened vertical margins and padding on category slider wrapper and pill controls to eliminate excessive height.
+
+- **Universal Reviews Tab Integration (`DocContent.jsx`, `BackendDocContent.jsx`, `ReviewsTab.module.scss`)**:
+  - Routed reviews tab in `DocContent.jsx` and `BackendDocContent.jsx` directly to `ReviewsTab`, eliminating unstyled raw fallback markup in live production mode.
+  - Refined review summary card grid, author avatar styling, and clean button controls.
 
 - **Hero Atmospheric Ambiance & Kicker Removal (`InformationCard.jsx`, `InformationCard.module.scss`)**:
   - Removed top kicker badge pill from the hero section.

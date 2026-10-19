@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Star, Eye, Bookmark, ArrowUpRight, ShieldCheck, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { safeOpenExternal } from '@/utils/security';
+import { getCategoryColor } from '@/constants/categoryIcons';
 import styles from './ProductCard.module.scss';
 
 function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
@@ -33,7 +34,7 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
   const pricingKey = tool.pricing ? tool.pricing.toLowerCase().replace(/[^a-z0-9]/g, '-') : '';
   const localizedPricing = tool.pricing ? t(`tag.${pricingKey}`, tool.pricing) : '';
 
-  // Extract secondary tags for display above the footer (max 2 rows with +N)
+  // Extract secondary tags for display above the footer (compact single row with +N)
   const rawTags = (Array.isArray(tool.tags) && tool.tags.length > 0)
     ? tool.tags
     : (Array.isArray(tool.capabilities) && tool.capabilities.length > 0)
@@ -43,9 +44,10 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
   const cleanTags = rawTags.filter(
     (tg) => tg && typeof tg === 'string' && tg.trim().length > 0 && tg.toLowerCase() !== (tool.category || '').toLowerCase()
   );
-  const maxVisibleTags = 3;
+  const maxVisibleTags = 2;
   const visibleTags = cleanTags.slice(0, maxVisibleTags);
   const remainingCount = cleanTags.length - maxVisibleTags;
+  const catColor = getCategoryColor(tool.categoryId || tool.category);
 
   return (
     <article
@@ -94,7 +96,15 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
             </div>
 
             <div className={styles.tagRow}>
-              <span className={styles.categoryTag}>
+              <span
+                className={styles.categoryTag}
+                style={{
+                  color: catColor,
+                  borderColor: `${catColor}38`,
+                  backgroundColor: `${catColor}14`,
+                }}
+              >
+                <span className={styles.categoryDot} style={{ backgroundColor: catColor }} />
                 {tool.category ? translateCategory(tool.category, tool.tag || tool.category) : tool.tag}
               </span>
               {tool.pricing && (
@@ -143,8 +153,6 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
           </div>
         </div>
       )}
-
-      <div className={styles.divider} />
 
       <div className={styles.bottomRow}>
         <div className={styles.metrics}>

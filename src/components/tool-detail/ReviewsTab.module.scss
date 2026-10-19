@@ -12,18 +12,18 @@
 .summaryCard {
   width: 100%;
   box-sizing: border-box;
-  padding: 24px;
+  padding: 18px 22px;
   border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--bg-card);
   display: grid;
-  grid-template-columns: 180px 1fr auto;
-  gap: 24px;
+  grid-template-columns: 150px 1fr auto;
+  gap: 20px;
   align-items: center;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 16px;
   }
 }
 
@@ -114,25 +114,23 @@
 }
 
 .writeReviewBtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 20px;
-  background: var(--accent-purple);
+  padding: 8px 18px;
+  background: #6366f1;
   color: #ffffff;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 13.5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition: all 0.15s ease;
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(129, 140, 248, 0.25);
 
   &:hover {
-    background: var(--accent-purple-hover);
-    transform: translateY(-1px);
+    background: #4f46e5;
   }
 }
 
@@ -461,17 +459,17 @@
 .reviewCard {
   width: 100%;
   box-sizing: border-box;
-  padding: 20px;
+  padding: 16px 18px;
   border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--bg-card);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   transition: border-color 0.15s ease;
 
   &:hover {
-    border-color: var(--border-hover);
+    border-color: var(--border-card-hover);
   }
 }
 
@@ -484,17 +482,19 @@
 }
 
 .authorAvatar {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #ffffff;
-  font-size: 13px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #818cf8;
+  font-size: 12.5px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .authorMeta {

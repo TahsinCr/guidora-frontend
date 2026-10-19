@@ -286,7 +286,11 @@ export default function ReviewsTab({ toolId, onReviewCountChange }) {
             <div key={rev.id} className={styles.reviewCard}>
               <div className={styles.revHeader}>
                 <div className={styles.authorAvatar}>
-                  {(rev.author || 'AI').split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+                  {rev.avatar ? (
+                    <img src={rev.avatar} alt={rev.author} />
+                  ) : (
+                    (rev.author || 'U').split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+                  )}
                 </div>
                 <div className={styles.authorMeta}>
                   <div className={styles.nameRow}>
