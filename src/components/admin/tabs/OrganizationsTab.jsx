@@ -79,7 +79,8 @@ export default function OrganizationsTab({
 
   const handleToggleVerify = (org) => {
     try {
-      const nextVer = !org.isVerified;
+      const currentVer = Boolean(org.verified ?? org.isVerified);
+      const nextVer = !currentVer;
       adminToggleOrgVerification(org.id);
       adminAddLog(
         nextVer ? 'ORGANIZATION_VERIFIED' : 'ORGANIZATION_UNVERIFIED',
@@ -145,60 +146,63 @@ export default function OrganizationsTab({
 
       {/* Organizations Grid */}
       <div className={styles.orgsGrid}>
-        {filteredOrgs.map((org) => (
-          <div key={org.id} className={styles.orgCard}>
-            <div className={styles.orgCardTop}>
-              <div className={styles.orgAvatar}>
-                <Building2 size={20} />
-              </div>
-              <div className={styles.orgInfo}>
-                <h4 className={styles.orgName}>
-                  {org.name}
-                  {org.isVerified && (
-                    <span className={styles.verifiedCheck} title="Doğrulanmış Üretici">
-                      <ShieldCheck size={14} color="#10b981" />
-                    </span>
+        {filteredOrgs.map((org) => {
+          const isOrgVerified = Boolean(org.verified ?? org.isVerified);
+          return (
+            <div key={org.id} className={styles.orgCard}>
+              <div className={styles.orgCardTop}>
+                <div className={styles.orgAvatar}>
+                  <Building2 size={20} />
+                </div>
+                <div className={styles.orgInfo}>
+                  <h4 className={styles.orgName}>
+                    {org.name}
+                    {isOrgVerified && (
+                      <span className={styles.verifiedCheck} title="Doğrulanmış Üretici">
+                        <ShieldCheck size={14} color="#10b981" />
+                      </span>
+                    )}
+                  </h4>
+                  {org.website && (
+                    <a
+                      href={org.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.orgLink}
+                    >
+                      <Globe size={12} />
+                      <span>{org.website.replace(/^https?:\/\//, '')}</span>
+                    </a>
                   )}
-                </h4>
-                {org.website && (
-                  <a
-                    href={org.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.orgLink}
-                  >
-                    <Globe size={12} />
-                    <span>{org.website.replace(/^https?:\/\//, '')}</span>
-                  </a>
-                )}
+                </div>
+              </div>
+
+              <p className={styles.orgDesc}>
+                {org.description || 'Kuruluş hakkında ayrıntılı açıklama bulunmuyor.'}
+              </p>
+
+              <div className={styles.orgCardActions}>
+                <button
+                  type="button"
+                  className={`${styles.orgVerifyBtn} ${isOrgVerified ? styles.verified : ''}`}
+                  onClick={() => handleToggleVerify(org)}
+                >
+                  <ShieldCheck size={14} />
+                  <span>{isOrgVerified ? 'Doğrulamayı Kaldır' : 'Doğrula'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.actionIconBtnDanger}
+                  onClick={() => handleDeleteOrg(org)}
+                  title="Kuruluşu Sil"
+                >
+                  <Trash2 size={14} />
+                </button>
               </div>
             </div>
-
-            <p className={styles.orgDesc}>
-              {org.description || 'Kuruluş hakkında ayrıntılı açıklama bulunmuyor.'}
-            </p>
-
-            <div className={styles.orgCardActions}>
-              <button
-                type="button"
-                className={`${styles.orgVerifyBtn} ${org.isVerified ? styles.verified : ''}`}
-                onClick={() => handleToggleVerify(org)}
-              >
-                <ShieldCheck size={14} />
-                <span>{org.isVerified ? 'Doğrulamayı Kaldır' : 'Doğrula'}</span>
-              </button>
-
-              <button
-                type="button"
-                className={styles.actionIconBtnDanger}
-                onClick={() => handleDeleteOrg(org)}
-                title="Kuruluşu Sil"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Add Org Modal */}
@@ -206,7 +210,7 @@ export default function OrganizationsTab({
         <div className={styles.modalOverlay} onClick={() => setAddModalOpen(false)} role="dialog" aria-modal="true">
           <div className={`${styles.modalContainer} ${styles.simpleModal}`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Yeni Yapay Zeka Kuruluşu Ekle</h2>
+              <h2 className={styles.modalTitle}>Yeni Yazılım / Teknoloji Kuruluşu Ekle</h2>
               <button
                 type="button"
                 className={styles.modalCloseBtn}
@@ -224,7 +228,7 @@ export default function OrganizationsTab({
                   <input
                     type="text"
                     className={styles.formInput}
-                    placeholder="örn. Anthropic, OpenAI, Mistral AI"
+                    placeholder="örn. Vercel, JetBrains, Supabase, Cloudflare"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required

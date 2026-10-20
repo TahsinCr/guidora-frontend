@@ -84,7 +84,7 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
     }
   }, [userId]);
 
-  // Load saved and submitted tools
+  // Load saved and submitted tools + user reviews once catalog is ready
   useEffect(() => {
     if (!user) return;
     setIsLoadingTools(true);
@@ -102,6 +102,12 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
         setSavedTools(saved);
         setSubmittedTools(submitted);
         setIsLoadingTools(false);
+        return getUserReviews(user.id || user.username || user.name);
+      })
+      .then((revs) => {
+        if (Array.isArray(revs)) {
+          setUserReviews(revs);
+        }
       })
       .catch((err) => {
         console.error('Error fetching user tools:', err);
@@ -374,16 +380,32 @@ export default function UserProfilePage({ userId, onBack, onOpenTool, onOpenAdmi
                     </div>
 
                     <div className={styles.reviewHeaderRight}>
-                      <div className={styles.reviewStars}>
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <Star
-                            key={s}
-                            size={14}
-                            fill={s <= rev.rating ? '#EAB308' : 'none'}
-                            color={s <= rev.rating ? '#EAB308' : 'var(--text-muted)'}
-                          />
-                        ))}
-                      </div>
+                      {rev.parentId ? (
+                        <span
+                          style={{
+                            padding: '3px 9px',
+                            borderRadius: '6px',
+                            background: 'rgba(139, 92, 246, 0.14)',
+                            border: '1px solid rgba(139, 92, 246, 0.3)',
+                            color: 'var(--accent-purple)',
+                            fontSize: '11.5px',
+                            fontWeight: 600,
+                          }}
+                        >
+                          Alt Yanıt {rev.replyTo ? `→ @${rev.replyTo}` : ''}
+                        </span>
+                      ) : (
+                        <div className={styles.reviewStars}>
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              size={14}
+                              fill={s <= (rev.rating || 5) ? '#EAB308' : 'none'}
+                              color={s <= (rev.rating || 5) ? '#EAB308' : 'var(--text-muted)'}
+                            />
+                          ))}
+                        </div>
+                      )}
 
                       {(isOwner || canDeleteAnyReview) && (
                         <button

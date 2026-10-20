@@ -78,7 +78,7 @@ export default function ProductSorterBar({
         <input
           type="text"
           className={styles.searchInput}
-          placeholder={t('sorter.searchPlaceholder', 'Search 12,000+ tools, prompts...')}
+          placeholder={t('sorter.searchPlaceholder', 'Araç, kategori veya #etiket ara...')}
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
         />
@@ -170,6 +170,9 @@ export default function ProductSorterBar({
                     className={`${styles.menuItem} ${timeFilter === opt.id ? styles.selected : ''}`}
                     onClick={() => {
                       setTimeFilter(opt.id);
+                      if (opt.id === 'week') onSortChange('newest');
+                      else if (opt.id === 'month') onSortChange('most-viewed');
+                      else onSortChange('highest-rated');
                       setIsTimeOpen(false);
                     }}
                   >

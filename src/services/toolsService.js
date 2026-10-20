@@ -8,7 +8,10 @@ let backendTools = [];
 
 export { loadBackendCatalog };
 
-async function loadBackendCatalog() {
+async function loadBackendCatalog(forceRefresh = false) {
+  if (!forceRefresh && backendTools.length > 0) {
+    return getAllTools();
+  }
   try {
     const categories = await taxonomiesApi.fetchCategories().catch(() => []);
     const categoryMap = {};
@@ -51,7 +54,7 @@ async function loadBackendCatalog() {
       page += 1;
     } while (items.length < (result?.totalCount ?? 0) && (result?.items?.length ?? 0) > 0);
     backendTools = items;
-    return items;
+    return getAllTools();
   } catch (err) {
     if (import.meta.env?.VITE_ALLOW_MOCK_FALLBACK !== 'false') {
       return getAllTools();
@@ -86,12 +89,21 @@ function getStoredCustomTools() {
 }
 
 export function getAllTools() {
-  if (!useMock()) return backendTools;
   const custom = getStoredCustomTools();
   const deletedIds = getDeletedToolIds();
   const overrides = getToolOverrides();
+  const baseList = useMock() ? TOOLS_DATA : backendTools;
 
-  const combined = [...custom, ...TOOLS_DATA].filter((t) => !deletedIds.includes(t.id));
+  const seen = new Set();
+  const combined = [...custom, ...baseList].filter((t) => {
+    if (!t) return false;
+    if (deletedIds.includes(t.id) || (t.numericId && deletedIds.includes(String(t.numericId)))) {
+      return false;
+    }
+    if (seen.has(t.id)) return false;
+    seen.add(t.id);
+    return true;
+  });
 
   return combined.map((t) => {
     if (overrides[t.id]) {
@@ -127,7 +139,10 @@ export async function getTools({
 } = {}) {
   await simulateDelay(60);
 
-  let filtered = useMock() ? getAllTools() : await loadBackendCatalog();
+  if (!useMock() && backendTools.length === 0) {
+    await loadBackendCatalog();
+  }
+  let filtered = getAllTools();
 
   // Primary Category filter (from top hero/slider)
   if (category && category !== 'all') {
@@ -242,110 +257,126 @@ export async function getTools({
  */
 export async function getToolById(id) {
   if (!useMock()) {
-    let cached = backendTools.find((t) => t.id === id || String(t.numericId) === String(id));
+    const allCurrent = getAllTools();
+    let cached = allCurrent.find((t) => t.id === id || String(t.numericId) === String(id));
     if (!cached && backendTools.length === 0) {
       await loadBackendCatalog();
-      cached = backendTools.find((t) => t.id === id || String(t.numericId) === String(id));
+      cached = getAllTools().find((t) => t.id === id || String(t.numericId) === String(id));
     }
+
     const numericId = cached?.numericId || (/^\d+$/.test(String(id)) ? Number(id) : null);
-    if (!numericId) throw new Error(`Tool not found: ${id}`);
-    const [dto, verification] = await Promise.all([
-      productsApi.fetchProductById(numericId),
-      productsApi.fetchProductVerificationSummary(numericId).catch(() => null),
-    ]);
-    const categoryMap = cached ? {
-      [numericId]: {
-        categorySlug: cached.categoryId || cached.category,
-        categoryName: cached.categoryName,
-        categorySlugs: cached.categories || [cached.categoryId || cached.category],
-        tags: cached.tags,
-        pricing: cached.pricing,
+    if (!numericId) {
+      if (cached) {
+        return enrichToolDetail(cached, getAllTools());
       }
-    } : {};
-    const tool = adaptProductDtoToTool(dto, categoryMap);
-    if (tool) {
-      tool.verified = {
-        admin: Boolean(verification?.adminVerified),
-        community: Boolean(verification?.communityVerified),
-        bot: false,
-      };
-      tool.overviewText = {
-        lead: `${tool.name} is a high-performance platform designed for modern workflows.`,
-        detail: tool.description || `Integrates seamlessly with existing toolchains and pipelines.`,
-      };
-      tool.keyFeatures = [
-        'High-throughput real-time processing',
-        'Context-aware workspace',
-        'Open API and webhook integrations',
-      ];
-      tool.capabilities = ['Automation', 'API Integration', 'Developer Tool'];
-      tool.creator = {
-        name: `${tool.name.split(' ')[0]} Labs`,
-        initials: tool.name.slice(0, 2).toUpperCase(),
-        verified: true,
-      };
-      tool.similarTools = backendTools
-        .filter((t) => t.id !== id && String(t.numericId) !== String(id))
-        .slice(0, 2)
-        .map((t) => ({
-          id: t.id,
-          name: t.name,
-          category: t.categoryName || 'AI',
-          pricing: t.pricing || 'Free',
-        }));
+      throw new Error(`Tool not found: ${id}`);
     }
-    return tool;
+
+    try {
+      const [dto, verification] = await Promise.all([
+        productsApi.fetchProductById(numericId),
+        productsApi.fetchProductVerificationSummary(numericId).catch(() => null),
+      ]);
+      const categoryMap = cached
+        ? {
+            [numericId]: {
+              categorySlug: cached.categoryId || cached.category,
+              categoryName: cached.categoryName,
+              categorySlugs: cached.categories || [cached.categoryId || cached.category],
+              tags: cached.tags,
+              pricing: cached.pricing,
+            },
+          }
+        : {};
+      const adapted = adaptProductDtoToTool(dto, categoryMap);
+      if (adapted) {
+        const overrides = getToolOverrides()[adapted.id] || {};
+        const merged = {
+          ...adapted,
+          ...overrides,
+          verified: {
+            admin: Boolean(verification?.adminVerified ?? adapted.verified?.admin),
+            community: Boolean(verification?.communityVerified ?? adapted.verified?.community),
+            bot: Boolean(overrides.verified?.bot ?? adapted.verified?.bot),
+            ...(overrides.verified || {}),
+          },
+        };
+        return enrichToolDetail(merged, getAllTools());
+      }
+    } catch (e) {
+      if (cached) {
+        return enrichToolDetail(cached, getAllTools());
+      }
+      throw e;
+    }
   }
+
   await simulateDelay(80);
   const all = getAllTools();
-  const tool = all.find((t) => t.id === id);
+  const tool = all.find((t) => t.id === id || String(t.numericId) === String(id));
   if (!tool) {
     throw new Error(`Tool not found: ${id}`);
   }
 
-  // Find 2 similar tools
-  const similar = all
-    .filter((t) => t.id !== id)
-    .slice(0, 2)
-    .map((t) => ({
-      id: t.id,
-      name: t.name.replace(/ (AI|Studio|Labs)$/i, ''),
-      category: (t.category || 'AI').split(' ')[0],
-      pricing: (t.pricing || 'Free').split(' ')[0],
-    }));
+  return enrichToolDetail(tool, all);
+}
+
+function enrichToolDetail(tool, allTools = []) {
+  const sameCategory = allTools.filter(
+    (t) =>
+      t.id !== tool.id &&
+      String(t.numericId) !== String(tool.numericId) &&
+      (t.categoryId === tool.categoryId || t.category === tool.category)
+  );
+  const otherTools = allTools.filter(
+    (t) => t.id !== tool.id && String(t.numericId) !== String(tool.numericId)
+  );
+  const candidates = sameCategory.length >= 2 ? sameCategory : [...sameCategory, ...otherTools];
+  const similar = candidates.slice(0, 3).map((t) => ({
+    id: t.id,
+    name: t.name,
+    category: t.categoryName || t.category || 'Software',
+    pricing: t.pricing || 'Freemium',
+  }));
+
+  const rawTags = (tool.tags || [])
+    .map((x) => (typeof x === 'string' ? x : x?.name || x?.id))
+    .filter(Boolean);
 
   return {
     ...tool,
     rank: tool.rank || '#4',
     rating: tool.rating || 4.8,
     monthlyVisits: tool.monthlyVisits || '1.2M',
-    license: tool.license || 'Proprietary',
+    license: tool.license || 'MIT / Commercial',
     platformDisplay: tool.platforms ? tool.platforms.slice(0, 2).join(', ') : 'Web, API',
     access: tool.access || 'Public',
     updated: tool.updated || 'Recently',
     creator: tool.creator || {
-      name: `${tool.name.split(' ')[0]} Labs`,
+      name: `${tool.name.split(' ')[0]} Team`,
       initials: tool.name.slice(0, 2).toUpperCase(),
       verified: true,
     },
-    similarTools: similar.length >= 2 ? similar : [
-      { id: 'codewizard-ai', name: 'CodeWizard', category: 'Coding', pricing: 'Free' },
-      { id: 'datamind-analytics', name: 'DataMind', category: 'Analytics', pricing: 'Paid' },
-    ],
+    similarTools:
+      Array.isArray(tool.similarTools) && tool.similarTools.length > 0
+        ? tool.similarTools
+        : similar,
     overviewText: tool.overviewText || {
-      lead: `${tool.name} is a high-performance platform designed for modern AI and developer workflows.`,
-      detail: tool.description || `Integrates seamlessly with existing toolchains and pipelines.`,
+      lead: `${tool.name} is a high-performance software platform engineered for modern development and operational workflows.`,
+      detail:
+        tool.description ||
+        `Integrates cleanly with existing engineering toolchains, CI/CD pipelines, and team workspaces.`,
     },
     keyFeatures: tool.keyFeatures || [
-      'High-throughput real-time processing',
-      'Context-aware developer workspace',
-      'Open API and webhook integrations',
+      'Low-latency execution & real-time workspace synchronization',
+      'Extensible CLI, REST API, and webhook automation hooks',
+      'Enterprise-grade access control & modular configuration',
     ],
-    capabilities: tool.capabilities || tool.topics || [
-      'Automation',
-      'API Integration',
-      'Developer Tool',
-    ],
+    capabilities:
+      tool.capabilities ||
+      (rawTags.length > 0
+        ? rawTags
+        : ['Developer Tool', 'API Integration', 'Workflow Automation']),
   };
 }
 
@@ -354,74 +385,42 @@ export async function getToolById(id) {
  * Eliminates skeleton flashes and layout shift on instant card clicks.
  */
 export function getToolByIdSync(id) {
-  if (!useMock()) return backendTools.find((t) => t.id === id || String(t.numericId) === String(id)) || null;
   if (!id) return null;
   const all = getAllTools();
-  const tool = all.find((t) => t.id === id);
+  const tool = all.find((t) => t.id === id || String(t.numericId) === String(id));
   if (!tool) return null;
-
-  const similar = all
-    .filter((t) => t.id !== id)
-    .slice(0, 2)
-    .map((t) => ({
-      id: t.id,
-      name: t.name.replace(/ (AI|Studio|Labs)$/i, ''),
-      category: (t.category || 'AI').split(' ')[0],
-      pricing: (t.pricing || 'Free').split(' ')[0],
-    }));
-
-  return {
-    ...tool,
-    rank: tool.rank || '#4',
-    rating: tool.rating || 4.8,
-    monthlyVisits: tool.monthlyVisits || '1.2M',
-    license: tool.license || 'Proprietary',
-    platformDisplay: tool.platforms ? tool.platforms.slice(0, 2).join(', ') : 'Web, API',
-    access: tool.access || 'Public',
-    updated: tool.updated || 'Recently',
-    creator: tool.creator || {
-      name: `${tool.name.split(' ')[0]} Labs`,
-      initials: tool.name.slice(0, 2).toUpperCase(),
-      verified: true,
-    },
-    similarTools: similar.length >= 2 ? similar : [
-      { id: 'codewizard-ai', name: 'CodeWizard', category: 'Coding', pricing: 'Free' },
-      { id: 'datamind-analytics', name: 'DataMind', category: 'Analytics', pricing: 'Paid' },
-    ],
-    overviewText: tool.overviewText || {
-      lead: `${tool.name} is a high-performance platform designed for modern AI and developer workflows.`,
-      detail: tool.description || `Integrates seamlessly with existing toolchains and pipelines.`,
-    },
-    keyFeatures: tool.keyFeatures || [
-      'High-throughput real-time processing',
-      'Context-aware developer workspace',
-      'Open API and webhook integrations',
-    ],
-    capabilities: tool.capabilities || tool.topics || [
-      'Automation',
-      'API Integration',
-      'Developer Tool',
-    ],
-  };
+  return enrichToolDetail(tool, all);
 }
 
 /**
- * Add a new tool to the catalog and persist it in localStorage.
+ * Add a new tool to the catalog and persist it in localStorage (with optional backend sync).
  */
 export async function addTool(toolData) {
-  if (!useMock()) return adaptProductDtoToTool(await productsApi.createProduct(adaptToolToCreateProductRequest(toolData)));
-  await simulateDelay(100);
+  if (useMock()) {
+    await simulateDelay(100);
+  }
 
   const cleanName = sanitizePlainText(toolData.name || '');
-  const id = toolData.id || cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  const categoryObj = CATEGORIES.find((c) => c.id === toolData.categoryId) || CATEGORIES[1];
+  const id =
+    toolData.id ||
+    cleanName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  const allCats = adminGetCategories();
+  const categoryObj =
+    allCats.find((c) => c.id === toolData.categoryId) ||
+    CATEGORIES.find((c) => c.id === toolData.categoryId) ||
+    CATEGORIES[1];
 
   const newTool = {
     id,
     name: cleanName,
-    category: categoryObj.name || categoryObj.label || 'Generative Art',
+    category: categoryObj.name || categoryObj.label || 'Developer Tools',
+    categoryName: categoryObj.name || categoryObj.label || 'Developer Tools',
     categoryId: categoryObj.id,
-    tag: sanitizePlainText(toolData.tag || (toolData.tags?.[0]?.name || 'Developer Tool')),
+    categories: [categoryObj.id],
+    tag: sanitizePlainText(toolData.tag || toolData.tags?.[0]?.name || 'Developer Tool'),
     tags: toolData.tags || [],
     pricing: toolData.pricing || 'Freemium',
     description: sanitizePlainText(toolData.description || ''),
@@ -445,11 +444,13 @@ export async function addTool(toolData) {
     rank: '#NEW',
     organizationId: toolData.organizationId || null,
     creator: {
-      name: toolData.creatorName || `${toolData.name} Team`,
-      initials: toolData.creatorInitials || (toolData.creatorName || toolData.name).slice(0, 2).toUpperCase(),
+      name: toolData.creatorName || `${cleanName} Team`,
+      initials:
+        toolData.creatorInitials ||
+        (toolData.creatorName || cleanName || 'GT').slice(0, 2).toUpperCase(),
       verified: toolData.creatorVerified !== undefined ? toolData.creatorVerified : true,
     },
-    capabilities: toolData.capabilities || ['AI Automation', 'Developer Tool'],
+    capabilities: toolData.capabilities || ['Workflow Automation', 'Developer Tool'],
     keyFeatures: toolData.keyFeatures || [
       'Automated repository integration',
       'Markdown documentation support',
@@ -553,10 +554,136 @@ export async function fetchGithubRepoData(repoUrl) {
   }
 }
 
+function extractMentions(text) {
+  if (!text || typeof text !== 'string') return [];
+  const matches = text.match(/@([a-zA-Z0-9_.-]+)/g) || [];
+  return Array.from(new Set(matches.map((m) => m.slice(1).toLowerCase())));
+}
+
+function getDefaultSeededReviews(toolId) {
+  return [
+    {
+      id: 'rev-1',
+      toolId,
+      userId: 'usr_alex_01',
+      author: 'Alex Mercer',
+      username: 'alexmercer',
+      role: 'Senior Systems Engineer',
+      avatar: 'AM',
+      rating: 5,
+      parentId: null,
+      replyTo: null,
+      mentions: [],
+      date: '3 days ago',
+      content: 'Incredible integration into our daily pipeline. The latency is practically non-existent and the API documentation is top-notch.',
+      helpful: 24,
+      verified: true,
+    },
+    {
+      id: 'rev-1-sub-1',
+      toolId,
+      userId: 'usr_admin_01',
+      author: 'Tahsin Cr',
+      username: 'tahsincr',
+      role: 'Lead Software & Platform Architect',
+      avatar: 'TC',
+      rating: null,
+      parentId: 'rev-1',
+      replyTo: 'alexmercer',
+      mentions: ['alexmercer'],
+      date: '2 days ago',
+      content: '@alexmercer Kesinlikle katılıyorum, özellikle CI/CD katmanındaki webhook gecikmeleri ve SDK entegrasyonu önceki çözümlere kıyasla çok daha kararlı çalışıyor.',
+      helpful: 7,
+      verified: true,
+    },
+    {
+      id: 'rev-2',
+      toolId,
+      userId: 'usr_sarah_02',
+      author: 'Sarah Chen',
+      username: 'sarahchen',
+      role: 'Fullstack Architect',
+      avatar: 'SC',
+      rating: 4,
+      parentId: null,
+      replyTo: null,
+      mentions: [],
+      date: '1 week ago',
+      content: 'Solid feature set and very clean UI. Would love to see more CLI automation options in future updates, but overall highly recommended.',
+      helpful: 12,
+      verified: true,
+    },
+    {
+      id: 'rev-2-sub-1',
+      toolId,
+      userId: 'usr_elena_02',
+      author: 'Elena Rostova',
+      username: 'elena',
+      role: 'Principal Systems & Interface Designer',
+      avatar: 'ER',
+      rating: null,
+      parentId: 'rev-2',
+      replyTo: 'sarahchen',
+      mentions: ['sarahchen'],
+      date: '5 days ago',
+      content: '@sarahchen Son sürüm notlarında CLI üzerinden toplu yapılandırma (batch config) desteğinin eklendiğini belirtmişler, iş akışlarında oldukça pratik.',
+      helpful: 5,
+      verified: true,
+    },
+    {
+      id: 'rev-3',
+      toolId,
+      userId: 'usr_marcus_03',
+      author: 'Marcus Vance',
+      username: 'marcusvance',
+      role: 'Product Lead',
+      avatar: 'MV',
+      rating: 5,
+      parentId: null,
+      replyTo: null,
+      mentions: [],
+      date: '2 weeks ago',
+      content: 'Compared to alternatives in this space, the auto-layout and context window handling is substantially more reliable.',
+      helpful: 8,
+      verified: false,
+    },
+  ];
+}
+
+function getStoredReviewsForTool(toolId) {
+  const key = `${REVIEWS_KEY_PREFIX}${toolId}`;
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((r) => ({
+          ...r,
+          toolId: r.toolId || toolId,
+          username: r.username || (r.author || 'user').toLowerCase().replace(/[^a-z0-9_]/g, ''),
+          parentId: r.parentId || null,
+          replyTo: r.replyTo || null,
+          mentions: Array.isArray(r.mentions) ? r.mentions : extractMentions(r.content),
+        }));
+      }
+    }
+  } catch (e) {
+    // fallback
+  }
+  const seeds = getDefaultSeededReviews(toolId);
+  try {
+    localStorage.setItem(key, JSON.stringify(seeds));
+  } catch (e) {}
+  return seeds;
+}
+
 /**
- * Fetch reviews for a tool with localStorage persistence.
+ * Fetch reviews and sub-message replies for a tool with localStorage + backend sync.
  */
 export async function getReviews(toolId) {
+  const key = `${REVIEWS_KEY_PREFIX}${toolId}`;
+  const localList = getStoredReviewsForTool(toolId);
+
   if (!useMock()) {
     let tool = backendTools.find((t) => t.id === toolId || String(t.numericId) === String(toolId));
     if (!tool && backendTools.length === 0) {
@@ -564,131 +691,132 @@ export async function getReviews(toolId) {
       tool = backendTools.find((t) => t.id === toolId || String(t.numericId) === String(toolId));
     }
     const numericId = tool?.numericId || (/^\d+$/.test(String(toolId)) ? Number(toolId) : null);
-    if (!numericId) return [];
+    if (!numericId) return localList;
     try {
       const result = await productsApi.fetchProductComments(numericId);
       const rawList = Array.isArray(result) ? result : (result?.items || []);
-      return rawList.map((c, idx) => ({
-        id: c.commentId || c.id || `comment-${idx}`,
-        userId: c.userId || null,
-        author: c.author || c.userName || (c.userId ? `Üye #${c.userId}` : 'Doğrulanmış Üye'),
-        role: c.role || 'Topluluk Üyesi',
-        rating: typeof c.rating === 'number' && !isNaN(c.rating) ? c.rating : 5,
-        date: c.createdAt ? new Date(c.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Son zamanlarda',
-        content: c.content || c.text || '',
-        title: c.title || '',
-        helpful: c.helpful || 0,
-        verified: true,
-      }));
+      const deletedKey = `guidora_deleted_reviews_${toolId}`;
+      const deletedIds = JSON.parse(localStorage.getItem(deletedKey) || '[]').map(String);
+
+      const backendMapped = rawList
+        .filter((c) => !deletedIds.includes(String(c.commentId || c.id)))
+        .map((c, idx) => {
+          const rawText = c.content || c.text || '';
+          const authorName = c.author || c.userName || (c.userId ? `Üye #${c.userId}` : 'Doğrulanmış Üye');
+          const username = (c.userName || authorName).toLowerCase().replace(/[^a-z0-9_]/g, '') || `uye${c.userId || idx}`;
+          return {
+            id: String(c.commentId || c.id || `comment-${idx}`),
+            toolId,
+            userId: c.userId || null,
+            author: authorName,
+            username,
+            role: c.role || 'Topluluk Üyesi',
+            rating: typeof c.rating === 'number' && !isNaN(c.rating) ? c.rating : 5,
+            parentId: c.parentId ? String(c.parentId) : null,
+            replyTo: c.replyTo || null,
+            mentions: extractMentions(rawText),
+            date: c.createdAt ? new Date(c.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Son zamanlarda',
+            content: rawText,
+            title: c.title || '',
+            helpful: c.helpful || 0,
+            verified: true,
+          };
+        });
+
+      // Merge backend comments that are not already tracked in localList (matching by id or content)
+      const merged = [...localList];
+      for (const bComment of backendMapped) {
+        const exists = merged.some(
+          (m) => String(m.id) === String(bComment.id) || (m.content && bComment.content && m.content.trim() === bComment.content.trim())
+        );
+        if (!exists) {
+          merged.push(bComment);
+        }
+      }
+      try {
+        localStorage.setItem(key, JSON.stringify(merged));
+      } catch (e) {}
+      return merged;
     } catch (e) {
-      console.warn('Failed to fetch backend comments:', e);
-      return [];
+      return localList;
     }
   }
+
   await simulateDelay(40);
-  const key = `${REVIEWS_KEY_PREFIX}${toolId}`;
-  try {
-    const stored = localStorage.getItem(key);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (e) {
-    // fallback
-  }
-
-  // Default seed reviews
-  const seeds = [
-    {
-      id: 'rev-1',
-      author: 'Alex Mercer',
-      role: 'Senior ML Engineer',
-      rating: 5,
-      date: '3 days ago',
-      content: 'Incredible integration into our daily pipeline. The latency is practically non-existent and the API documentation is top-notch.',
-      helpful: 24,
-      verified: true,
-    },
-    {
-      id: 'rev-2',
-      author: 'Sarah Chen',
-      role: 'Fullstack Architect',
-      rating: 4,
-      date: '1 week ago',
-      content: 'Solid feature set and very clean UI. Would love to see more CLI automation options in future updates, but overall highly recommended.',
-      helpful: 12,
-      verified: true,
-    },
-    {
-      id: 'rev-3',
-      author: 'Marcus Vance',
-      role: 'Product Lead',
-      rating: 5,
-      date: '2 weeks ago',
-      content: 'Compared to alternatives in this space, the auto-layout and context window handling is substantially more reliable.',
-      helpful: 8,
-      verified: false,
-    },
-  ];
-
-  try {
-    localStorage.setItem(key, JSON.stringify(seeds));
-  } catch (e) {}
-
-  return seeds;
+  return localList;
 }
 
 /**
- * Add a review to a tool.
+ * Add a top-level review or nested sub-message reply to a tool.
  */
 export async function addReview(toolId, reviewData) {
-  if (!useMock()) {
-    let tool = backendTools.find((t) => t.id === toolId || String(t.numericId) === String(toolId));
-    if (!tool) {
-      tool = await getToolById(toolId);
-    }
-    await productsApi.addProductComment(tool.numericId, reviewData.content);
-    return await getReviews(toolId);
-  }
-  await simulateDelay(60);
   const key = `${REVIEWS_KEY_PREFIX}${toolId}`;
   const existing = await getReviews(toolId);
 
+  const authorName = reviewData.author || 'Anonymous Practitioner';
+  const username =
+    reviewData.username ||
+    authorName.toLowerCase().replace(/[^a-z0-9_]/g, '') ||
+    'member';
+  const isReply = Boolean(reviewData.parentId);
+
   const newReview = {
-    id: `rev-${Date.now()}`,
+    id: isReply ? `sub-${Date.now()}` : `rev-${Date.now()}`,
     toolId,
     toolName: reviewData.toolName || toolId,
     userId: reviewData.userId || null,
-    author: reviewData.author || 'Anonymous Practitioner',
+    author: authorName,
+    username,
     role: reviewData.role || 'Verified User',
     title: reviewData.title || '',
-    avatar: reviewData.avatar || null,
-    rating: reviewData.rating || 5,
+    avatar: reviewData.avatar || authorName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase(),
+    rating: isReply ? null : (reviewData.rating || 5),
+    parentId: reviewData.parentId || null,
+    replyTo: reviewData.replyTo || null,
+    mentions: extractMentions(reviewData.content),
     date: 'Just now',
     content: reviewData.content,
     helpful: 0,
     verified: true,
   };
 
-  const updated = [newReview, ...existing];
+  // Place top-level reviews at the top, and sub-message replies in chronological order
+  const updated = isReply ? [...existing, newReview] : [newReview, ...existing];
   try {
     localStorage.setItem(key, JSON.stringify(updated));
   } catch (e) {}
+
+  if (!useMock()) {
+    try {
+      let tool = backendTools.find((t) => t.id === toolId || String(t.numericId) === String(toolId));
+      if (!tool) {
+        tool = await getToolById(toolId);
+      }
+      if (tool?.numericId) {
+        await productsApi.addProductComment(tool.numericId, reviewData.content);
+      }
+    } catch (e) {
+      // Backend comment endpoint requires backend JWT or may be unreachable; local thread store already persisted
+    }
+  } else {
+    await simulateDelay(60);
+  }
 
   return updated;
 }
 
 /**
- * Delete a review from a tool.
+ * Toggle helpful count on a review or sub-message and persist.
  */
-export async function deleteReview(toolId, reviewId) {
-  if (!useMock()) {
-    await productsApi.deleteProductComment(reviewId);
-    return await getReviews(toolId);
-  }
-  await simulateDelay(40);
+export async function toggleReviewHelpful(toolId, reviewId, delta = 1) {
   const key = `${REVIEWS_KEY_PREFIX}${toolId}`;
   const existing = await getReviews(toolId);
-  const updated = existing.filter((r) => r.id !== reviewId);
+  const updated = existing.map((r) => {
+    if (String(r.id) === String(reviewId)) {
+      return { ...r, helpful: Math.max(0, (r.helpful || 0) + delta) };
+    }
+    return r;
+  });
   try {
     localStorage.setItem(key, JSON.stringify(updated));
   } catch (e) {}
@@ -696,11 +824,46 @@ export async function deleteReview(toolId, reviewId) {
 }
 
 /**
- * Get all reviews across all tools (for Admin Moderation Panel)
+ * Delete a review (and its nested sub-messages) from a tool.
+ */
+export async function deleteReview(toolId, reviewId) {
+  const key = `${REVIEWS_KEY_PREFIX}${toolId}`;
+  const existing = await getReviews(toolId);
+  const targetId = String(reviewId);
+  const updated = existing.filter(
+    (r) => String(r.id) !== targetId && String(r.parentId) !== targetId
+  );
+  try {
+    localStorage.setItem(key, JSON.stringify(updated));
+    const deletedKey = `guidora_deleted_reviews_${toolId}`;
+    const deletedIds = JSON.parse(localStorage.getItem(deletedKey) || '[]');
+    if (!deletedIds.includes(targetId)) {
+      deletedIds.push(targetId);
+      localStorage.setItem(deletedKey, JSON.stringify(deletedIds));
+    }
+  } catch (e) {}
+
+  if (!useMock()) {
+    try {
+      if (/^\d+$/.test(targetId)) {
+        await productsApi.deleteProductComment(targetId);
+      }
+    } catch (e) {
+      // Local store already updated
+    }
+  } else {
+    await simulateDelay(40);
+  }
+  return updated;
+}
+
+/**
+ * Get all reviews across all tools (for Admin Moderation Panel & User Profile)
  */
 export async function getAllReviews() {
-  if (!useMock()) return [];
-  await simulateDelay(50);
+  if (useMock()) {
+    await simulateDelay(50);
+  }
   const allTools = await getAllTools();
   let aggregated = [];
 
@@ -715,27 +878,30 @@ export async function getAllReviews() {
             ...rev,
             toolId: tool.id,
             toolName: tool.name,
-            toolCategory: tool.category,
+            toolCategory: tool.categoryName || tool.category,
           });
         });
       }
     } catch (e) {}
   }
 
-  // Also include seeds for default demo tools if not yet visited
-  if (aggregated.length === 0) {
-    const neuroReviews = await getReviews('neurogen-studio');
-    neuroReviews.forEach((rev) => {
-      aggregated.push({
-        ...rev,
-        toolId: 'neurogen-studio',
-        toolName: 'NeuroGen Studio',
-        toolCategory: 'Generative AI',
+  // Seed initial reviews for top catalog tools if none have been visited yet
+  if (aggregated.length === 0 && allTools.length > 0) {
+    const seedTargets = allTools.slice(0, Math.min(2, allTools.length));
+    for (const targetTool of seedTargets) {
+      const seeded = await getReviews(targetTool.id);
+      seeded.forEach((rev) => {
+        aggregated.push({
+          ...rev,
+          toolId: targetTool.id,
+          toolName: targetTool.name,
+          toolCategory: targetTool.categoryName || targetTool.category,
+        });
       });
-    });
+    }
   }
 
-  return aggregated.sort((a, b) => (b.id > a.id ? 1 : -1));
+  return aggregated.sort((a, b) => (String(b.id) > String(a.id) ? 1 : -1));
 }
 
 /**
@@ -744,70 +910,76 @@ export async function getAllReviews() {
 export async function getUserReviews(userId) {
   const all = await getAllReviews();
   if (!userId) return [];
-  return all.filter((r) => r.userId === userId || r.author === userId);
+  return all.filter(
+    (r) =>
+      r.userId === userId ||
+      r.author === userId ||
+      (r.username && String(r.username).toLowerCase() === String(userId).toLowerCase())
+  );
 }
 
 /**
  * Submit a report for a tool.
  */
 export async function submitReport(toolId, reportData) {
-  if (!useMock()) {
-    const tool = await getToolById(toolId);
-    return await productsApi.reportProduct(tool.numericId, reportData);
+  if (useMock()) {
+    await simulateDelay(80);
   }
-  await simulateDelay(80);
-  
-  // Try sending to .NET 10 API if numeric ID is available
+
+  let targetTool = null;
   try {
-    const all = getAllTools();
-    const targetTool = all.find((t) => t.id === toolId);
+    targetTool = await getToolById(toolId);
     if (targetTool?.numericId) {
       await productsApi.reportProduct(targetTool.numericId, {
         reason: reportData.reason,
         details: reportData.details,
         contactEmail: reportData.email || '',
       });
-      return { success: true, message: 'Report submitted successfully' };
     }
   } catch (e) {
-    // Fallback to local storage
+    // Fallback to local storage when unauthenticated or offline
   }
 
   const report = {
     id: `rep-${Date.now()}`,
     toolId,
+    toolName: targetTool?.name || reportData.toolName || toolId,
     reason: reportData.reason,
     details: reportData.details,
     email: reportData.email || '',
+    status: 'pending',
     submittedAt: new Date().toISOString(),
   };
 
   try {
     const raw = localStorage.getItem(REPORTS_KEY);
     const list = raw ? JSON.parse(raw) : [];
-    list.push(report);
+    list.unshift(report);
     localStorage.setItem(REPORTS_KEY, JSON.stringify(list));
   } catch (e) {}
 
-  return { success: true, message: 'Report submitted successfully' };
+  return { success: true, message: 'Report submitted successfully', report };
 }
 
 /**
- * Fetch list of categories (queries .NET 10 API first, falls back to local data)
+ * Fetch list of categories (queries .NET 10 API first, merges local admin overrides/colors)
  */
 export async function getCategories() {
   if (!useMock()) {
     const apiCats = await taxonomiesApi.fetchCategories();
-    return apiCats.map((c) => {
-      const slug = c.slug || String(c.categoryId);
-      return {
-        id: slug,
-        numericId: c.categoryId,
-        name: c.categoryName,
-        count: 0,
-        color: c.color || getCategoryColor(slug),
-      };
-    });
+    const deletedCats = JSON.parse(localStorage.getItem('guidora_deleted_categories') || '[]');
+    return (Array.isArray(apiCats) ? apiCats : [])
+      .map((c) => {
+        const slug = c.slug || String(c.categoryId);
+        return {
+          id: slug,
+          numericId: c.categoryId,
+          name: c.categoryName,
+          count: 0,
+          color: c.color || getCategoryColor(slug),
+        };
+      })
+      .filter((c) => !deletedCats.includes(c.id));
   }
   await simulateDelay(40);
   try {
@@ -843,11 +1015,72 @@ export async function getPopularCategories() {
 }
 
 /**
- * Fetch hierarchical tag categories
+ * Fetch hierarchical tag categories (normalized across live backend and local admin store)
  */
 export async function getTagCategories() {
-  if (!useMock()) return await taxonomiesApi.fetchTagCategories();
-  await simulateDelay(40);
+  if (useMock()) {
+    await simulateDelay(40);
+    return adminGetTagCategories();
+  }
+  try {
+    const [rawCats, rawTags] = await Promise.all([
+      taxonomiesApi.fetchTagCategories(),
+      taxonomiesApi.fetchTags(),
+    ]);
+    if (Array.isArray(rawCats) && rawCats.length > 0) {
+      const localGroups = adminGetTagCategories();
+      const apiMapped = rawCats.map((cat) => {
+        const slugId =
+          cat.slug ||
+          (cat.tagCategoryName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-') ||
+          String(cat.tagCategoryId);
+        const matchingLocal = localGroups.find(
+          (lg) =>
+            lg.id === slugId ||
+            lg.name?.toLowerCase() === (cat.tagCategoryName || '').toLowerCase()
+        );
+        const catTags = (Array.isArray(rawTags) ? rawTags : [])
+          .filter((t) => t.tagCategoryId === cat.tagCategoryId)
+          .map((t) => ({
+            id: t.slug || (t.tagName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            numericId: t.tagId,
+            name: t.tagName,
+            only: Boolean(matchingLocal?.isSingleSelect),
+          }));
+
+        // Merge any custom local tags added in Admin Panel under this group
+        if (matchingLocal && Array.isArray(matchingLocal.tags)) {
+          for (const lt of matchingLocal.tags) {
+            if (!catTags.some((ct) => ct.id === lt.id || ct.name.toLowerCase() === lt.name.toLowerCase())) {
+              catTags.push(lt);
+            }
+          }
+        }
+
+        return {
+          id: matchingLocal?.id || slugId,
+          numericId: cat.tagCategoryId,
+          name: matchingLocal?.name || cat.tagCategoryName,
+          isSingleSelect: Boolean(matchingLocal?.isSingleSelect),
+          tags: catTags,
+        };
+      });
+
+      // Append any custom local tag categories created in Admin Panel
+      for (const lg of localGroups) {
+        if (
+          !apiMapped.some(
+            (am) => am.id === lg.id || am.name?.toLowerCase() === lg.name?.toLowerCase()
+          )
+        ) {
+          apiMapped.push(lg);
+        }
+      }
+      return apiMapped;
+    }
+  } catch (e) {
+    // Fallback to local tag categories
+  }
   return adminGetTagCategories();
 }
 
@@ -855,9 +1088,7 @@ export async function getTagCategories() {
  * Fetch all available tags alphabetically
  */
 export async function getAllTags() {
-  if (!useMock()) return await taxonomiesApi.fetchTags();
-  await simulateDelay(30);
-  const tagCats = adminGetTagCategories();
+  const tagCats = await getTagCategories();
   const allFlattened = [];
   tagCats.forEach((group) => {
     (group.tags || []).forEach((t) => {

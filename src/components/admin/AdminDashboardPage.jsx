@@ -153,6 +153,10 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
         }
         if (catalogItems.status === 'fulfilled' && Array.isArray(catalogItems.value)) {
           setTools(catalogItems.value);
+          const refreshedRevs = await getAllReviews();
+          if (Array.isArray(refreshedRevs)) {
+            setAllReviews(refreshedRevs);
+          }
         }
       }
     } catch (err) {
@@ -213,7 +217,7 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
       schema: 8,
       tables: 8,
       toolsCount: tools.length,
-      categoriesCount: categories.length - 1,
+      categoriesCount: Math.max(0, categories.filter((c) => c.id !== 'all').length),
       usersCount: users.length,
       pendingReports: pendingR,
       pendingProposals: pendingP,
@@ -223,8 +227,13 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
 
   // Computed platform statistics
   const stats = useMemo(() => {
-    return adminGetStats(tools, users);
-  }, [tools, users, categories, reports, proposals]);
+    return adminGetStats(tools, users, {
+      categories,
+      organizations,
+      reports,
+      proposals,
+    });
+  }, [tools, users, categories, organizations, reports, proposals]);
 
   return (
     <div className={styles.adminWorkspace}>
@@ -368,6 +377,7 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
           {activeTab === 'reports' && (
             <ReportsTab
               reports={reports}
+              tools={tools}
               globalSearch={globalSearch}
               onRefreshReports={async () => {
                 if (!isMockMode()) {

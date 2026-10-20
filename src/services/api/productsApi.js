@@ -58,6 +58,10 @@ export async function fetchProductChangelogs(productId) {
   return await apiRequest(`products/${productId}/changelogs`, { method: 'GET' });
 }
 
+export async function fetchProductMedia(productId) {
+  return await apiRequest(`products/${productId}/media`, { method: 'GET' });
+}
+
 export async function fetchProductDocuments(productId) {
   return await apiRequest(`products/${productId}/documents`, { method: 'GET' });
 }

@@ -18,7 +18,8 @@ import AdminConfirmModal from '../modals/AdminConfirmModal';
 import styles from '../AdminDashboardPage.module.scss';
 
 const RATING_CHIPS = [
-  { id: 'all', label: 'Tüm Yorumlar' },
+  { id: 'all', label: 'Tüm Mesajlar' },
+  { id: 'replies', label: 'Alt Yanıtlar (@Reply)' },
   { id: '5', label: '★★★★★ (5 Yıldız)' },
   { id: '4', label: '★★★★☆ (4 Yıldız)' },
   { id: '3', label: '★★★☆☆ (3 Yıldız)' },
@@ -58,8 +59,12 @@ export default function ReviewsTab({
 
   const filteredReviews = useMemo(() => {
     return safeReviews.filter((r) => {
-      if (activeChip !== 'all' && Number(r.rating) !== parseInt(activeChip, 10)) {
-        return false;
+      if (activeChip === 'replies') {
+        if (!r.parentId) return false;
+      } else if (activeChip !== 'all') {
+        if (r.parentId || Number(r.rating) !== parseInt(activeChip, 10)) {
+          return false;
+        }
       }
       const q = (search || globalSearch || '').trim().toLowerCase();
       if (q) {
@@ -88,22 +93,23 @@ export default function ReviewsTab({
   };
 
   const handleDeleteReview = (rev) => {
+    const authorDisplay = getAuthor(rev);
     setConfirmModal({
       isOpen: true,
-      title: 'Yorumu Sil',
-      message: `"${rev.userName || 'Kullanıcı'}" tarafından yazılan değerlendirmeyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
+      title: rev.parentId ? 'Alt Yanıtı Sil' : 'Yorumu Sil',
+      message: `"${authorDisplay}" tarafından yazılan ${rev.parentId ? 'alt yanıtı' : 'değerlendirmeyi'} silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
       variant: 'danger',
-      confirmText: 'Yorumu Sil',
-      onConfirm: () => {
+      confirmText: 'Sil',
+      onConfirm: async () => {
         try {
-          deleteReview(rev.toolId, rev.id);
-          adminAddLog('REVIEW_DELETED', `${rev.toolName || rev.toolId} (${rev.userName})`, 'warning', {
+          await deleteReview(rev.toolId, rev.id);
+          adminAddLog('REVIEW_DELETED', `${rev.toolName || rev.toolId} (${authorDisplay})`, 'warning', {
             category: 'GOVERNANCE',
           });
-          toastService.success('Yorum başarıyla silindi.');
+          toastService.success('Mesaj başarıyla silindi.');
           if (onRefreshReviews) onRefreshReviews();
         } catch (err) {
-          toastService.error('Yorum silme hatası: ' + err.message);
+          toastService.error('Mesaj silme hatası: ' + err.message);
         }
       },
     });
@@ -114,13 +120,14 @@ export default function ReviewsTab({
       toastService.warning('Dışa aktarılacak değerlendirme bulunmuyor.');
       return;
     }
-    const headers = ['ID', 'Kullanıcı', 'Araç ID', 'Araç Adı', 'Puan', 'Yorum', 'Tarih'];
+    const headers = ['ID', 'Tür', 'Kullanıcı', 'Araç ID', 'Araç Adı', 'Puan', 'Yorum', 'Tarih'];
     const rows = filteredReviews.map((r) => [
       `"${r.id || ''}"`,
+      `"${r.parentId ? 'Alt Yanıt' : 'Ana Yorum'}"`,
       `"${getAuthor(r).replace(/"/g, '""')}"`,
       `"${r.toolId || ''}"`,
       `"${(r.toolName || '').replace(/"/g, '""')}"`,
-      r.rating || 5,
+      r.parentId ? 'Yanıt' : (r.rating || 5),
       `"${getContent(r).replace(/"/g, '""')}"`,
       `"${getDate(r)}"`,
     ]);
@@ -164,7 +171,7 @@ export default function ReviewsTab({
             <input
               type="text"
               className={styles.searchInput}
-              placeholder="Yorum içeriği, kullanıcı veya araç adı ara..."
+              placeholder="Yorum içeriği, @kullanıcı veya araç adı ara..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -186,7 +193,7 @@ export default function ReviewsTab({
           </button>
 
           <div className={styles.toolbarInfo}>
-            <span>{filteredReviews.length} değerlendirme listeleniyor</span>
+            <span>{filteredReviews.length} mesaj listeleniyor</span>
           </div>
         </div>
       </div>
@@ -197,7 +204,7 @@ export default function ReviewsTab({
           <div className={styles.emptyStateCard}>
             <MessageSquare size={36} className={styles.emptyIcon} />
             <h3 className={styles.emptyTitle}>Değerlendirme Bulunamadı</h3>
-            <p className={styles.emptyDesc}>Kriterlere uyan kullanıcı yorumu veya değerlendirmesi bulunmuyor.</p>
+            <p className={styles.emptyDesc}>Kriterlere uyan kullanıcı yorumu veya alt yanıt bulunmuyor.</p>
           </div>
         ) : (
           paginatedReviews.map((rev) => (
@@ -208,7 +215,14 @@ export default function ReviewsTab({
                     <User size={14} />
                   </div>
                   <div>
-                    <h4 className={styles.reviewUserName}>{getAuthor(rev)}</h4>
+                    <h4 className={styles.reviewUserName}>
+                      {getAuthor(rev)}
+                      {rev.username && (
+                        <span style={{ marginLeft: '6px', fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 500 }}>
+                          @{rev.username}
+                        </span>
+                      )}
+                    </h4>
                     <span className={styles.reviewTargetTool}>
                       Araç: <strong>{rev.toolName || rev.toolId}</strong>
                       {rev.toolId && (
@@ -231,16 +245,32 @@ export default function ReviewsTab({
                   </div>
                 </div>
 
-                <div className={styles.reviewRatingStars}>
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star
-                      key={s}
-                      size={13}
-                      fill={s <= (rev.rating || 5) ? '#fbbf24' : 'none'}
-                      color={s <= (rev.rating || 5) ? '#fbbf24' : 'var(--text-muted)'}
-                    />
-                  ))}
-                </div>
+                {rev.parentId ? (
+                  <span
+                    style={{
+                      padding: '3px 9px',
+                      borderRadius: '6px',
+                      background: 'rgba(139, 92, 246, 0.14)',
+                      border: '1px solid rgba(139, 92, 246, 0.3)',
+                      color: 'var(--accent-purple)',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Alt Yanıt {rev.replyTo ? `→ @${rev.replyTo}` : ''}
+                  </span>
+                ) : (
+                  <div className={styles.reviewRatingStars}>
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        size={13}
+                        fill={s <= (rev.rating || 5) ? '#fbbf24' : 'none'}
+                        color={s <= (rev.rating || 5) ? '#fbbf24' : 'var(--text-muted)'}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               <p className={styles.reviewCardText}>

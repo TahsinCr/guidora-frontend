@@ -8,6 +8,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- **Threaded Review Sub-Messages & `@username` Mention System (`ReviewsTab.jsx`, `ReviewsTab.module.scss`, `toolsService.js`, `userService.js`)**:
+  - Upgraded the product review system into a two-level threaded architecture supporting top-level evaluations (`!parentId`) and nested sub-message replies (`parentId`).
+  - Added inline reply composer (`Yanıtla`) on every review and sub-reply, automatically pre-filling `@username` for targeted responses.
+  - Added interactive `@` mention autocomplete dropdown and quick-mention chips, plus highlighted clickable `@username` badges inside comment bodies.
+  - Fixed broken avatar rendering when user avatars contain 2-letter initials instead of image URLs, and separated top-level star rating averages from sub-reply counts.
+  - Added cascading deletion so removing a parent review cleanly removes its child sub-messages.
+
+- **Live Backend Tool Detail Tabs (`BackendDocContent.jsx`, `productsApi.js`)**:
+  - Exported `fetchProductMedia` in `productsApi.js` and upgraded `BackendDocContent.jsx` to render full styled cards (`DocContent.module.scss`) for `about` (Overview, Key Features, Classifications & Tags), `gallery`, `changelog`, `license`, and `alternatives` in live backend mode.
+
+- **Admin Panel Live-Mode Synchronization & UX Overhaul (`adminService.js`, `AdminDashboardPage.jsx`, `AdminSidebar.jsx`, `OrganizationsTab.jsx`, `ReportsTab.jsx`, `ReviewsTab.jsx`, `ProductSorterBar.jsx`, `UserProfilePage.jsx`)**:
+  - Enabled full CRUD persistence and state synchronization in live backend mode (`!isMockMode()`) across Tools, Categories, Tag Groups, Users, Organizations, Proposals, Reports, and Reviews.
+  - Restored category color accents (`getCategoryColor`) in Admin Categories and fixed the header category counter to exclude the synthetic `all` filter tab.
+  - Added a dedicated sidebar footer (`Dizine Geri Dön` action and active admin profile card) to `AdminSidebar.jsx`.
+  - Fixed organization verification state toggling (`verified` / `isVerified`), report tool name and timestamp resolution, and sub-reply filtering (`Alt Yanıtlar (@Reply)`) in Admin Reviews.
+  - Connected the `timeFilter` dropdown in `ProductSorterBar.jsx` and replaced leftover AI-prompt clichés with corporate software catalog copy across schemas and modals.
+
 - **Modern App Store / Raycast Style Tool Card Overhaul (`ProductCard.jsx`, `ProductCard.module.scss`)**:
   - Re-architected tool cards into an airy, modern squircle design inspired by modern developer directories and App Store aesthetics.
   - Implemented 52px squircle logo container with generous padding (`8px`) and `object-fit: contain`, preventing logo distortion and clipping.

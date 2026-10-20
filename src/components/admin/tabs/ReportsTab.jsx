@@ -21,6 +21,8 @@ import styles from '../AdminDashboardPage.module.scss';
 
 export default function ReportsTab({
   reports = [],
+  tools = [],
+  globalSearch = '',
   onRefreshReports,
   onOpenTool,
 }) {
@@ -29,22 +31,33 @@ export default function ReportsTab({
   const [search, setSearch] = useState('');
   const [actionNotes, setActionNotes] = useState({});
 
+  const resolveToolName = (rep) => {
+    const matched = tools.find(
+      (tool) =>
+        tool.id === rep.toolId ||
+        String(tool.numericId) === String(rep.toolId)
+    );
+    if (matched?.name) return matched.name;
+    return rep.toolName || rep.toolId || 'Bilinmeyen Araç';
+  };
+
   const filteredReports = useMemo(() => {
+    const combinedQuery = (search || globalSearch || '').trim().toLowerCase();
     return reports.filter((r) => {
       const isResolved = r.status === 'resolved' || r.status === 'dismissed';
       if (filter === 'pending' && isResolved) return false;
       if (filter === 'resolved' && !isResolved) return false;
 
-      if (search) {
-        const q = search.toLowerCase();
-        const reasonMatch = (r.reason || '').toLowerCase().includes(q);
-        const detailsMatch = (r.details || '').toLowerCase().includes(q);
-        const toolMatch = (r.toolName || r.toolId || '').toLowerCase().includes(q);
+      if (combinedQuery) {
+        const resolvedName = resolveToolName(r).toLowerCase();
+        const reasonMatch = (r.reason || '').toLowerCase().includes(combinedQuery);
+        const detailsMatch = (r.details || '').toLowerCase().includes(combinedQuery);
+        const toolMatch = resolvedName.includes(combinedQuery) || String(r.toolId || '').toLowerCase().includes(combinedQuery);
         if (!reasonMatch && !detailsMatch && !toolMatch) return false;
       }
       return true;
     });
-  }, [reports, filter, search]);
+  }, [reports, tools, filter, search, globalSearch]);
 
   const handleResolve = (reportId, toolName) => {
     const note = actionNotes[reportId] || 'İncelendi ve çözüldü.';
@@ -110,29 +123,32 @@ export default function ReportsTab({
           <div className={styles.emptyStateCard}>
             <CheckCircle2 size={36} color="#10b981" className={styles.emptyIcon} />
             <h3 className={styles.emptyTitle}>{t('admin.reportsEmpty')}</h3>
-            <p className={styles.emptyDesc}>{t('admin.reportsEmptyDesc', '0 pending user reports in the moderation queue.')}</p>
+            <p className={styles.emptyDesc}>{t('admin.reportsEmptyDesc', 'Moderasyon kuyruğunda bekleyen kullanıcı bildirimi bulunmuyor.')}</p>
           </div>
         ) : (
-          filteredReports.map((rep) => (
+          filteredReports.map((rep) => {
+            const toolDisplayName = resolveToolName(rep);
+            const dateVal = rep.reportedAt || rep.submittedAt || rep.createdAt;
+            return (
             <div key={rep.id} className={styles.reportCard}>
               <div className={styles.reportHeader}>
                 <div className={styles.reportHeaderLeft}>
                   <div className={styles.reportBadges}>
                     <span className={`${styles.reasonBadge} ${styles[rep.reason] || styles.general}`}>
-                      {rep.reason || 'General'}
+                      {rep.reason || 'Genel Bildirim'}
                     </span>
                     <span className={`${styles.statusBadge} ${styles[rep.status || 'pending']}`}>
                       {rep.status === 'resolved' ? t('admin.statusResolved') : rep.status === 'dismissed' ? t('admin.statusDismissed') : t('admin.statusPending')}
                     </span>
                   </div>
                   <h4 className={styles.reportedToolTitle}>
-                    {t('admin.colTool')}: <strong>{rep.toolName || rep.toolId || 'Unknown'}</strong>
+                    {t('admin.colTool')}: <strong>{toolDisplayName}</strong>
                     {rep.toolId && onOpenTool && (
                       <button
                         type="button"
                         className={styles.toolLinkBtn}
                         onClick={() => onOpenTool(rep.toolId)}
-                        title={rep.toolName}
+                        title={toolDisplayName}
                       >
                         <ExternalLink size={12} />
                       </button>
@@ -143,18 +159,18 @@ export default function ReportsTab({
                 <div className={styles.reportHeaderRight}>
                   <span className={styles.reportDate}>
                     <Clock size={12} />
-                    {rep.createdAt ? new Date(rep.createdAt).toLocaleString(language === 'en' ? 'en-US' : language === 'ru' ? 'ru-RU' : 'tr-TR') : 'Recent'}
+                    {dateVal ? new Date(dateVal).toLocaleString(language === 'en' ? 'en-US' : language === 'ru' ? 'ru-RU' : 'tr-TR') : 'Son zamanlarda'}
                   </span>
                 </div>
               </div>
 
               <div className={styles.reportContent}>
                 <p className={styles.reportDetailsText}>
-                  "{rep.details || '-'}"
+                  "{rep.details || rep.reason || '-'}"
                 </p>
-                {rep.email && (
+                {(rep.email || rep.reporter) && (
                   <span className={styles.reporterEmail}>
-                    {rep.email}
+                    {rep.email || rep.reporter}
                   </span>
                 )}
               </div>
@@ -176,14 +192,14 @@ export default function ReportsTab({
                     <button
                       type="button"
                       className={styles.dismissBtn}
-                      onClick={() => handleDismiss(rep.id, rep.toolName)}
+                      onClick={() => handleDismiss(rep.id, toolDisplayName)}
                     >
                       {t('admin.dismissReport')}
                     </button>
                     <button
                       type="button"
                       className={styles.resolveBtn}
-                      onClick={() => handleResolve(rep.id, rep.toolName)}
+                      onClick={() => handleResolve(rep.id, toolDisplayName)}
                     >
                       <CheckCircle2 size={14} />
                       <span>{t('admin.resolveReport')}</span>
@@ -201,7 +217,8 @@ export default function ReportsTab({
                 </div>
               )}
             </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

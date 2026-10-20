@@ -13,8 +13,8 @@ export const MOCK_USERS = [
     email: 'tahsincrs@gmail.com',
     role: 'admin', // 'admin' | 'moderator' | 'creator' | 'member'
     avatar: 'TC',
-    title: 'Lead AI Engineer & Product Architect',
-    bio: 'Building next-generation AI developer directories, intelligent tool orchestration workflows, and modular UI design architectures.',
+    title: 'Lead Software & Platform Architect',
+    bio: 'Building developer tool directories, scalable software architectures, and modular design systems.',
     location: 'Istanbul, Turkey',
     website: 'https://github.com/Tahsincr',
     joinedDate: 'September 2024',
@@ -26,14 +26,14 @@ export const MOCK_USERS = [
   {
     id: 'usr_mod_04',
     name: 'Deniz Kaya',
-    username: 'DenizMod',
-    email: 'deniz@guidora.ai',
+    username: 'denizkaya',
+    email: 'deniz@guidora.io',
     role: 'moderator',
     avatar: 'DK',
     title: 'Community Content & Review Moderator',
-    bio: 'Reviewing directory submissions, keeping tool evaluations clean, and filtering community reports.',
+    bio: 'Reviewing directory submissions, keeping tool evaluations accurate, and moderating community feedback.',
     location: 'Izmir, Turkey',
-    website: 'https://guidora.ai',
+    website: 'https://guidora.io',
     joinedDate: 'December 2025',
     savedToolIds: ['claude-3-5-sonnet', 'cursor-editor'],
     submittedToolIds: [],
@@ -42,13 +42,14 @@ export const MOCK_USERS = [
   {
     id: 'usr_elena_02',
     name: 'Elena Rostova',
-    email: 'elena@neurolabs.ai',
+    username: 'elena',
+    email: 'elena@neurolabs.io',
     role: 'creator',
     avatar: 'ER',
-    title: 'Senior Neural Interface Designer',
-    bio: 'Obsessed with generative tokens, dark mode UI paradigms, and contextual coding assistants.',
+    title: 'Principal Systems & Interface Designer',
+    bio: 'Focused on design tokens, high-contrast UI systems, and developer productivity workflows.',
     location: 'Berlin, Germany',
-    website: 'https://neurolabs.ai',
+    website: 'https://neurolabs.io',
     joinedDate: 'November 2025',
     savedToolIds: ['codewizard-ai', 'figma'],
     submittedToolIds: ['vision-forge'],
@@ -57,11 +58,12 @@ export const MOCK_USERS = [
   {
     id: 'usr_dev_03',
     name: 'Alex Vance',
+    username: 'alexvance',
     email: 'alex@community.org',
     role: 'member',
     avatar: 'AV',
     title: 'Fullstack Software Engineer',
-    bio: 'Exploring local LLMs, Ollama orchestration, and open-source generative stacks.',
+    bio: 'Exploring cloud-native infrastructure, container orchestration, and open-source developer stacks.',
     location: 'San Francisco, CA',
     website: 'https://github.com',
     joinedDate: 'January 2026',
@@ -75,43 +77,43 @@ export const MOCK_USERS = [
 // Initial Organizations (Verified / Admin created)
 const DEFAULT_ORGANIZATIONS = [
   {
-    id: 'org_neurolabs',
-    name: 'NeuroLabs Inc.',
-    slug: 'neurolabs',
-    initials: 'NL',
-    website: 'https://neurolabs.ai',
-    description: 'Pioneering multimodal neural generative software and context-aware dev tools.',
+    id: 'org_vercel',
+    name: 'Vercel Inc.',
+    slug: 'vercel',
+    initials: 'VC',
+    website: 'https://vercel.com',
+    description: 'Frontend cloud platform providing developer experience and infrastructure to build, preview, and ship faster web applications.',
     verified: true,
-    verificationSource: 'admin', // 'admin' | 'bot' (future automated bot validation)
+    verificationSource: 'admin',
     createdAt: '2025-11-10',
-    memberCount: 24,
-    toolIds: ['neurogen-studio', 'vision-forge'],
+    memberCount: 520,
+    toolIds: ['v0-dev', 'nextjs'],
   },
   {
-    id: 'org_anthropic',
-    name: 'Anthropic',
-    slug: 'anthropic',
-    initials: 'AN',
-    website: 'https://anthropic.com',
-    description: 'AI safety and research company developing helpful, honest, and harmless AI systems.',
+    id: 'org_jetbrains',
+    name: 'JetBrains',
+    slug: 'jetbrains',
+    initials: 'JB',
+    website: 'https://jetbrains.com',
+    description: 'Creator of professional software development IDEs and team productivity tools for modern engineering teams.',
     verified: true,
     verificationSource: 'admin',
     createdAt: '2025-08-15',
-    memberCount: 350,
-    toolIds: ['claude-3-5-sonnet'],
+    memberCount: 1900,
+    toolIds: ['intellij-idea'],
   },
   {
-    id: 'org_openai',
-    name: 'OpenAI',
-    slug: 'openai',
-    initials: 'OA',
-    website: 'https://openai.com',
-    description: 'Dedicated to developing safe and beneficial artificial general intelligence for humanity.',
+    id: 'org_supabase',
+    name: 'Supabase',
+    slug: 'supabase',
+    initials: 'SB',
+    website: 'https://supabase.com',
+    description: 'Open-source Postgres development platform offering database, authentication, instant APIs, and edge functions.',
     verified: true,
     verificationSource: 'admin',
     createdAt: '2025-06-01',
-    memberCount: 800,
-    toolIds: ['chatgpt-plus', 'sora-video'],
+    memberCount: 140,
+    toolIds: ['supabase'],
   },
   {
     id: 'org_cursor',
@@ -119,7 +121,7 @@ const DEFAULT_ORGANIZATIONS = [
     slug: 'anysphere',
     initials: 'AS',
     website: 'https://cursor.com',
-    description: 'Building Cursor, the AI-first code editor designed for pair-programming at lightspeed.',
+    description: 'Engineering team building high-velocity code editing and developer workflow tooling.',
     verified: true,
     verificationSource: 'admin',
     createdAt: '2026-01-20',
@@ -145,14 +147,17 @@ export function getCurrentUser() {
 const ALL_USERS_KEY = 'guidora_all_users';
 
 export function getAllUsers() {
-  if (!isMockMode()) return getCurrentUser() ? [getCurrentUser()] : [];
   try {
     const raw = localStorage.getItem(ALL_USERS_KEY);
+    const list = raw ? JSON.parse(raw) : [...MOCK_USERS];
     if (!raw) {
-      localStorage.setItem(ALL_USERS_KEY, JSON.stringify(MOCK_USERS));
-      return [...MOCK_USERS];
+      localStorage.setItem(ALL_USERS_KEY, JSON.stringify(list));
     }
-    return JSON.parse(raw);
+    const current = getCurrentUser();
+    if (current && !list.some((u) => String(u.id) === String(current.id) || (u.email && current.email && u.email === current.email))) {
+      return [current, ...list];
+    }
+    return list;
   } catch (e) {
     return [...MOCK_USERS];
   }
@@ -309,7 +314,6 @@ export function canUserPerformAction(user, actionKey) {
 
 
 export function getOrganizations() {
-  if (!isMockMode()) return [];
   try {
     const raw = localStorage.getItem(ORGANIZATIONS_KEY);
     if (!raw) {

@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
+  ArrowLeft,
   X,
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
@@ -63,6 +64,16 @@ export default function AdminSidebar({
     },
   ];
 
+  const handleReturnToDirectory = () => {
+    if (onBack) {
+      onBack();
+    } else if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('view');
+      window.location.href = url.pathname;
+    }
+  };
+
   return (
     <>
       {/* Mobile Backdrop Overlay */}
@@ -82,25 +93,17 @@ export default function AdminSidebar({
         <div className={styles.sidebarHeader}>
           <div
             className={styles.brandRow}
-            onClick={() => {
-              if (onBack) {
-                onBack();
-              } else if (typeof window !== 'undefined') {
-                const url = new URL(window.location.href);
-                url.searchParams.delete('view');
-                window.location.href = url.pathname;
-              }
-            }}
+            onClick={handleReturnToDirectory}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                if (onBack) onBack();
+                handleReturnToDirectory();
               }
             }}
-            title="Ana Sayfaya Dön (Go to Home)"
-            aria-label="Ana Sayfaya Dön"
+            title="Ana Dizine Dön"
+            aria-label="Ana Dizine Dön"
           >
             <div className={styles.brandLogo}>
               <ShieldCheck size={22} className={styles.brandIcon} />
@@ -187,6 +190,34 @@ export default function AdminSidebar({
             </div>
           ))}
         </nav>
+
+        {/* Sidebar Footer: Back to Directory & Admin Profile */}
+        <div className={styles.sidebarFooter}>
+          <button
+            type="button"
+            className={styles.backBtn}
+            onClick={handleReturnToDirectory}
+            title="Ana Dizine Geri Dön"
+          >
+            <ArrowLeft size={16} />
+            {!isCollapsed && <span>{t('header.backToDirectory', 'Dizine Geri Dön')}</span>}
+          </button>
+
+          {currentUser && !isCollapsed && (
+            <div className={styles.userCard}>
+              <div className={styles.userAvatar}>
+                {(currentUser.avatar && currentUser.avatar.length <= 3
+                  ? currentUser.avatar
+                  : (currentUser.name || 'AD').slice(0, 2)
+                ).toUpperCase()}
+              </div>
+              <div className={styles.userInfo}>
+                <div className={styles.userName}>{currentUser.name || 'Admin'}</div>
+                <div className={styles.userRole}>{currentUser.role || 'admin'}</div>
+              </div>
+            </div>
+          )}
+        </div>
       </aside>
     </>
   );

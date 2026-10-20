@@ -1,12 +1,14 @@
 import { CATEGORIES, TAG_CATEGORIES } from './mockData';
 import { getOrganizations, adminUpdateOrganization } from './userService';
 import { isMockMode } from './config/modeService';
+import { getCategoryColor } from '@/constants/categoryIcons';
 import * as adminApi from './api/adminApi';
 
 export { adminUpdateOrganization };
 
 export const CATEGORIES_KEY = 'guidora_custom_categories';
 export const TAGS_KEY = 'guidora_custom_tags';
+const DELETED_CATEGORIES_KEY = 'guidora_deleted_categories';
 const DELETED_TOOLS_KEY = 'guidora_deleted_tool_ids';
 const TOOL_OVERRIDES_KEY = 'guidora_tool_overrides';
 const REPORTS_KEY = 'guidora_reports';
@@ -36,26 +38,68 @@ function notifyTaxonomyChange() {
   }
 }
 
+function getLocalStoredCategoriesRaw() {
+  try {
+    const raw = localStorage.getItem(CATEGORIES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function getLocalStoredTagsRaw() {
+  try {
+    const raw = localStorage.getItem(TAGS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
 // --- Async Backend Fetchers ---
 
 export async function adminFetchCategories() {
   if (isMockMode()) {
     return adminGetCategories();
   }
+  const localStored = getLocalStoredCategoriesRaw();
+  const localMap = new Map(localStored.map((c) => [c.id, c]));
+  const deletedCats = JSON.parse(localStorage.getItem(DELETED_CATEGORIES_KEY) || '[]');
+
   try {
     const list = await adminApi.fetchCategoriesForManagement();
-    const mapped = (list || []).map((dto) => ({
-      id: dto.slug || String(dto.id),
-      numericId: dto.id,
-      name: dto.name,
-      translations: {},
-      count: 0,
-      color: '#8A38F5',
-      isPopular: false,
-      popular: false,
-      isActive: dto.isActive !== false,
-      description: dto.description || '',
-    }));
+    const mapped = (list || [])
+      .map((dto, idx) => {
+        const slug = dto.slug || String(dto.id);
+        const localOverride = localMap.get(slug);
+        const resolvedColor =
+          localOverride?.color || dto.color || getCategoryColor(slug) || '#8A38F5';
+        const resolvedPopular =
+          localOverride?.isPopular !== undefined ? Boolean(localOverride.isPopular) : idx < 6;
+        return {
+          id: slug,
+          numericId: dto.id,
+          name: localOverride?.name || dto.name,
+          translations: localOverride?.translations || {},
+          count: localOverride?.count || 0,
+          color: resolvedColor,
+          isPopular: resolvedPopular,
+          popular: resolvedPopular,
+          isActive: dto.isActive !== false,
+          description: localOverride?.description ?? dto.description ?? '',
+        };
+      })
+      .filter((c) => !deletedCats.includes(c.id));
+
+    for (const lc of localStored) {
+      if (lc.id !== 'all' && !deletedCats.includes(lc.id) && !mapped.some((m) => m.id === lc.id)) {
+        mapped.push({
+          ...lc,
+          color: lc.color || getCategoryColor(lc.id),
+        });
+      }
+    }
+
     if (!mapped.some((c) => c.id === 'all')) {
       mapped.unshift({
         id: 'all',
@@ -79,28 +123,68 @@ export async function adminFetchTagCategories() {
   if (isMockMode()) {
     return adminGetTagCategories();
   }
+  const localStored = getLocalStoredTagsRaw();
   try {
     const [cats, tags] = await Promise.all([
       adminApi.fetchTagCategories(),
       adminApi.fetchTags(),
     ]);
     const mapped = (cats || []).map((c) => {
-      const groupTags = (tags || []).filter((t) => t.tagCategoryId === c.id);
-      return {
-        id: String(c.id),
-        numericId: c.id,
-        name: c.name,
-        translations: {},
-        isSingleSelect: Boolean(c.isSingleSelect),
-        tags: groupTags.map((t) => ({
-          id: String(t.id),
-          numericId: t.id,
-          name: t.name,
+      const catId = c.id ?? c.tagCategoryId;
+      const catName = c.name ?? c.tagCategoryName ?? `Group #${catId}`;
+      const groupTags = (tags || []).filter((t) => t.tagCategoryId === catId);
+      const localMatch = localStored.find(
+        (lg) =>
+          String(lg.id) === String(catId) ||
+          lg.numericId === catId ||
+          lg.name?.toLowerCase() === catName.toLowerCase()
+      );
+      const mergedTags = groupTags.map((t) => {
+        const tId = t.id ?? t.tagId;
+        const tName = t.name ?? t.tagName;
+        return {
+          id: t.slug || String(tId),
+          numericId: tId,
+          name: tName,
           translations: {},
-          only: Boolean(c.isSingleSelect),
-        })),
+          only: Boolean(localMatch?.isSingleSelect ?? c.isSingleSelect),
+        };
+      });
+
+      if (localMatch && Array.isArray(localMatch.tags)) {
+        for (const lt of localMatch.tags) {
+          if (
+            !mergedTags.some(
+              (mt) => mt.id === lt.id || mt.name?.toLowerCase() === lt.name?.toLowerCase()
+            )
+          ) {
+            mergedTags.push(lt);
+          }
+        }
+      }
+
+      return {
+        id: localMatch?.id || String(catId),
+        numericId: catId,
+        name: localMatch?.name || catName,
+        translations: localMatch?.translations || {},
+        isSingleSelect: Boolean(localMatch?.isSingleSelect ?? c.isSingleSelect),
+        tags: mergedTags,
       };
     });
+
+    for (const lg of localStored) {
+      if (
+        !mapped.some(
+          (m) =>
+            String(m.id) === String(lg.id) ||
+            m.name?.toLowerCase() === lg.name?.toLowerCase()
+        )
+      ) {
+        mapped.push(lg);
+      }
+    }
+
     cachedBackendTagCategories = mapped;
     return cachedBackendTagCategories;
   } catch (err) {
@@ -110,14 +194,30 @@ export async function adminFetchTagCategories() {
 }
 
 export async function adminFetchProposals() {
+  const localProposals = (() => {
+    try {
+      const raw = localStorage.getItem(PROPOSALS_KEY);
+      if (raw) return JSON.parse(raw);
+      localStorage.setItem(PROPOSALS_KEY, JSON.stringify(INITIAL_PROPOSALS));
+      return [...INITIAL_PROPOSALS];
+    } catch {
+      return [...INITIAL_PROPOSALS];
+    }
+  })();
+
   if (isMockMode()) {
-    return adminGetProposals();
+    return localProposals;
   }
   try {
     const items = await adminApi.fetchPendingProposals();
     const statusMap = { 1: 'pending', 2: 'accepted', 3: 'rejected' };
     const mapped = (items || []).map((p) => {
-      const status = typeof p.status === 'number' ? (statusMap[p.status] || 'pending') : (p.status || 'pending');
+      const localMatch = localProposals.find(
+        (lp) => String(lp.id) === String(p.id) || lp.numericId === p.id
+      );
+      const status =
+        localMatch?.status ||
+        (typeof p.status === 'number' ? statusMap[p.status] || 'pending' : p.status || 'pending');
       return {
         id: String(p.id),
         numericId: p.id,
@@ -138,38 +238,101 @@ export async function adminFetchProposals() {
         },
       };
     });
-    cachedBackendProposals = mapped;
+
+    const merged = [...mapped];
+    for (const lp of localProposals) {
+      if (!merged.some((m) => String(m.id) === String(lp.id))) {
+        merged.push(lp);
+      }
+    }
+    cachedBackendProposals = merged;
     return cachedBackendProposals;
   } catch (err) {
-    console.warn('[adminService] adminFetchProposals error, fallback to local/mock:', err);
-    return adminGetProposals();
+    cachedBackendProposals = localProposals;
+    return localProposals;
   }
 }
 
+const INITIAL_REPORTS = [
+  {
+    id: 'rep-seed-101',
+    toolId: 'v0-dev',
+    toolName: 'v0 by Vercel',
+    reason: 'Fiyatlandırma bilgisi güncellenmeli',
+    details: 'Kurumsal plan ve takım lisans kotaları son sürümde güncellendi, katalog açıklaması eski kotayı gösteriyor.',
+    reporter: 'deniz@guidora.io',
+    email: 'deniz@guidora.io',
+    reportedAt: new Date(Date.now() - 1000 * 60 * 110).toISOString(),
+    submittedAt: new Date(Date.now() - 1000 * 60 * 110).toISOString(),
+    status: 'pending',
+    actionTaken: '',
+  },
+  {
+    id: 'rep-seed-102',
+    toolId: 'cursor-editor',
+    toolName: 'Cursor',
+    reason: 'Dokümantasyon bağlantısı yönlendirme yapıyor',
+    details: 'API referans adresi docs.cursor.com altına taşındı.',
+    reporter: 'alex@community.org',
+    email: 'alex@community.org',
+    reportedAt: new Date(Date.now() - 1000 * 60 * 420).toISOString(),
+    submittedAt: new Date(Date.now() - 1000 * 60 * 420).toISOString(),
+    status: 'resolved',
+    actionTaken: 'Dokümantasyon bağlantısı güncellendi',
+    resolvedAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
+  },
+];
+
 export async function adminFetchReports() {
+  const localReports = (() => {
+    try {
+      const raw = localStorage.getItem(REPORTS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      localStorage.setItem(REPORTS_KEY, JSON.stringify(INITIAL_REPORTS));
+      return [...INITIAL_REPORTS];
+    } catch {
+      return [...INITIAL_REPORTS];
+    }
+  })();
+
   if (isMockMode()) {
-    return adminGetReports();
+    return localReports;
   }
   try {
     const items = await adminApi.fetchOpenReports();
-    const mapped = (items || []).map((r) => ({
-      id: String(r.id),
-      numericId: r.id,
-      toolId: String(r.productId),
-      toolName: `Tool #${r.productId}`,
-      reason: r.description || `Şikayet Nedeni #${r.reportReasonId || 1}`,
-      details: r.description || '',
-      reporter: `User #${r.reportedByUserId || 'Anon'}`,
-      reportedAt: r.createdAt || new Date().toISOString(),
-      status: r.resolvedAt ? 'resolved' : 'pending',
-      actionTaken: '',
-      resolvedAt: r.resolvedAt,
-    }));
-    cachedBackendReports = mapped;
+    const mapped = (items || []).map((r) => {
+      const localMatch = localReports.find(
+        (lr) => String(lr.id) === String(r.id) || lr.numericId === r.id
+      );
+      return {
+        id: String(r.id),
+        numericId: r.id,
+        toolId: String(r.productId),
+        toolName: localMatch?.toolName || r.productName || `Araç #${r.productId}`,
+        reason: r.description || `Bildirim #${r.reportReasonId || 1}`,
+        details: r.description || '',
+        reporter: `Üye #${r.reportedByUserId || 'Anonim'}`,
+        reportedAt: r.createdAt || new Date().toISOString(),
+        status: localMatch?.status || (r.resolvedAt ? 'resolved' : 'pending'),
+        actionTaken: localMatch?.actionTaken || '',
+        resolvedAt: localMatch?.resolvedAt || r.resolvedAt,
+      };
+    });
+
+    const merged = [...mapped];
+    for (const lr of localReports) {
+      if (!merged.some((m) => String(m.id) === String(lr.id))) {
+        merged.push(lr);
+      }
+    }
+    cachedBackendReports = merged;
     return cachedBackendReports;
   } catch (err) {
-    console.warn('[adminService] adminFetchReports error, fallback to local/mock:', err);
-    return adminGetReports();
+    cachedBackendReports = localReports;
+    return localReports;
   }
 }
 
@@ -507,6 +670,13 @@ export function adminDeleteCategory(catId) {
         .catch(err => console.warn('[adminService] Backend deleteCategory error:', err));
     }
   }
+  try {
+    const deletedCats = JSON.parse(localStorage.getItem(DELETED_CATEGORIES_KEY) || '[]');
+    if (!deletedCats.includes(catId)) {
+      deletedCats.push(catId);
+      localStorage.setItem(DELETED_CATEGORIES_KEY, JSON.stringify(deletedCats));
+    }
+  } catch (e) {}
   const current = adminGetCategories();
   const updated = current.filter((c) => c.id !== catId && c.numericId !== Number(catId));
   if (!isMockMode()) {
@@ -1027,12 +1197,20 @@ export function adminResolveProposal(proposalId, status, reviewNotes = '') {
 }
 
 // --- Platform Stats Overview ---
-export function adminGetStats(allTools = [], allUsers = []) {
-  const categories = adminGetCategories();
-  const organizations = getOrganizations();
-  const reports = adminGetReports();
+export function adminGetStats(allTools = [], allUsers = [], extra = {}) {
+  const categories = Array.isArray(extra.categories) && extra.categories.length > 0
+    ? extra.categories
+    : adminGetCategories();
+  const organizations = Array.isArray(extra.organizations)
+    ? extra.organizations
+    : getOrganizations();
+  const reports = Array.isArray(extra.reports)
+    ? extra.reports
+    : adminGetReports();
   const pendingReports = reports.filter((r) => !r.status || r.status === 'pending');
-  const proposals = adminGetProposals();
+  const proposals = Array.isArray(extra.proposals)
+    ? extra.proposals
+    : adminGetProposals();
   const pendingProposals = proposals.filter((p) => p.status === 'pending');
 
   const verifiedTools = allTools.filter((t) => t.verified?.admin || t.verified?.audited);
@@ -1044,7 +1222,7 @@ export function adminGetStats(allTools = [], allUsers = []) {
   return {
     totalTools: allTools.length,
     verifiedTools: verifiedTools.length,
-    totalCategories: categories.length - 1, // exclude 'all'
+    totalCategories: Math.max(0, categories.filter((c) => c.id !== 'all').length),
     totalOrganizations: organizations.length,
     totalUsers: allUsers.length || 4,
     pendingReports: pendingReports.length,
@@ -1060,8 +1238,8 @@ export function adminGetEntitySchemas() {
     products: {
       id: 'products',
       name: 'Product / ToolItem',
-      pluralName: 'Yapay Zeka Araçları',
-      description: 'Guidora platformundaki tüm doğrulanmış ve listelenmiş yapay zeka araçlarının temel veri modeli.',
+      pluralName: 'Yazılım & Geliştirici Araçları',
+      description: 'Guidora platformundaki tüm doğrulanmış ve listelenmiş yazılım ve geliştirici araçlarının temel veri modeli.',
       icon: 'Wrench',
       category: 'Katalog',
       fields: [
