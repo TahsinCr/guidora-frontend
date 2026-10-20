@@ -78,7 +78,7 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
       });
     }
 
-    const maxVisible = 4;
+    const maxVisible = 3;
     return {
       visibleTags: unique.slice(0, maxVisible),
       extraCount: Math.max(0, unique.length - maxVisible),
@@ -112,8 +112,6 @@ function ProductCard({ tool, viewMode = 'grid', onOpenDetail }) {
               !showImage
                 ? {
                     background: `linear-gradient(135deg, ${catColor} 0%, #6366f1 100%)`,
-                    borderColor: 'transparent',
-                    padding: 0,
                   }
                 : undefined
             }

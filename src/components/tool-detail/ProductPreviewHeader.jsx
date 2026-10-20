@@ -41,7 +41,7 @@ export default function ProductPreviewHeader({ tool }) {
           <img
             src={tool.icon}
             alt={tool.name}
-            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit', display: 'block' }}
             onError={() => setImgError(true)}
           />
         ) : (

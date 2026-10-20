@@ -15,13 +15,13 @@ Proje, istemci tarafı tek sayfa uygulaması (SPA) olarak yapılandırılmışt�
 
 Bu proje şunları sağlar:
 
-- masaüstü ekran yoğunluğuna göre optimize edilmiş uyarlanabilir bir kart ızgarası (1920x1080 ekranda satır başına 4 kart);
+- masaüstü ekran yoğunluğuna göre optimize edilmiş, tam kaplayan squircle ikonlu (kırık görsellerde otomatik 2 harfli monogram yedekli), tek satır `#etiket` (`+N ...` taşma göstergeli) ve tam genişlikli alt metrik çubuğuna sahip uyarlanabilir kart ızgarası (1920x1080 ekranda satır başına 4 kart);
 - kategori, onay durumu, platform ve fiyatlandırma modeline göre çoklu filtreleme;
 - dinamik sıralama (Alaka Düzeyi, En Yüksek Puan, Popülerlik, Yenilik) ve metin tabanlı arama;
 - Figma tasarım şablonlarına birebir sadık iki sütunlu araç detay ekranı;
 - dokümantasyon ve sürüm notları için yerel Markdown (`marked`) render desteği;
 - GitHub reposundan otomatik veri çekebilen (yıldız, lisans, etiketler, README) ve çift modlu Markdown editörüne sahip "Araç Ekleme" ekranı;
-- puan kartları, yıldız seçici ve faydalı oylaması sunan etkileşimli topluluk yorumları sistemi;
+- ana değerlendirme ve alt yanıt (`parentId`) hiyerarşisi, `@kullanıcı` etiketleme önerileri/rozetleri, puan dağılımı ve faydalı oylaması sunan etkileşimli topluluk yorumları sistemi;
 - içerik moderasyonu ve sorun bildirimi için özel raporlama modalı;
 - kullanıcının kaydırma hareketini önceden algılayan (`IntersectionObserver`) sonsuz kaydırma akışı;
 - anlamsal CSS değişkenleri (custom properties) üzerine kurulu tam çift tema (Karanlık ve Açık) desteği;

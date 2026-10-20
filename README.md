@@ -17,13 +17,13 @@ The project is structured as a client-side single-page application. Tool queryin
 
 The application provides:
 
-- an adaptive card grid optimized for desktop density (4 cards per row on 1920x1080 displays);
+- an adaptive card grid optimized for desktop density (4 cards per row on 1920x1080 displays) with full-bleed squircle logos, automatic 2-letter monogram fallbacks, single-line `#tag` chips with `+N ...` overflow indicators, and full-width metric footers;
 - multi-criteria filtering across categories, verification levels, platforms, and pricing models;
 - dynamic sorting (Relevance, Highest Rated, Most Popular, Newest) and text search;
 - a two-column tool detail view matching Figma design specifications;
 - native Markdown rendering (`marked`) for documentation and release changelogs;
 - a "Submit Tool" screen with GitHub repository auto-fetching (stars, license, topics, README) and a dual-mode Markdown editor;
-- an interactive community reviews system with rating breakdowns, star pickers, and helpful upvoting;
+- an interactive two-level community reviews system supporting top-level evaluations, nested sub-message replies (`parentId`), `@username` mention autocomplete/badges, rating breakdowns, and helpful upvoting;
 - a content moderation and issue reporting workflow;
 - an infinite scroll feed powered by native `IntersectionObserver` with advance prefetching;
 - a complete dual-theme engine (Dark and Light) built on semantic CSS custom properties;

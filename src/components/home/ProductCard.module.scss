@@ -14,19 +14,19 @@
 .card {
   @include layout.width(fill);
   @include layout.box(
-    $padding: 18px 20px 14px 20px,
+    $padding: 15px 18px 12px 18px,
     $border: 1px solid var(--border-card),
     $radius: 14px
   );
   background: var(--bg-card);
   /* Notice: in layout.flex(column, $x, $y), $x is align-items and $y is justify-content */
-  @include layout.flex(column, stretch, flex-start, 12px);
+  @include layout.flex(column, stretch, flex-start, 9px);
   cursor: pointer;
   position: relative;
   overflow: hidden;
   container-type: inline-size;
   content-visibility: auto;
-  contain-intrinsic-size: auto 230px;
+  contain-intrinsic-size: auto 196px;
   animation: cardEntrance 0.28s ease both;
   will-change: transform, border-color, box-shadow;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
@@ -57,7 +57,7 @@
     }
 
     .thumbnail {
-      transform: scale(1.02);
+      transform: scale(1.03);
     }
   }
 
@@ -71,14 +71,13 @@
   }
 
   @media (max-width: 640px) {
-    padding: 16px;
-    gap: 10px;
+    padding: 14px 16px 12px 16px;
+    gap: 8px;
     border-radius: 12px;
 
     .thumbnail {
-      width: 44px;
-      height: 44px;
-      padding: 6px;
+      width: 42px;
+      height: 42px;
       border-radius: 10px;
 
       .thumbInitials {
@@ -87,7 +86,7 @@
     }
 
     .title {
-      font-size: 15.5px;
+      font-size: 15px;
     }
 
     .description {
@@ -100,7 +99,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    padding: 16px 24px;
+    padding: 14px 22px;
     border-radius: var(--radius-md);
 
     &:hover {
@@ -119,13 +118,13 @@
     }
 
     .thumbnail {
-      @include layout.square(48px);
-      border-radius: 12px;
+      @include layout.square(44px);
+      border-radius: 11px;
       flex-shrink: 0;
     }
 
     .title {
-      font-size: 16px;
+      font-size: 15.5px;
     }
 
     .descriptionSection {
@@ -154,8 +153,8 @@
     @media (max-width: 960px) {
       flex-direction: column;
       align-items: stretch;
-      gap: 12px;
-      padding: 18px 20px;
+      gap: 10px;
+      padding: 15px 18px;
 
       &:hover {
         transform: translateY(-2px);
@@ -179,7 +178,7 @@
         width: 100%;
         justify-content: space-between;
         padding-left: 0;
-        padding-top: 10px;
+        padding-top: 9px;
         border-left: none;
         border-top: 1px solid var(--border-subtle);
       }
@@ -189,32 +188,32 @@
 
 .header {
   @include layout.width(fill);
-  @include layout.flex(row, start, start, 14px);
+  @include layout.flex(row, start, start, 12px);
 }
 
 .leftHead {
   @include layout.width(fill);
-  @include layout.flex(row, start, center, 13px);
+  @include layout.flex(row, start, center, 12px);
 }
 
 .thumbnail {
-  @include layout.square(48px);
-  border-radius: 12px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-card);
+  @include layout.square(44px);
+  border-radius: 11px;
+  background: transparent;
+  border: none;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  padding: 7px;
+  padding: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .thumbInitials {
   color: #ffffff;
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 700;
   letter-spacing: 0.4px;
   user-select: none;
@@ -223,8 +222,8 @@
 .thumbImg {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  border-radius: 4px;
+  object-fit: cover;
+  border-radius: inherit;
   display: block;
 }
 
@@ -285,7 +284,7 @@
 
 .info {
   @include layout.width(fill);
-  @include layout.flex(column, stretch, start, 5px);
+  @include layout.flex(column, stretch, start, 4px);
   min-width: 0;
 }
 
@@ -302,14 +301,14 @@
 }
 
 .title {
-  font-size: 16px;
+  font-size: 15.5px;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.3;
+  line-height: 1.25;
   margin: 0;
 }
 
@@ -320,7 +319,7 @@
 }
 
 .newBadge {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
   padding: 1.5px 6px;
   border-radius: 4px;
@@ -334,8 +333,9 @@
 .tagRow {
   @include layout.width(fill);
   @include layout.flex(row, start, center, 5px);
-  font-size: 11.5px;
-  flex-wrap: wrap;
+  font-size: 11px;
+  flex-wrap: nowrap;
+  overflow: hidden;
   max-width: 100%;
 }
 
@@ -345,19 +345,19 @@
   gap: 4.5px;
   font-size: 10.5px;
   font-weight: 600;
-  padding: 2px 7px;
+  padding: 2px 6.5px;
   border-radius: 5px;
   background: var(--bg-secondary);
   color: var(--text-secondary);
   border: 1px solid var(--border-card);
   white-space: nowrap;
   flex-shrink: 0;
-  line-height: 1.25;
+  line-height: 1.2;
 }
 
 .categoryDot {
-  width: 6px;
-  height: 6px;
+  width: 5.5px;
+  height: 5.5px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -372,85 +372,90 @@
 
 .descriptionSection {
   @include layout.width(fill);
-  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
 }
 
 .description {
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 12.75px;
+  line-height: 1.45;
   color: var(--text-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin: 0;
-  min-height: 39px;
 }
 
 .cardTagsRow {
   @include layout.width(fill);
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 5px;
-  max-height: 48px;
+  height: 22px;
   overflow: hidden;
-  margin-top: auto;
+  margin-top: 1px;
 }
 
 .cardTagChip {
   display: inline-flex;
   align-items: center;
   gap: 1.5px;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 500;
-  padding: 2px 7px;
+  padding: 2px 6.5px;
   border-radius: 5px;
   background: var(--bg-secondary);
   color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
   white-space: nowrap;
-  line-height: 1.3;
+  line-height: 1.25;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: border-color 0.15s ease, color 0.15s ease;
 
   .tagHash {
     color: var(--primary-color, #8b5cf6);
     font-weight: 600;
     opacity: 0.85;
+    flex-shrink: 0;
   }
 }
 
 .cardTagMore {
   display: inline-flex;
   align-items: center;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 600;
-  padding: 2px 6px;
+  padding: 2px 5.5px;
   border-radius: 5px;
   background: rgba(139, 92, 246, 0.08);
   color: var(--primary-color, #8b5cf6);
   border: 1px solid rgba(139, 92, 246, 0.2);
   white-space: nowrap;
-  line-height: 1.3;
+  line-height: 1.25;
+  flex-shrink: 0;
 }
 
 .bottomRow {
   @include layout.width(fill);
-  @include layout.flex(row, space-between, center, 12px);
-  padding-top: 10px;
+  @include layout.flex(row, space-between, center, 10px);
+  padding-top: 8px;
+  margin-top: auto;
   border-top: 1px solid var(--border-subtle);
 }
 
 .metrics {
-  @include layout.flex(row, start, center, 14px);
+  @include layout.flex(row, start, center, 12px);
   min-width: 0;
 }
 
 .rating {
-  @include layout.flex(row, start, center, 4px);
-  font-size: 12.5px;
+  @include layout.flex(row, start, center, 3.5px);
+  font-size: 12px;
   font-weight: 700;
   color: #f59e0b;
   white-space: nowrap;
@@ -464,21 +469,21 @@
 
 .views {
   @include layout.flex(row, start, center, 4px);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 500;
   color: var(--text-muted);
   white-space: nowrap;
 }
 
 .actions {
-  @include layout.flex(row, end, center, 6px);
+  @include layout.flex(row, end, center, 5px);
   flex-shrink: 0;
 
   .actionBtn {
-    @include layout.square(28px);
+    @include layout.square(26px);
     @include layout.flex(row, center, center);
     color: var(--text-muted);
-    border-radius: 7px;
+    border-radius: 6.5px;
     border: 1px solid var(--border-card);
     background: var(--bg-secondary);
     cursor: pointer;
@@ -504,6 +509,6 @@
     display: none;
   }
   .metrics {
-    gap: 10px;
+    gap: 8px;
   }
 }
