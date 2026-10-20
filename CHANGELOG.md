@@ -26,10 +26,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Connected the `timeFilter` dropdown in `ProductSorterBar.jsx` and replaced leftover AI-prompt clichés with corporate software catalog copy across schemas and modals.
 
 - **Modern App Store / Raycast Style Tool Card Overhaul (`ProductCard.jsx`, `ProductCard.module.scss`, `ProductPreviewHeader.jsx`, `toolAdapter.js`)**:
-  - Fixed the column flex alignment bug (`@include layout.flex(column, stretch, flex-start, 9px)`) and added explicit `width: 100%` to `.bottomRow`, `.descriptionSection`, and `.cardTagsRow` so the card footer and top border span the full card width.
-  - Made tool icons fill the entire `44px` squircle thumbnail edge-to-edge (`padding: 0`, `border: none`, `object-fit: cover`) without leaving a dark border frame around the logo.
+  - Fixed the column flex alignment bug (`@include layout.flex(column, stretch, flex-start, 13px)`) and added explicit `width: 100%` to `.bottomRow`, `.descriptionSection`, and `.cardTagsRow` so the card footer and top border span the full card width.
+  - Made tool icons fill the entire `48px` squircle thumbnail edge-to-edge (`padding: 0`, `border: none`, `object-fit: cover`) without leaving a dark border frame around the logo.
   - Added `imgError` state and `onError` fallback in `ProductCard.jsx` and `ProductPreviewHeader.jsx` (plus broken-logo filtering in `toolAdapter.js`) so unavailable external favicons cleanly fall back to category-tinted 2-letter monogram squircles.
-  - Standardized `.cardTagsRow` to a strict single-line row (`flex-wrap: nowrap; height: 22px`, up to 3 `#tag` chips + `+N ...` overflow badge) and removed vertical gap between the 2-line description and tags, reducing overall card height across all grid items.
+  - Standardized `.cardTagsRow` to a strict single-line row (`flex-wrap: nowrap; height: 24px`, up to 3 `#tag` chips + `+N ...` overflow badge) with balanced vertical spacing (`gap: 13px`, `padding: 18px 20px 15px 20px`, `~216px` card height) across all grid items.
   - Enriched live-backend `adaptProductDtoToTool` mapping with pricing, version, rating, review count, views, verification flags, and Turkish catalog descriptions.
 
 - **Category Color Badges & Vibrant Accent Restoration (`ProductCard.jsx`, `CategorySlider.module.scss`, `FilterBar.module.scss`, `ProductPreviewHeader.jsx`, `_theme.scss`)**:

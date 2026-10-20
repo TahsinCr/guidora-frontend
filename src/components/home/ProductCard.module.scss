@@ -14,19 +14,19 @@
 .card {
   @include layout.width(fill);
   @include layout.box(
-    $padding: 15px 18px 12px 18px,
+    $padding: 18px 20px 15px 20px,
     $border: 1px solid var(--border-card),
     $radius: 14px
   );
   background: var(--bg-card);
   /* Notice: in layout.flex(column, $x, $y), $x is align-items and $y is justify-content */
-  @include layout.flex(column, stretch, flex-start, 9px);
+  @include layout.flex(column, stretch, flex-start, 13px);
   cursor: pointer;
   position: relative;
   overflow: hidden;
   container-type: inline-size;
   content-visibility: auto;
-  contain-intrinsic-size: auto 196px;
+  contain-intrinsic-size: auto 216px;
   animation: cardEntrance 0.28s ease both;
   will-change: transform, border-color, box-shadow;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
@@ -188,17 +188,17 @@
 
 .header {
   @include layout.width(fill);
-  @include layout.flex(row, start, start, 12px);
+  @include layout.flex(row, start, start, 14px);
 }
 
 .leftHead {
   @include layout.width(fill);
-  @include layout.flex(row, start, center, 12px);
+  @include layout.flex(row, start, center, 13px);
 }
 
 .thumbnail {
-  @include layout.square(44px);
-  border-radius: 11px;
+  @include layout.square(48px);
+  border-radius: 12px;
   background: transparent;
   border: none;
   flex-shrink: 0;
@@ -213,7 +213,7 @@
 
 .thumbInitials {
   color: #ffffff;
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.4px;
   user-select: none;
@@ -284,7 +284,7 @@
 
 .info {
   @include layout.width(fill);
-  @include layout.flex(column, stretch, start, 4px);
+  @include layout.flex(column, stretch, start, 5px);
   min-width: 0;
 }
 
@@ -301,7 +301,7 @@
 }
 
 .title {
-  font-size: 15.5px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
@@ -377,8 +377,8 @@
 }
 
 .description {
-  font-size: 12.75px;
-  line-height: 1.45;
+  font-size: 13px;
+  line-height: 1.5;
   color: var(--text-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -392,19 +392,19 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 5px;
-  height: 22px;
+  gap: 6px;
+  height: 24px;
   overflow: hidden;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
 .cardTagChip {
   display: inline-flex;
   align-items: center;
   gap: 1.5px;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 500;
-  padding: 2px 6.5px;
+  padding: 2.5px 7px;
   border-radius: 5px;
   background: var(--bg-secondary);
   color: var(--text-secondary);
@@ -428,9 +428,9 @@
 .cardTagMore {
   display: inline-flex;
   align-items: center;
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 600;
-  padding: 2px 5.5px;
+  padding: 2.5px 6px;
   border-radius: 5px;
   background: rgba(139, 92, 246, 0.08);
   color: var(--primary-color, #8b5cf6);
@@ -442,20 +442,20 @@
 
 .bottomRow {
   @include layout.width(fill);
-  @include layout.flex(row, space-between, center, 10px);
-  padding-top: 8px;
+  @include layout.flex(row, space-between, center, 12px);
+  padding-top: 11px;
   margin-top: auto;
   border-top: 1px solid var(--border-subtle);
 }
 
 .metrics {
-  @include layout.flex(row, start, center, 12px);
+  @include layout.flex(row, start, center, 14px);
   min-width: 0;
 }
 
 .rating {
-  @include layout.flex(row, start, center, 3.5px);
-  font-size: 12px;
+  @include layout.flex(row, start, center, 4px);
+  font-size: 12.5px;
   font-weight: 700;
   color: #f59e0b;
   white-space: nowrap;
@@ -469,21 +469,21 @@
 
 .views {
   @include layout.flex(row, start, center, 4px);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-muted);
   white-space: nowrap;
 }
 
 .actions {
-  @include layout.flex(row, end, center, 5px);
+  @include layout.flex(row, end, center, 6px);
   flex-shrink: 0;
 
   .actionBtn {
-    @include layout.square(26px);
+    @include layout.square(28px);
     @include layout.flex(row, center, center);
     color: var(--text-muted);
-    border-radius: 6.5px;
+    border-radius: 7px;
     border: 1px solid var(--border-card);
     background: var(--bg-secondary);
     cursor: pointer;
