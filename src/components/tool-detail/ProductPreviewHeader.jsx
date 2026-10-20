@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { getCategoryColor } from '@/constants/categoryIcons';
@@ -6,28 +6,44 @@ import styles from './ProductPreviewHeader.module.scss';
 
 export default function ProductPreviewHeader({ tool }) {
   const { t, translateCategory } = useLanguage();
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [tool?.icon]);
+
   const categoryName = translateCategory(tool.categoryId, tool.category || 'Software Tool').toUpperCase();
   const catColor = getCategoryColor(tool.categoryId || tool.category);
+  const showImage = Boolean(tool.icon && !imgError);
 
   return (
     <div className={styles.heroCard}>
       <div
         className={styles.largeIcon}
-        style={!tool.icon ? {
-          background: `linear-gradient(135deg, ${catColor} 0%, #6366f1 100%)`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderColor: 'transparent',
-        } : {
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'hidden',
-        }}
+        style={
+          !showImage
+            ? {
+                background: `linear-gradient(135deg, ${catColor} 0%, #6366f1 100%)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderColor: 'transparent',
+              }
+            : {
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              }
+        }
       >
-        {tool.icon ? (
-          <img src={tool.icon} alt={tool.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        {showImage ? (
+          <img
+            src={tool.icon}
+            alt={tool.name}
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            onError={() => setImgError(true)}
+          />
         ) : (
           <span style={{ color: '#ffffff', fontSize: '26px', fontWeight: 800 }}>
             {tool.name ? tool.name.slice(0, 2).toUpperCase() : 'TL'}
@@ -48,9 +64,15 @@ export default function ProductPreviewHeader({ tool }) {
             {categoryName}
           </span>
           <div className={styles.trustBadges}>
-            {tool.verified?.admin && <ShieldCheck size={16} color="#EAB308" title={t('filter.adminVerified', 'Admin Verified')} />}
-            {tool.verified?.community && <Sparkles size={16} color="#10B981" title={t('filter.communityChoice', 'Community Choice')} />}
-            {tool.verified?.bot && <CheckCircle2 size={16} color="#8B5CF6" title={t('filter.botAudited', 'Technical Audit')} />}
+            {tool.verified?.admin && (
+              <ShieldCheck size={16} color="#EAB308" title={t('filter.adminVerified', 'Admin Verified')} />
+            )}
+            {tool.verified?.community && (
+              <Sparkles size={16} color="#10B981" title={t('filter.communityChoice', 'Community Choice')} />
+            )}
+            {(tool.verified?.bot || tool.verified?.audited) && (
+              <CheckCircle2 size={16} color="#8B5CF6" title={t('filter.botAudited', 'Technical Audit')} />
+            )}
           </div>
         </div>
 

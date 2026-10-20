@@ -25,13 +25,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Fixed organization verification state toggling (`verified` / `isVerified`), report tool name and timestamp resolution, and sub-reply filtering (`Alt Yanıtlar (@Reply)`) in Admin Reviews.
   - Connected the `timeFilter` dropdown in `ProductSorterBar.jsx` and replaced leftover AI-prompt clichés with corporate software catalog copy across schemas and modals.
 
-- **Modern App Store / Raycast Style Tool Card Overhaul (`ProductCard.jsx`, `ProductCard.module.scss`)**:
-  - Re-architected tool cards into an airy, modern squircle design inspired by modern developer directories and App Store aesthetics.
-  - Implemented 52px squircle logo container with generous padding (`8px`) and `object-fit: contain`, preventing logo distortion and clipping.
-  - Aligned tool title, verification badges, category tags, and pricing tags into a clean, uncrowded two-tier header hierarchy.
-  - Removed harsh 1px divider line; integrated a soft, subtle separator (`border-top: 1px solid var(--border-subtle)`) directly into the footer.
-  - Styled footer action controls into tactile squircle pill buttons (`30px`, `border-radius: 8px`) with soft hover and active bookmark states.
-  - Enhanced card surface with smooth 14px rounded corners and subtle depth shadows in both light and dark themes.
+- **Modern App Store / Raycast Style Tool Card Overhaul (`ProductCard.jsx`, `ProductCard.module.scss`, `ProductPreviewHeader.jsx`, `toolAdapter.js`)**:
+  - Fixed the column flex alignment bug (`@include layout.flex(column, stretch, flex-start, 12px)`) and added explicit `width: 100%` to `.bottomRow`, `.descriptionSection`, and `.cardTagsRow` so the card footer and top border span the full card width instead of collapsing to the left.
+  - Added `imgError` state and `onError` fallback in `ProductCard.jsx` and `ProductPreviewHeader.jsx` (plus broken-logo filtering in `toolAdapter.js`) so unavailable external favicons cleanly fall back to category-tinted 2-letter monogram squircles.
+  - Added compact `#tag` chips row (`.cardTagsRow`) with `+N ...` overflow indicator directly above the footer.
+  - Enriched live-backend `adaptProductDtoToTool` mapping with pricing, version, rating, review count, views, verification flags, and Turkish catalog descriptions so live-mode cards never render `0` ratings or empty view counts.
 
 - **Category Color Badges & Vibrant Accent Restoration (`ProductCard.jsx`, `CategorySlider.module.scss`, `FilterBar.module.scss`, `ProductPreviewHeader.jsx`, `_theme.scss`)**:
   - Restored category-specific accent colors to tool card category tags with matching tinted backgrounds (`${catColor}14`), subtle borders, and indicator dots.

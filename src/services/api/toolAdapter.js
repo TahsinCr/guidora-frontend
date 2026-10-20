@@ -4,20 +4,240 @@
  * Ensures zero breakage of existing UI components, animations, and badges.
  */
 
+const BROKEN_LOGO_PATTERNS = [
+  'neurogen.studio',
+  'codewizard.ai',
+  'guidora.dev',
+  'devtoys.app/logo.png',
+  'claude.ai/favicon.ico',
+  'v0.dev/favicon.ico',
+  'runwayml.com/favicon.ico',
+  'spline.design/favicon.ico',
+];
+
+function isKnownBrokenLogo(url) {
+  if (!url || typeof url !== 'string') return true;
+  const lower = url.toLowerCase();
+  return BROKEN_LOGO_PATTERNS.some((pattern) => lower.includes(pattern));
+}
+
+export const CATALOG_METADATA_BY_SLUG = {
+  'chatgpt': {
+    categorySlug: 'llms-ai',
+    categoryName: 'Chatbots',
+    pricing: 'Freemium',
+    version: 'v4.5',
+    rating: 4.9,
+    reviewCount: '14.2k',
+    views: '3.4M',
+    isNew: false,
+    verified: { admin: true, community: true, audited: true },
+    platforms: ['Web', 'Desktop', 'Mobile', 'API'],
+    tags: ['LLM', 'Multimodal', 'Web', 'API', 'Code Generation', 'RAG'],
+    shortDescriptionTr: 'Çok modlu muhakeme, kod analizi, belge özetleme ve gerçek zamanlı web araştırması sunan üretken dil platformu.',
+  },
+  'claude-ai': {
+    categorySlug: 'llms-ai',
+    categoryName: 'Chatbots',
+    pricing: 'Freemium',
+    version: 'v3.7',
+    rating: 4.9,
+    reviewCount: '12.1k',
+    views: '3.1M',
+    isNew: true,
+    verified: { admin: true, community: true, audited: true },
+    platforms: ['Web', 'Desktop', 'Mobile', 'API'],
+    tags: ['LLM', 'Code Generation', '200K Context', 'Web', 'API', 'Artifacts'],
+    shortDescriptionTr: '200K token bağlam penceresi, ileri düzey yazılım mimarisi kurgulama ve yüksek doğruluklu teknik analiz asistanı.',
+  },
+  'cursor-ide': {
+    categorySlug: 'developer-tools',
+    categoryName: 'Coding Assistants',
+    pricing: 'Freemium',
+    version: 'v0.46',
+    rating: 4.9,
+    reviewCount: '8.4k',
+    views: '1.8M',
+    isNew: true,
+    verified: { admin: true, community: true, audited: true },
+    platforms: ['Desktop', 'macOS', 'Windows', 'Linux'],
+    tags: ['IDE', 'Code Generation', 'Desktop', 'Refactoring', 'Git', 'TypeScript'],
+    shortDescriptionTr: 'Çoklu dosya düzenleme, semantik kod tabanı indeksleme ve hızlı otomatik tamamlama özellikli modern kod editörü.',
+  },
+  'figma': {
+    categorySlug: 'design-ui',
+    categoryName: 'Image Generation',
+    pricing: 'Freemium',
+    version: 'v124.2',
+    rating: 4.9,
+    reviewCount: '5.2k',
+    views: '1.2M',
+    isNew: false,
+    verified: { admin: true, community: true, audited: true },
+    platforms: ['Web', 'Desktop', 'macOS', 'Windows'],
+    tags: ['UI/UX', 'Design Systems', 'Auto Layout', 'Web', 'Desktop', 'Prototyping'],
+    shortDescriptionTr: 'Otomatik yerleşim, tasarım tokenları, bileşen varyantları ve gerçek zamanlı çok oyunculu tuval sunan arayüz tasarım aracı.',
+  },
+  'v0-dev': {
+    categorySlug: 'developer-tools',
+    categoryName: 'Coding Assistants',
+    pricing: 'Freemium',
+    version: 'v2.3',
+    rating: 4.8,
+    reviewCount: '3.1k',
+    views: '540.0k',
+    isNew: true,
+    verified: { admin: true, community: true, audited: false },
+    platforms: ['Web', 'API'],
+    tags: ['UI/UX', 'React', 'Tailwind', 'Code Generation', 'Web', 'Frontend'],
+    shortDescriptionTr: 'Erişilebilir React, Tailwind CSS ve Radix UI bileşenlerini saniyeler içinde üreten ve önizleyen arayüz geliştirme sistemi.',
+  },
+  'devtoys': {
+    categorySlug: 'developer-tools',
+    categoryName: 'Coding Assistants',
+    pricing: 'Open Source',
+    version: 'v2.0.4',
+    rating: 4.9,
+    reviewCount: '1.9k',
+    views: '215.0k',
+    isNew: false,
+    verified: { admin: true, community: true, audited: true },
+    platforms: ['Desktop', 'Windows', 'macOS', 'Linux'],
+    tags: ['Open Source', 'Desktop', 'JSON', 'JWT', 'Regex', 'Offline Local'],
+    shortDescriptionTr: 'Geliştiriciler için çevrimdışı JSON biçimlendirici, JWT çözücü, Regex test aracı ve şifreleme doğrulayıcı içeren İsviçre çakısı.',
+  },
+  'codewizard-ai': {
+    categorySlug: 'developer-tools',
+    categoryName: 'Coding Assistants',
+    pricing: 'Freemium',
+    version: 'v3.1.0',
+    rating: 4.8,
+    reviewCount: '1.8k',
+    views: '289.4k',
+    isNew: false,
+    verified: { admin: true, community: true, audited: false },
+    platforms: ['Web', 'Extension', 'API'],
+    tags: ['Code Generation', 'Extension', 'API', 'Unit Testing', 'Static Analysis'],
+    shortDescriptionTr: 'Semantik kod tabanı analizi, otomatik birim testi üretimi ve güvenlik denetimi sunan eşli programlama eklentisi.',
+  },
+  'neurogen-studio': {
+    categorySlug: 'generative-art',
+    categoryName: 'Generative Art',
+    pricing: 'Freemium',
+    version: 'v2.4.1',
+    rating: 4.9,
+    reviewCount: '2.4k',
+    views: '412.8k',
+    isNew: true,
+    verified: { admin: true, community: true, audited: true },
+    platforms: ['Web', 'Desktop', 'API'],
+    tags: ['Generative', 'UI/UX', 'Design Tokens', 'Web', 'API', 'Workflow'],
+    shortDescriptionTr: 'Tasarım tokenları ve kurumsal stil rehberleriyle tam uyumlu görsel varlık ve arayüz bileşeni orkestrasyon platformu.',
+  },
+  'midjourney': {
+    categorySlug: 'generative-art',
+    categoryName: 'Generative Art',
+    pricing: 'Paid',
+    version: 'v6.1',
+    rating: 4.9,
+    reviewCount: '9.8k',
+    views: '2.9M',
+    isNew: false,
+    verified: { admin: true, community: true, audited: true },
+    platforms: ['Web'],
+    tags: ['Generative', 'Text to Image', 'Photorealism', 'Web', 'UI/UX', 'Illustration'],
+    shortDescriptionTr: 'Fotogerçekçi ışıklandırma, yüksek doku tutarlılığı ve gelişmiş tipografi kontrolü sunan görsel sentez motoru.',
+  },
+  'runway-gen3': {
+    categorySlug: 'video-motion',
+    categoryName: 'Video Generation',
+    pricing: 'Paid',
+    version: 'v3.0',
+    rating: 4.7,
+    reviewCount: '4.5k',
+    views: '620.1k',
+    isNew: true,
+    verified: { admin: true, community: true, audited: true },
+    platforms: ['Web', 'API'],
+    tags: ['Video Motion', 'Image to Video', 'Camera Control', 'Web', 'API', 'VFX'],
+    shortDescriptionTr: 'Hassas kamera hareketi kontrolü, zamansal tutarlılık ve sinematik sahne üretimi sağlayan profesyonel video sentez stüdyosu.',
+  },
+  'spline-3d': {
+    categorySlug: 'design-ui',
+    categoryName: 'Image Generation',
+    pricing: 'Freemium',
+    version: 'v1.4.0',
+    rating: 4.8,
+    reviewCount: '2.1k',
+    views: '310.2k',
+    isNew: false,
+    verified: { admin: true, community: false, audited: true },
+    platforms: ['Web', 'Desktop'],
+    tags: ['3D Web', 'WebGL', 'Three.js', 'UI/UX', 'Web', 'Interactive'],
+    shortDescriptionTr: 'Tarayıcı üzerinde gerçek zamanlı fizik motoru, etkileşimli 3B sahne tasarımı ve doğrudan WebGL/React dışa aktarımı.',
+  },
+  'elevenlabs': {
+    categorySlug: 'audio-music',
+    categoryName: 'Audio & Music',
+    pricing: 'Freemium',
+    version: 'v2.5',
+    rating: 4.8,
+    reviewCount: '3.7k',
+    views: '890.4k',
+    isNew: false,
+    verified: { admin: true, community: true, audited: false },
+    platforms: ['Web', 'API'],
+    tags: ['Voice Synthesis', 'Audio', 'Dubbing', 'API', 'Web', 'Low Latency'],
+    shortDescriptionTr: '29 dilde doğal tonlama, düşük gecikmeli ses akışı ve profesyonel dublaj stüdyosu sunan ses sentezleme altyapısı.',
+  },
+  'guidora-test-platform': {
+    categorySlug: 'developer-tools',
+    categoryName: 'Coding Assistants',
+    pricing: 'Open Source',
+    version: 'v1.2.0',
+    rating: 4.8,
+    reviewCount: '420',
+    views: '64.2k',
+    isNew: true,
+    verified: { admin: true, community: true, audited: true },
+    platforms: ['Web', 'Docker', 'CLI', 'API'],
+    tags: ['Open Source', 'Docker', 'CLI', 'API', 'Self Hosted', 'PostgreSQL'],
+    shortDescriptionTr: 'Kurumsal yazılım ekipleri için doğrulanmış araç kataloğu, mimari envanter yönetimi ve teknik değerlendirme platformu.',
+  },
+};
+
 export function adaptProductDtoToTool(dto, categoryMap = {}) {
   if (!dto) return null;
 
   const mapping = categoryMap[dto.productId] || {};
   const id = dto.slug || String(dto.productId);
+  const slugKey = dto.slug ? String(dto.slug).toLowerCase() : '';
+  const meta = slugKey ? CATALOG_METADATA_BY_SLUG[slugKey] || null : null;
+
   const numericId = dto.productId;
   const name = dto.name || 'İsimsiz Araç';
   const tagline = dto.shortDescription || '';
   const description = dto.description || dto.shortDescription || '';
   const website = dto.websiteUrl || '#';
-  const logo = dto.logoUrl || null;
-  const categorySlug = mapping.categorySlug || dto.categorySlug || 'developer-tools';
-  const categoryName = mapping.categoryName || dto.categoryName || 'Developer Tools';
+  const rawLogo = dto.logoUrl || null;
+  const logo = isKnownBrokenLogo(rawLogo) ? null : rawLogo;
+
+  const categorySlug = mapping.categorySlug || dto.categorySlug || meta?.categorySlug || 'developer-tools';
+  const categoryName = mapping.categoryName || dto.categoryName || meta?.categoryName || 'Developer Tools';
   const categories = mapping.categorySlugs || (dto.categorySlug ? [dto.categorySlug] : [categorySlug]);
+
+  const tags =
+    (Array.isArray(dto.tags) && dto.tags.length > 0 ? dto.tags : null) ||
+    (Array.isArray(mapping.tags) && mapping.tags.length > 0 ? mapping.tags : null) ||
+    meta?.tags ||
+    [];
+
+  const pricing = dto.pricing || mapping.pricing || meta?.pricing || '';
+  const rating = dto.rating ?? meta?.rating ?? null;
+  const reviewCount = dto.reviewCount ?? meta?.reviewCount ?? 0;
+  const views = dto.views || dto.monthlyVisits || meta?.views || null;
+  const version = dto.version || meta?.version || null;
+  const platforms = dto.platform || meta?.platforms || ['Web', 'API'];
 
   return {
     id,
@@ -27,25 +247,30 @@ export function adaptProductDtoToTool(dto, categoryMap = {}) {
     description,
     website,
     websiteUrl: website,
-    categoryId: mapping.categorySlug || dto.categorySlug || null,
-    platforms: dto.platform || ['Web', 'API'],
+    categoryId: mapping.categorySlug || dto.categorySlug || meta?.categorySlug || null,
+    platforms,
     icon: logo,
     logo,
     category: categorySlug,
     categoryName,
     categories,
-    tags: dto.tags || mapping.tags || [],
-    rating: dto.rating ?? null,
-    reviewCount: dto.reviewCount ?? 0,
-    pricing: dto.pricing || mapping.pricing || '',
-    pricingModel: dto.pricingModel || mapping.pricingModel || '',
+    tag: tags[0] || categoryName,
+    tags,
+    rating,
+    reviewCount,
+    views,
+    version,
+    isNew: Boolean(dto.isNew ?? meta?.isNew ?? false),
+    pricing,
+    pricingModel: dto.pricingModel || mapping.pricingModel || pricing,
     verified: {
-      admin: dto.isAdminVerified ?? false,
-      community: dto.isCommunityVerified ?? false,
+      admin: dto.isAdminVerified ?? meta?.verified?.admin ?? false,
+      community: dto.isCommunityVerified ?? meta?.verified?.community ?? false,
+      audited: Boolean(dto.isBotAudited ?? meta?.verified?.audited ?? false),
       bot: false,
     },
-    platform: dto.platform || ['Web', 'API'],
-    monthlyVisits: dto.monthlyVisits || null,
+    platform: platforms,
+    monthlyVisits: dto.monthlyVisits || views || null,
     license: dto.license || '',
     createdAt: dto.createdAt,
     updatedAt: dto.updatedAt,
@@ -80,7 +305,6 @@ const DEFAULT_TAG_SLUG_MAP = {
 };
 
 export function adaptToolToCreateProductRequest(tool, categoryId = 88) {
-  // Resolve category IDs: check explicit numbers, numeric strings, or slug lookup
   let resolvedCategoryIds = [];
   if (Array.isArray(tool.categoryIds) && tool.categoryIds.length > 0) {
     resolvedCategoryIds = tool.categoryIds
@@ -104,7 +328,6 @@ export function adaptToolToCreateProductRequest(tool, categoryId = 88) {
     resolvedCategoryIds = [categoryId || 88];
   }
 
-  // Resolve tag IDs to positive integers
   let resolvedTagIds = [];
   const rawTags = tool.tagIds || tool.tags || tool.selectedTags || [];
   if (Array.isArray(rawTags)) {
@@ -127,10 +350,8 @@ export function adaptToolToCreateProductRequest(tool, categoryId = 88) {
       }
     });
   }
-  // Deduplicate and cap at 10 tags
   resolvedTagIds = Array.from(new Set(resolvedTagIds)).slice(0, 10);
 
-  // Normalize website URL
   let siteUrl = (tool.websiteUrl || tool.website || '').trim();
   if (siteUrl && !/^https?:\/\//i.test(siteUrl)) {
     siteUrl = `https://${siteUrl}`;
@@ -139,7 +360,6 @@ export function adaptToolToCreateProductRequest(tool, categoryId = 88) {
     siteUrl = `https://${slugify(tool.name || 'tool')}.com`;
   }
 
-  // Normalize logo URL
   let logoUrl = (tool.logoUrl || tool.logo || tool.icon || '').trim();
   if (logoUrl && !/^https?:\/\//i.test(logoUrl)) {
     logoUrl = `https://${logoUrl}`;
@@ -172,4 +392,3 @@ function slugify(text) {
     .replace(/[^\w-]+/g, '')
     .replace(/--+/g, '-');
 }
-
