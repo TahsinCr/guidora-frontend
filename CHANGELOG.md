@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [v1.1] - 2026-10-21
+
 ### Changed
 
 - **Enterprise-Grade Admin Panel Architecture & Real Backend Integration (`adminApi.js`, `adminService.js`, `AdminDashboardPage.jsx`, `ToolsTab.jsx`, `ProposalsTab.jsx`, `UsersTab.jsx`, `ReviewsTab.jsx`, `SystemTab.jsx`, `AdminDashboardPage.module.scss`)**:
@@ -144,7 +146,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Restored full-featured `AdminDashboardPage` across all environments while eliminating mock-only limitations.
   - Maintained 100% vitest suite pass rate (83 passing tests across 14 suites).
 
-## **[v1.0] - 02.10.2026**
+## [v1.0] - 2026-10-02
 
 ### Changed
 
