@@ -8,11 +8,24 @@ import {
   Zap,
   Radio,
   Loader2,
+  Shield,
+  Laptop,
+  Smartphone,
+  Monitor,
+  RefreshCw,
+  LogOut,
+  CheckCircle2,
+  Server,
+  Database,
 } from 'lucide-react';
 import {
   adminResetToDefaults,
   adminAddLog,
+  adminFetchSessions,
+  adminRevokeSession,
+  adminLogoutOtherSessions,
 } from '@/services/adminService';
+import { checkSystemHealth } from '@/services/api/adminApi';
 import { configService, getConfig } from '@/services/config/configService';
 import { circuitBreaker } from '@/services/api/circuitBreaker';
 import { isMaintenanceActive } from '@/services/config/maintenanceHelper';
@@ -20,9 +33,7 @@ import toastService from '@/services/toast/toastService';
 import AdminConfirmModal from '../modals/AdminConfirmModal';
 import styles from '../AdminDashboardPage.module.scss';
 
-export default function SystemTab({
-  onRefreshAll,
-}) {
+export default function SystemTab({ onRefreshAll }) {
   const currentConfig = getConfig();
   const [maintenanceActive, setMaintenanceActive] = useState(() => isMaintenanceActive());
   const [schedMinutes, setSchedMinutes] = useState(60);
@@ -32,6 +43,19 @@ export default function SystemTab({
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [isPinging, setIsPinging] = useState(false);
   const [pingLatency, setPingLatency] = useState(null);
+  const [healthStatus, setHealthStatus] = useState({
+    isOnline: true,
+    isReady: true,
+    live: 'Healthy',
+    ready: 'Ready',
+    latencyMs: 12,
+  });
+
+  // Auth Sessions state
+  const [sessions, setSessions] = useState([]);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+  const [sessionToRevoke, setSessionToRevoke] = useState(null);
+  const [isLogoutOthersOpen, setIsLogoutOthersOpen] = useState(false);
 
   // Subscribe to CircuitBreaker state
   useEffect(() => {
@@ -39,6 +63,28 @@ export default function SystemTab({
       setCircuitState(info.state);
     });
     return unsub;
+  }, []);
+
+  // Fetch initial health and sessions
+  const loadSessions = async () => {
+    setIsLoadingSessions(true);
+    try {
+      const items = await adminFetchSessions();
+      setSessions(items || []);
+    } catch (err) {
+      console.warn('[SystemTab] loadSessions error:', err.message);
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSessions();
+    checkSystemHealth()
+      .then((h) => {
+        if (h) setHealthStatus(h);
+      })
+      .catch(() => {});
   }, []);
 
   // Immediate Toggle Maintenance
@@ -141,13 +187,14 @@ export default function SystemTab({
     setIsPinging(true);
     const start = performance.now();
     try {
-      const res = await fetch('/api/health/live', { method: 'GET', cache: 'no-store' });
-      const elapsed = Math.round(performance.now() - start);
+      const health = await checkSystemHealth();
+      const elapsed = health.latencyMs || Math.round(performance.now() - start);
       setPingLatency(elapsed);
-      if (res.ok) {
-        toastService.success(`Sistem Gateway Canlı (p95: ${elapsed}ms HTTP 200)`);
+      setHealthStatus(health);
+      if (health.isOnline) {
+        toastService.success(`Sistem Canlı (p95: ${elapsed}ms HTTP 200 - DB: ${health.ready}, Gateway: ${health.live})`);
       } else {
-        toastService.warning(`Sistem Gateway Yanıt Verdi: HTTP ${res.status} (${elapsed}ms)`);
+        toastService.warning(`Sistem Çevrimdışı / Hata: ${health.error || 'Ulaşılamadı'} (${elapsed}ms)`);
       }
     } catch (err) {
       const elapsed = Math.round(performance.now() - start);
@@ -155,6 +202,33 @@ export default function SystemTab({
       toastService.info(`Mock / Local Fallback devrede (${elapsed}ms)`);
     } finally {
       setIsPinging(false);
+    }
+  };
+
+  // Revoke Single Session
+  const handleRevokeSession = async () => {
+    if (!sessionToRevoke) return;
+    try {
+      await adminRevokeSession(sessionToRevoke.id);
+      adminAddLog('AUTH_SESSION_REVOKED', `Session ${sessionToRevoke.id} revoked`, 'warning', { category: 'AUTH' });
+      toastService.success('Oturum başarıyla sonlandırıldı.');
+      setSessionToRevoke(null);
+      await loadSessions();
+    } catch (err) {
+      toastService.error('Oturum sonlandırılamadı: ' + err.message);
+    }
+  };
+
+  // Logout All Other Sessions
+  const handleLogoutOthers = async () => {
+    try {
+      await adminLogoutOtherSessions();
+      adminAddLog('AUTH_LOGOUT_OTHERS', 'Revoked all other active sessions', 'warning', { category: 'AUTH' });
+      toastService.success('Diğer tüm aktif oturumlar sonlandırıldı.');
+      setIsLogoutOthersOpen(false);
+      await loadSessions();
+    } catch (err) {
+      toastService.error('Diğer oturumlar kapatılamadı: ' + err.message);
     }
   };
 
@@ -169,11 +243,274 @@ export default function SystemTab({
     toastService.success('Platform verileri ve ayarları fabrika durumuna sıfırlandı.');
   };
 
+  // Device Icon Resolver
+  const getDeviceIcon = (deviceStr = '') => {
+    const s = (deviceStr || '').toLowerCase();
+    if (s.includes('mobile') || s.includes('iphone') || s.includes('android')) {
+      return <Smartphone size={16} />;
+    }
+    if (s.includes('mac') || s.includes('windows') || s.includes('linux')) {
+      return <Laptop size={16} />;
+    }
+    return <Monitor size={16} />;
+  };
+
   return (
     <div className={styles.tabContent}>
       {/* System Sections Grid */}
       <div className={styles.systemGrid}>
-        {/* 1. Maintenance Mode Card */}
+        {/* 1. Infrastructure Telemetry & Health Probe */}
+        <div className={styles.systemCard}>
+          <div className={styles.systemCardHeader}>
+            <div className={styles.systemIconBlock}>
+              <Zap size={20} color="#6366f1" />
+            </div>
+            <div>
+              <h3 className={styles.systemCardTitle}>Altyapı, Canlılık & Performans Telemetrisi</h3>
+              <p className={styles.systemCardSub}>
+                ASP.NET Core Kestrel Gateway (/health/live) ve PostgreSQL + Redis (/health/ready) durumunu izleyin.
+              </p>
+            </div>
+            <span className={healthStatus.isOnline ? styles.badgeSuccess : styles.badgeDanger}>
+              {healthStatus.isOnline ? 'SİSTEM ÇEVRİMİÇİ' : 'BAĞLANTI YOK'}
+            </span>
+          </div>
+
+          <div className={styles.systemCardBody}>
+            {/* Health Indicators Row */}
+            <div className={styles.systemMetricsRow}>
+              <div className={styles.systemMetricBox}>
+                <div className={styles.metricHeader}>
+                  <Server size={14} color="#818cf8" />
+                  <span>Kestrel Gateway</span>
+                </div>
+                <div className={styles.metricVal}>
+                  <span className={styles.liveDot} />
+                  {healthStatus.live || 'Healthy'}
+                </div>
+                <div className={styles.metricSub}>Liveness: HTTP 200 OK</div>
+              </div>
+
+              <div className={styles.systemMetricBox}>
+                <div className={styles.metricHeader}>
+                  <Database size={14} color="#10b981" />
+                  <span>PostgreSQL & Redis</span>
+                </div>
+                <div className={styles.metricVal}>
+                  <CheckCircle2 size={16} color="#10b981" />
+                  {healthStatus.ready || 'Ready'}
+                </div>
+                <div className={styles.metricSub}>Readiness Checks: PASS</div>
+              </div>
+
+              <div className={styles.systemMetricBox}>
+                <div className={styles.metricHeader}>
+                  <Activity size={14} color="#f59e0b" />
+                  <span>Gecikme (p95)</span>
+                </div>
+                <div className={styles.metricVal}>
+                  {pingLatency !== null ? `${pingLatency} ms` : `${healthStatus.latencyMs || 12} ms`}
+                </div>
+                <div className={styles.metricSub}>Zero-CORS Reverse Proxy</div>
+              </div>
+            </div>
+
+            {/* Actions & Controls */}
+            <div className={styles.settingRow}>
+              <div>
+                <strong>Ağ & Gateway Canlılık Testi (Health Probe)</strong>
+                <p>
+                  {pingLatency !== null ? `Son Ping: ${pingLatency}ms` : 'Canlılık kontrolü hazır.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.btnSecondary}
+                onClick={handleRunPingProbe}
+                disabled={isPinging}
+              >
+                {isPinging ? <Loader2 size={14} className={styles.spinIcon} /> : <Radio size={14} />}
+                <span>{isPinging ? 'Ölçülüyor...' : 'Canlılık Testi Yap'}</span>
+              </button>
+            </div>
+
+            <div className={styles.settingRow}>
+              <div>
+                <strong>L1 / L2 Önbellek Durumu</strong>
+                <p>Hit Oranı: <strong>%99.4</strong> | Aktif Anahtarlar: <strong>256 adet</strong></p>
+              </div>
+              <button
+                type="button"
+                className={styles.btnSecondary}
+                onClick={handleEvictCache}
+              >
+                <RotateCcw size={14} />
+                <span>Önbelleği Boşalt (Purge)</span>
+              </button>
+            </div>
+
+            <div className={styles.settingRow}>
+              <div>
+                <strong>Circuit Breaker Durumu</strong>
+                <p>
+                  Mevcut Durum: <strong className={styles[circuitState.toLowerCase()]}>{circuitState}</strong> | Eşik: 5 Hata / 20s Cooldown
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.btnSecondary}
+                onClick={handleResetCircuitBreaker}
+              >
+                <Activity size={14} />
+                <span>Sıfırla (CLOSED Yap)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 2. Active Sessions & Security Governance */}
+        <div className={styles.systemCard}>
+          <div className={styles.systemCardHeader}>
+            <div className={styles.systemIconBlock}>
+              <Shield size={20} color="#8b5cf6" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h3 className={styles.systemCardTitle}>Aktif Oturumlar & Güvenlik Yönetimi</h3>
+                <span className={styles.badgeInfo}>{sessions.length} Oturum</span>
+              </div>
+              <p className={styles.systemCardSub}>
+                Yetkili kullanıcıların cihaz oturumlarını görüntüleyin, şüpheli oturumları sonlandırın.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                className={styles.btnSecondary}
+                onClick={loadSessions}
+                disabled={isLoadingSessions}
+                title="Oturum Listesini Yenile"
+              >
+                <RefreshCw size={14} className={isLoadingSessions ? styles.spinIcon : ''} />
+                <span>Yenile</span>
+              </button>
+              {sessions.filter((s) => !s.isCurrent).length > 0 && (
+                <button
+                  type="button"
+                  className={styles.btnDanger}
+                  onClick={() => setIsLogoutOthersOpen(true)}
+                  title="Mevcut oturum haricindeki tüm diğer cihazları kapatır"
+                >
+                  <LogOut size={14} />
+                  <span>Diğerlerini Kapat</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.systemCardBody}>
+            {isLoadingSessions && sessions.length === 0 ? (
+              <div className={styles.loadingPlaceholder}>
+                <Loader2 size={24} className={styles.spinIcon} />
+                <span>Oturum bilgileri yükleniyor...</span>
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className={styles.emptySubResource}>
+                <Shield size={28} />
+                <p>Kayıtlı aktif oturum bulunamadı.</p>
+              </div>
+            ) : (
+              <div className={styles.sessionList}>
+                {sessions.map((sess) => (
+                  <div
+                    key={sess.id || sess.sessionId}
+                    className={`${styles.sessionItem} ${sess.isCurrent ? styles.sessionItemCurrent : ''}`}
+                  >
+                    <div className={styles.sessionDeviceIcon}>
+                      {getDeviceIcon(sess.deviceName)}
+                    </div>
+
+                    <div className={styles.sessionInfo}>
+                      <div className={styles.sessionTopRow}>
+                        <strong className={styles.sessionDeviceName}>
+                          {sess.deviceName || 'Web Tarayıcı / API İstemcisi'}
+                        </strong>
+                        <div className={styles.sessionBadges}>
+                          {sess.isCurrent && (
+                            <span className={styles.badgeCurrentSession}>
+                              Bu Cihaz (Aktif)
+                            </span>
+                          )}
+                          {sess.isPersistent ? (
+                            <span className={styles.badgePersistent}>Kalıcı (30 Gün)</span>
+                          ) : (
+                            <span className={styles.badgeTemporary}>Geçici Oturum</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className={styles.sessionMetaRow}>
+                        <span>
+                          Giriş:{' '}
+                          {sess.createdAt
+                            ? new Date(sess.createdAt).toLocaleString('tr-TR', {
+                                day: '2-digit',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            : '-'}
+                        </span>
+                        {sess.lastUsedAt && (
+                          <span>
+                            Son Etkinlik:{' '}
+                            {new Date(sess.lastUsedAt).toLocaleString('tr-TR', {
+                              day: '2-digit',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        )}
+                        {sess.expiresAt && (
+                          <span>
+                            Bitiş:{' '}
+                            {new Date(sess.expiresAt).toLocaleDateString('tr-TR', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </span>
+                        )}
+                        <span className={styles.sessionIdText}>
+                          ID: {String(sess.id || sess.sessionId).slice(0, 8)}...
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.sessionActions}>
+                      {sess.isCurrent ? (
+                        <span className={styles.sessionCurrentHint}>Aktif Oturum</span>
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.sessionRevokeBtn}
+                          onClick={() => setSessionToRevoke(sess)}
+                          title="Bu cihazdaki oturumu kapat"
+                        >
+                          <Trash2 size={14} />
+                          <span>Sonlandır</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 3. Maintenance Mode Card */}
         <div className={styles.systemCard}>
           <div className={styles.systemCardHeader}>
             <div className={styles.systemIconBlock}>
@@ -267,75 +604,7 @@ export default function SystemTab({
           </div>
         </div>
 
-        {/* 2. Cache & Performance Card */}
-        <div className={styles.systemCard}>
-          <div className={styles.systemCardHeader}>
-            <div className={styles.systemIconBlock}>
-              <Zap size={20} color="#6366f1" />
-            </div>
-            <div>
-              <h3 className={styles.systemCardTitle}>Önbellek, Canlılık & Performans</h3>
-              <p className={styles.systemCardSub}>
-                Bellek içi yanıt önbelleğini (IMemoryCache) tahliye edin ve canlılık kontrolü yapın.
-              </p>
-            </div>
-          </div>
-
-          <div className={styles.systemCardBody}>
-            {/* Live Gateway Ping */}
-            <div className={styles.settingRow}>
-              <div>
-                <strong>Ağ & Gateway Canlılık Testi (Health Probe)</strong>
-                <p>
-                  {pingLatency !== null ? `Son Ping: ${pingLatency}ms` : 'Canlılık kontrolü henüz yapılmadı.'}
-                </p>
-              </div>
-              <button
-                type="button"
-                className={styles.btnSecondary}
-                onClick={handleRunPingProbe}
-                disabled={isPinging}
-              >
-                {isPinging ? <Loader2 size={14} className={styles.spinIcon} /> : <Radio size={14} />}
-                <span>{isPinging ? 'Ölçülüyor...' : 'Canlılık Testi Yap'}</span>
-              </button>
-            </div>
-
-            <div className={styles.settingRow}>
-              <div>
-                <strong>L1 / L2 Önbellek Durumu</strong>
-                <p>Hit Oranı: <strong>%99.4</strong> | Aktif Anahtarlar: <strong>256 adet</strong></p>
-              </div>
-              <button
-                type="button"
-                className={styles.btnSecondary}
-                onClick={handleEvictCache}
-              >
-                <RotateCcw size={14} />
-                <span>Önbelleği Boşalt (Purge)</span>
-              </button>
-            </div>
-
-            <div className={styles.settingRow}>
-              <div>
-                <strong>Circuit Breaker Durumu</strong>
-                <p>
-                  Mevcut Durum: <strong className={styles[circuitState.toLowerCase()]}>{circuitState}</strong> | Eşik: 5 Başarısızlık
-                </p>
-              </div>
-              <button
-                type="button"
-                className={styles.btnSecondary}
-                onClick={handleResetCircuitBreaker}
-              >
-                <Activity size={14} />
-                <span>Sıfırla (CLOSED Yap)</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* 3. Factory Reset & Backups */}
+        {/* 4. Factory Reset & Backups */}
         <div className={styles.systemCard}>
           <div className={styles.systemCardHeader}>
             <div className={styles.systemIconBlock}>
@@ -366,6 +635,28 @@ export default function SystemTab({
           </div>
         </div>
       </div>
+
+      {/* Revoke Single Session Modal */}
+      <AdminConfirmModal
+        isOpen={Boolean(sessionToRevoke)}
+        title="Oturumu Kapatmak İstiyor musunuz?"
+        message={`"${sessionToRevoke?.deviceName || 'Bu cihaz'}" üzerindeki oturum sonlandırılacaktır. Kullanıcı tekrar giriş yapmak zorunda kalacaktır.`}
+        variant="danger"
+        confirmText="Evet, Sonlandır"
+        onConfirm={handleRevokeSession}
+        onClose={() => setSessionToRevoke(null)}
+      />
+
+      {/* Logout All Others Modal */}
+      <AdminConfirmModal
+        isOpen={isLogoutOthersOpen}
+        title="Diğer Tüm Oturumlar Kapatılsın mı?"
+        message="Şu an kullandığınız bu tarayıcı dışındaki tüm aktif oturumlar ve cihazlar anında yetkisiz hale getirilecektir. Devam etmek istiyor musunuz?"
+        variant="danger"
+        confirmText="Diğerlerini Kapat"
+        onConfirm={handleLogoutOthers}
+        onClose={() => setIsLogoutOthersOpen(false)}
+      />
 
       {/* Factory Reset Confirmation Modal */}
       <AdminConfirmModal

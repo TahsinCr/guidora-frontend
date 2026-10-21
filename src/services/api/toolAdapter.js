@@ -239,6 +239,11 @@ export function adaptProductDtoToTool(dto, categoryMap = {}) {
   const version = dto.version || meta?.version || null;
   const platforms = dto.platform || meta?.platforms || ['Web', 'API'];
 
+  const isAdminVer = Boolean(dto.isAdminVerified ?? meta?.verified?.admin ?? false);
+  const isCommVer = Boolean(dto.isCommunityVerified ?? meta?.verified?.community ?? false);
+  const isAuditedVer = Boolean(dto.isBotAudited ?? meta?.verified?.audited ?? false);
+  const isFeaturedVal = Boolean(dto.isFeatured ?? meta?.isNew ?? false);
+
   return {
     id,
     numericId,
@@ -251,6 +256,7 @@ export function adaptProductDtoToTool(dto, categoryMap = {}) {
     platforms,
     icon: logo,
     logo,
+    image: logo,
     category: categorySlug,
     categoryName,
     categories,
@@ -258,15 +264,19 @@ export function adaptProductDtoToTool(dto, categoryMap = {}) {
     tags,
     rating,
     reviewCount,
+    votes: reviewCount,
     views,
     version,
     isNew: Boolean(dto.isNew ?? meta?.isNew ?? false),
+    isFeatured: isFeaturedVal,
+    featured: isFeaturedVal,
+    isVerified: isAdminVer || isAuditedVer,
     pricing,
     pricingModel: dto.pricingModel || mapping.pricingModel || pricing,
     verified: {
-      admin: dto.isAdminVerified ?? meta?.verified?.admin ?? false,
-      community: dto.isCommunityVerified ?? meta?.verified?.community ?? false,
-      audited: Boolean(dto.isBotAudited ?? meta?.verified?.audited ?? false),
+      admin: isAdminVer,
+      community: isCommVer,
+      audited: isAuditedVer,
       bot: false,
     },
     platform: platforms,

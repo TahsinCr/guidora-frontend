@@ -8,6 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- **Enterprise-Grade Admin Panel Architecture & Real Backend Integration (`adminApi.js`, `adminService.js`, `AdminDashboardPage.jsx`, `ToolsTab.jsx`, `ProposalsTab.jsx`, `UsersTab.jsx`, `ReviewsTab.jsx`, `SystemTab.jsx`, `AdminDashboardPage.module.scss`)**:
+  - Implemented automatic JWT bootstrap admin authentication (`ensureAdminBackendSession`) resolving all 401 Unauthorized errors when communicating directly with .NET 10 backend.
+  - Eliminated duplicate in-flight catalog loads in `toolsService.js` and fixed numeric ID resolution across all admin operations.
+  - Added full Product Sub-Resource Governance Modal to `ToolsTab.jsx` for managing Changelogs (`ProductChangelogsController`), Documents (`ProductDocumentsController`), Media (`ProductMediaController`), and Contributors (`ProductContributorsController`).
+  - Added Community Verification Review queue sub-tab to `ProposalsTab.jsx` wired to `CommunityVerificationReviewsController`, with approve/reject actions and diff chip comparisons.
+  - Expanded `UsersTab.jsx` with an interactive Roles & OperationClaims permissions matrix powered by `RolesController`.
+  - Upgraded `ReviewsTab.jsx` with real backend comment moderation (visibility toggling via `PATCH /api/comments/{id}/visibility` and blocking via `POST /api/comments/{id}/block`).
+  - Completely redesigned `SystemTab.jsx` with live Kestrel Gateway liveness probe (`/health/live`), PostgreSQL & Redis readiness telemetry (`/health/ready`), Active Auth Sessions governance card (`/api/auth/sessions`, `/api/auth/logout-others`), and circuit breaker recovery controls.
+  - Fixed tool logo thumbnail squircle rendering in the admin tools table (`.toolThumbnailSmall`, `width: 36px`, `height: 36px`, `object-fit: cover`) preventing oversized SVG badges.
+  - Comprehensive light theme contrast overhaul (`:global([data-theme='light'])`) across all sub-tabs, tables, diff chips, modals, and session items.
+
+
 - **Threaded Review Sub-Messages & `@username` Mention System (`ReviewsTab.jsx`, `ReviewsTab.module.scss`, `toolsService.js`, `userService.js`)**:
   - Upgraded the product review system into a two-level threaded architecture supporting top-level evaluations (`!parentId`) and nested sub-message replies (`parentId`).
   - Added inline reply composer (`Yanıtla`) on every review and sub-reply, automatically pre-filling `@username` for targeted responses.

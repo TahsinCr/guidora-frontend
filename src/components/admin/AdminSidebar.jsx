@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { getAllApiEndpoints } from '@/services/api/apiCatalog';
 import styles from './AdminDashboardPage.module.scss';
 
 export default function AdminSidebar({
@@ -33,13 +34,14 @@ export default function AdminSidebar({
   onCloseMobile,
 }) {
   const { t } = useLanguage();
+  const apiCount = badges.apiCount || getAllApiEndpoints().length;
 
   const navSections = [
     {
       title: t('admin.sectionPlatform') || 'Platform & İzleme',
       items: [
         { id: 'overview', label: t('admin.tabOverview') || 'Genel Bakış', icon: LayoutDashboard },
-        { id: 'schema', label: 'REST API Sözleşmeleri', icon: Layers, badge: '18 API', badgeVariant: 'accent' },
+        { id: 'schema', label: 'REST API Sözleşmeleri', icon: Layers, badge: `${apiCount} API`, badgeVariant: 'accent' },
         { id: 'logs', label: t('admin.tabLogs') || 'Denetim Logları', icon: FileText, badge: badges.criticalLogs > 0 ? `${badges.criticalLogs} Alert` : null, badgeVariant: 'danger' },
         { id: 'system', label: t('admin.tabSystem') || 'Sistem & Bakım', icon: Activity },
       ],

@@ -530,6 +530,7 @@ export default function App() {
               <AdminDashboardPage
                 onBack={handleCloseTool}
                 onOpenTool={handleOpenTool}
+                initialTab={initialParams.get('tab')}
               />
             </ErrorBoundary>
           ) : isProfileView ? (

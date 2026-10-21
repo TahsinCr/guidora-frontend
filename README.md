@@ -1,4 +1,5 @@
-> Live mode is the default: `npm run dev` proxies `/api` to `http://localhost:8080`. Use the parent Guidora Compose stack for the real backend. Docker production builds force live mode and disable offline login fallback. The module-local Compose entry point includes the real parent stack; demos require the explicitly named `docker-compose.mock.yml`. The live administration view is read-only; the full demo console remains available only with `VITE_USE_MOCK=true`.
+> Live mode is the default: `npm run dev` proxies `/api` to `http://localhost:8080`. Use the parent Guidora Compose stack for the real backend. Docker production builds force live mode and disable offline login fallback. The module-local Compose entry point includes the real parent stack; demos require the explicitly named `docker-compose.mock.yml`. The administration console (`?view=admin`) provides full enterprise governance with live .NET 10 backend integration (Roles & OperationClaims matrix, Product Sub-Resources, Community Verification Queue, Comment Moderation, Auth Session Governance, and Telemetry).
+
 
 [![React 18](https://img.shields.io/badge/React-18.x-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6.x-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)

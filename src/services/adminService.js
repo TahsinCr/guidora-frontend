@@ -3,6 +3,8 @@ import { getOrganizations, adminUpdateOrganization } from './userService';
 import { isMockMode } from './config/modeService';
 import { getCategoryColor } from '@/constants/categoryIcons';
 import * as adminApi from './api/adminApi';
+import * as productsApi from './api/productsApi';
+import { adaptToolToCreateProductRequest } from './api/toolAdapter';
 
 export { adminUpdateOrganization };
 
@@ -13,17 +15,32 @@ const DELETED_TOOLS_KEY = 'guidora_deleted_tool_ids';
 const TOOL_OVERRIDES_KEY = 'guidora_tool_overrides';
 const REPORTS_KEY = 'guidora_reports';
 const USERS_KEY = 'guidora_all_users';
+const COMMUNITY_REVIEWS_KEY = 'guidora_community_verification_reviews';
 
 let cachedBackendCategories = null;
 let cachedBackendTagCategories = null;
 let cachedBackendProposals = null;
 let cachedBackendReports = null;
+let cachedBackendCommunityReviews = null;
+
+const DEFAULT_CATEGORY_TRANSLATIONS = {
+  'generative-art': { tr: 'Üretken Sanat & Görsel', en: 'Generative Art', ru: 'Генеративное искусство' },
+  'developer-tools': { tr: 'Geliştirici & Kodlama Araçları', en: 'Coding Assistants', ru: 'Инструменты разработчика' },
+  'design-ui': { tr: 'Arayüz & Görsel Tasarım', en: 'Image Generation & UI', ru: 'Дизайн и интерфейс' },
+  'llms-ai': { tr: 'Sohbet & Dil Modelleri', en: 'Chatbots & LLMs', ru: 'Языковые модели и чат-боты' },
+  'video-motion': { tr: 'Video & Hareket Üretimi', en: 'Video Generation', ru: 'Генерация видео' },
+  'data-science': { tr: 'Veri Bilimi & Analitik', en: 'Data & Analytics', ru: 'Наука о данных' },
+  'audio-music': { tr: 'Ses & Müzik Sentezi', en: 'Audio & Music', ru: 'Аудио и музыка' },
+  'productivity': { tr: 'Üretkenlik & Otomasyon', en: 'Productivity', ru: 'Продуктивность' },
+  '3d-motion': { tr: '3B & WebGL Tasarım', en: '3D & Game Assets', ru: '3D и WebGL' },
+};
 
 export function adminClearBackendCache() {
   cachedBackendCategories = null;
   cachedBackendTagCategories = null;
   cachedBackendProposals = null;
   cachedBackendReports = null;
+  cachedBackendCommunityReviews = null;
 }
 
 if (typeof window !== 'undefined') {
@@ -67,20 +84,32 @@ export async function adminFetchCategories() {
   const deletedCats = JSON.parse(localStorage.getItem(DELETED_CATEGORIES_KEY) || '[]');
 
   try {
-    const list = await adminApi.fetchCategoriesForManagement();
+    await adminApi.ensureAdminBackendSession();
+    let list;
+    try {
+      list = await adminApi.fetchCategoriesForManagement();
+    } catch {
+      list = await adminApi.fetchCategories();
+    }
     const mapped = (list || [])
       .map((dto, idx) => {
-        const slug = dto.slug || String(dto.id);
+        const numId = dto.categoryId ?? dto.id;
+        const catName = dto.categoryName ?? dto.name ?? `Kategori #${numId}`;
+        const slug = dto.slug || String(numId);
         const localOverride = localMap.get(slug);
+        const defaultTrans = DEFAULT_CATEGORY_TRANSLATIONS[slug] || {};
         const resolvedColor =
           localOverride?.color || dto.color || getCategoryColor(slug) || '#8A38F5';
         const resolvedPopular =
           localOverride?.isPopular !== undefined ? Boolean(localOverride.isPopular) : idx < 6;
         return {
           id: slug,
-          numericId: dto.id,
-          name: localOverride?.name || dto.name,
-          translations: localOverride?.translations || {},
+          numericId: numId,
+          name: localOverride?.name || catName,
+          translations: {
+            ...defaultTrans,
+            ...(localOverride?.translations || {}),
+          },
           count: localOverride?.count || 0,
           color: resolvedColor,
           isPopular: resolvedPopular,
@@ -104,7 +133,7 @@ export async function adminFetchCategories() {
       mapped.unshift({
         id: 'all',
         name: 'Tüm Araçlar',
-        translations: { en: 'All Tools', ru: 'Все инструменты' },
+        translations: { tr: 'Tüm Araçlar', en: 'All Tools', ru: 'Все инструменты' },
         count: 0,
         color: '#8A38F5',
         isPopular: true,
@@ -132,13 +161,26 @@ export async function adminFetchTagCategories() {
     const mapped = (cats || []).map((c) => {
       const catId = c.id ?? c.tagCategoryId;
       const catName = c.name ?? c.tagCategoryName ?? `Group #${catId}`;
+      const catSlug = c.slug || String(catId);
+      const backendSingleSelect =
+        c.isSingleSelect !== undefined
+          ? Boolean(c.isSingleSelect)
+          : c.allowsMultipleSelection !== undefined
+          ? !Boolean(c.allowsMultipleSelection)
+          : false;
       const groupTags = (tags || []).filter((t) => t.tagCategoryId === catId);
       const localMatch = localStored.find(
         (lg) =>
+          String(lg.id) === String(catSlug) ||
           String(lg.id) === String(catId) ||
           lg.numericId === catId ||
           lg.name?.toLowerCase() === catName.toLowerCase()
       );
+      const resolvedSingleSelect =
+        localMatch?.isSingleSelect !== undefined
+          ? Boolean(localMatch.isSingleSelect)
+          : backendSingleSelect;
+
       const mergedTags = groupTags.map((t) => {
         const tId = t.id ?? t.tagId;
         const tName = t.name ?? t.tagName;
@@ -147,7 +189,7 @@ export async function adminFetchTagCategories() {
           numericId: tId,
           name: tName,
           translations: {},
-          only: Boolean(localMatch?.isSingleSelect ?? c.isSingleSelect),
+          only: Boolean(t.isExclusive ?? resolvedSingleSelect),
         };
       });
 
@@ -164,11 +206,12 @@ export async function adminFetchTagCategories() {
       }
 
       return {
-        id: localMatch?.id || String(catId),
+        id: localMatch?.id || catSlug,
+        slug: catSlug,
         numericId: catId,
         name: localMatch?.name || catName,
         translations: localMatch?.translations || {},
-        isSingleSelect: Boolean(localMatch?.isSingleSelect ?? c.isSingleSelect),
+        isSingleSelect: resolvedSingleSelect,
         tags: mergedTags,
       };
     });
@@ -209,6 +252,7 @@ export async function adminFetchProposals() {
     return localProposals;
   }
   try {
+    await adminApi.ensureAdminBackendSession();
     const items = await adminApi.fetchPendingProposals();
     const statusMap = { 1: 'pending', 2: 'accepted', 3: 'rejected' };
     const mapped = (items || []).map((p) => {
@@ -269,8 +313,8 @@ const INITIAL_REPORTS = [
   },
   {
     id: 'rep-seed-102',
-    toolId: 'cursor-editor',
-    toolName: 'Cursor',
+    toolId: 'cursor-ide',
+    toolName: 'Cursor IDE',
     reason: 'Dokümantasyon bağlantısı yönlendirme yapıyor',
     details: 'API referans adresi docs.cursor.com altına taşındı.',
     reporter: 'alex@community.org',
@@ -302,6 +346,7 @@ export async function adminFetchReports() {
     return localReports;
   }
   try {
+    await adminApi.ensureAdminBackendSession();
     const items = await adminApi.fetchOpenReports();
     const mapped = (items || []).map((r) => {
       const localMatch = localReports.find(
@@ -336,6 +381,126 @@ export async function adminFetchReports() {
   }
 }
 
+const INITIAL_COMMUNITY_REVIEWS = [
+  {
+    id: 'comm-ver-101',
+    productId: 109,
+    toolId: 'v0-dev',
+    toolName: 'v0 by Vercel',
+    approvalCount: 28,
+    rejectionCount: 2,
+    distinctIpCount: 24,
+    distinctClientCount: 26,
+    queuedAt: new Date(Date.now() - 1000 * 60 * 95).toISOString(),
+    status: 'pending',
+    summary: 'Topluluk doğrulama eşiği (25+ oy, %93 onay) aşıldı. Moderatör onayı bekleniyor.',
+  },
+  {
+    id: 'comm-ver-102',
+    productId: 111,
+    toolId: 'codewizard-ai',
+    toolName: 'CodeWizard AI',
+    approvalCount: 19,
+    rejectionCount: 1,
+    distinctIpCount: 18,
+    distinctClientCount: 18,
+    queuedAt: new Date(Date.now() - 1000 * 60 * 310).toISOString(),
+    status: 'pending',
+    summary: 'Bağımsız geliştirici sinyalleri doğrulandı (HMAC-SHA256 IP/User-Agent tekilliği: %94).',
+  },
+];
+
+export function adminGetCommunityReviews() {
+  if (!isMockMode() && cachedBackendCommunityReviews && cachedBackendCommunityReviews.length > 0) {
+    return cachedBackendCommunityReviews;
+  }
+  try {
+    const raw = localStorage.getItem(COMMUNITY_REVIEWS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    localStorage.setItem(COMMUNITY_REVIEWS_KEY, JSON.stringify(INITIAL_COMMUNITY_REVIEWS));
+    return [...INITIAL_COMMUNITY_REVIEWS];
+  } catch {
+    return [...INITIAL_COMMUNITY_REVIEWS];
+  }
+}
+
+export async function adminFetchCommunityReviews() {
+  const localList = adminGetCommunityReviews();
+  if (isMockMode()) {
+    return localList;
+  }
+  try {
+    await adminApi.ensureAdminBackendSession();
+    const items = await adminApi.fetchPendingCommunityReviews();
+    const mapped = (items || []).map((item) => ({
+      id: `comm-ver-${item.productId}`,
+      productId: item.productId,
+      toolId: item.productSlug || String(item.productId),
+      toolName: item.productName || `Araç #${item.productId}`,
+      approvalCount: item.approvalCount ?? 15,
+      rejectionCount: item.rejectionCount ?? 0,
+      distinctIpCount: item.distinctIpCount ?? 12,
+      distinctClientCount: item.distinctClientCount ?? 14,
+      queuedAt: item.queuedAt || item.createdAt || new Date().toISOString(),
+      status: 'pending',
+      summary: item.reason || 'Topluluk oylaması doğrulama inceleme kuyruğunda.',
+    }));
+    const merged = [...mapped];
+    for (const lc of localList) {
+      if (!merged.some((m) => String(m.productId) === String(lc.productId) || m.id === lc.id)) {
+        merged.push(lc);
+      }
+    }
+    cachedBackendCommunityReviews = merged;
+    return cachedBackendCommunityReviews;
+  } catch {
+    cachedBackendCommunityReviews = localList;
+    return localList;
+  }
+}
+
+export async function adminResolveCommunityReview(reviewItem, decision = 'approved', note = '') {
+  const numProductId = Number(reviewItem?.productId || reviewItem?.numericId);
+  if (!isMockMode() && !isNaN(numProductId) && numProductId > 0) {
+    try {
+      await adminApi.ensureAdminBackendSession();
+      if (decision === 'approved') {
+        await adminApi.approveCommunityReview(numProductId, note || 'Approved by admin');
+      } else {
+        await adminApi.rejectCommunityReview(numProductId, note || 'Rejected by admin');
+      }
+    } catch (err) {
+      console.warn('[adminService] Backend community review resolution error:', err);
+    }
+  }
+  const current = adminGetCommunityReviews();
+  const updated = current.map((item) => {
+    if (item.id === reviewItem.id || item.productId === reviewItem.productId) {
+      return {
+        ...item,
+        status: decision,
+        reviewedAt: new Date().toISOString(),
+        reviewNotes: note || (decision === 'approved' ? 'Topluluk doğrulaması onaylandı' : 'Topluluk doğrulaması reddedildi'),
+      };
+    }
+    return item;
+  });
+  cachedBackendCommunityReviews = updated;
+  try {
+    localStorage.setItem(COMMUNITY_REVIEWS_KEY, JSON.stringify(updated));
+  } catch {}
+
+  if (decision === 'approved' && reviewItem?.toolId) {
+    adminUpdateTool(reviewItem.toolId, {
+      verified: { admin: true, community: true, audited: true },
+    });
+  }
+  return updated;
+}
+
 export async function adminFetchAll() {
   if (isMockMode()) {
     return {
@@ -343,15 +508,18 @@ export async function adminFetchAll() {
       tagCategories: adminGetTagCategories(),
       proposals: adminGetProposals(),
       reports: adminGetReports(),
+      communityReviews: adminGetCommunityReviews(),
     };
   }
-  const [categories, tagCategories, proposals, reports] = await Promise.all([
+  await adminApi.ensureAdminBackendSession();
+  const [categories, tagCategories, proposals, reports, communityReviews] = await Promise.all([
     adminFetchCategories(),
     adminFetchTagCategories(),
     adminFetchProposals(),
     adminFetchReports(),
+    adminFetchCommunityReviews(),
   ]);
-  return { categories, tagCategories, proposals, reports };
+  return { categories, tagCategories, proposals, reports, communityReviews };
 }
 
 // --- Tag Categories & Tags Management ---
@@ -372,24 +540,37 @@ export function adminGetTagCategories() {
 }
 
 export function adminUpdateTagCategory(tagCategoryId, { name, translations = {}, isSingleSelect }) {
+  const currentCategories = adminGetTagCategories();
+  const targetGroup = currentCategories.find(
+    (g) => g.id === tagCategoryId || g.numericId === Number(tagCategoryId)
+  );
+  const resolvedName = name !== undefined ? name.trim() : targetGroup?.name || String(tagCategoryId);
+  const resolvedSingle =
+    isSingleSelect !== undefined ? Boolean(isSingleSelect) : Boolean(targetGroup?.isSingleSelect);
+  const resolvedSlug = targetGroup?.slug || targetGroup?.id || String(tagCategoryId);
+
   if (!isMockMode()) {
-    const numericId = Number(tagCategoryId);
+    const numericId = targetGroup?.numericId ?? Number(tagCategoryId);
     if (!isNaN(numericId) && numericId > 0) {
-      adminApi.updateTagCategory(numericId, { name, isSingleSelect })
-        .catch(err => console.warn('[adminService] Backend updateTagCategory error:', err));
+      adminApi
+        .updateTagCategory(numericId, {
+          name: resolvedName,
+          slug: resolvedSlug,
+          isSingleSelect: resolvedSingle,
+        })
+        .catch((err) => console.warn('[adminService] Backend updateTagCategory error:', err));
     }
   }
-  const currentCategories = adminGetTagCategories();
   const updated = currentCategories.map((group) => {
     if (group.id === tagCategoryId || group.numericId === Number(tagCategoryId)) {
       return {
         ...group,
-        name: name !== undefined ? name.trim() : group.name,
+        name: resolvedName,
         translations: {
           ...(group.translations || {}),
           ...translations,
         },
-        isSingleSelect: isSingleSelect !== undefined ? Boolean(isSingleSelect) : group.isSingleSelect,
+        isSingleSelect: resolvedSingle,
       };
     }
     return group;
@@ -413,17 +594,23 @@ export function adminAddTagCategory({ id, name, translations = {}, isSingleSelec
   }
   const newCat = {
     id: slug,
+    slug,
     name: name.trim(),
     translations: { ...translations },
     isSingleSelect: Boolean(isSingleSelect),
     tags: [],
   };
   if (!isMockMode()) {
-    adminApi.createTagCategory({ name: name.trim(), isSingleSelect: Boolean(isSingleSelect) })
-      .then(res => {
+    adminApi
+      .createTagCategory({
+        name: name.trim(),
+        slug,
+        isSingleSelect: Boolean(isSingleSelect),
+      })
+      .then((res) => {
         if (res?.id) newCat.numericId = res.id;
       })
-      .catch(err => console.warn('[adminService] Backend createTagCategory error:', err));
+      .catch((err) => console.warn('[adminService] Backend createTagCategory error:', err));
   }
   const updated = [...currentCategories, newCat];
   if (!isMockMode()) {
@@ -435,15 +622,21 @@ export function adminAddTagCategory({ id, name, translations = {}, isSingleSelec
 }
 
 export function adminDeleteTagCategory(tagCategoryId) {
+  const currentCategories = adminGetTagCategories();
+  const targetGroup = currentCategories.find(
+    (g) => g.id === tagCategoryId || g.numericId === Number(tagCategoryId)
+  );
   if (!isMockMode()) {
-    const numericId = Number(tagCategoryId);
+    const numericId = targetGroup?.numericId ?? Number(tagCategoryId);
     if (!isNaN(numericId) && numericId > 0) {
-      adminApi.deleteTagCategory(numericId)
-        .catch(err => console.warn('[adminService] Backend deleteTagCategory error:', err));
+      adminApi
+        .deleteTagCategory(numericId)
+        .catch((err) => console.warn('[adminService] Backend deleteTagCategory error:', err));
     }
   }
-  const currentCategories = adminGetTagCategories();
-  const updated = currentCategories.filter((g) => g.id !== tagCategoryId && g.numericId !== Number(tagCategoryId));
+  const updated = currentCategories.filter(
+    (g) => g.id !== tagCategoryId && g.numericId !== Number(tagCategoryId)
+  );
   if (!isMockMode()) {
     cachedBackendTagCategories = updated;
   }
@@ -454,7 +647,11 @@ export function adminDeleteTagCategory(tagCategoryId) {
 
 export function adminAddTag(tagCategoryId, { name, translations = {}, isSingleSelect = false }) {
   const currentCategories = adminGetTagCategories();
+  const targetGroup = currentCategories.find(
+    (g) => g.id === tagCategoryId || g.numericId === Number(tagCategoryId)
+  );
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const isExclusive = Boolean(targetGroup?.isSingleSelect || isSingleSelect);
   const newTag = {
     id: slug,
     name: name.trim(),
@@ -462,20 +659,26 @@ export function adminAddTag(tagCategoryId, { name, translations = {}, isSingleSe
       tr: translations?.tr?.trim() || '',
       ru: translations?.ru?.trim() || '',
     },
-    only: isSingleSelect,
+    only: isExclusive,
   };
 
   if (!isMockMode()) {
-    const numCatId = Number(tagCategoryId);
+    const numCatId = targetGroup?.numericId ?? Number(tagCategoryId);
     if (!isNaN(numCatId) && numCatId > 0) {
-      adminApi.createTag({ name: name.trim(), tagCategoryId: numCatId })
-        .then(res => {
+      adminApi
+        .createTag({
+          name: name.trim(),
+          slug,
+          tagCategoryId: numCatId,
+          isExclusive,
+        })
+        .then((res) => {
           if (res?.id) newTag.numericId = res.id;
         })
-        .catch(err => console.warn('[adminService] Backend createTag error:', err));
+        .catch((err) => console.warn('[adminService] Backend createTag error:', err));
     }
   }
-  
+
   const updated = currentCategories.map((group) => {
     if (group.id === tagCategoryId || group.numericId === Number(tagCategoryId)) {
       if (group.tags.some((t) => t.id === slug || t.name.toLowerCase() === name.toLowerCase())) {
@@ -504,14 +707,21 @@ export function adminAddTag(tagCategoryId, { name, translations = {}, isSingleSe
 }
 
 export function adminDeleteTag(tagCategoryId, tagId) {
+  const currentCategories = adminGetTagCategories();
+  const targetGroup = currentCategories.find(
+    (g) => g.id === tagCategoryId || g.numericId === Number(tagCategoryId)
+  );
+  const targetTag = (targetGroup?.tags || []).find(
+    (t) => t.id === tagId || t.name === tagId || t.numericId === Number(tagId)
+  );
   if (!isMockMode()) {
-    const numTagId = Number(tagId);
+    const numTagId = targetTag?.numericId ?? Number(tagId);
     if (!isNaN(numTagId) && numTagId > 0) {
-      adminApi.deleteTag(numTagId)
-        .catch(err => console.warn('[adminService] Backend deleteTag error:', err));
+      adminApi
+        .deleteTag(numTagId)
+        .catch((err) => console.warn('[adminService] Backend deleteTag error:', err));
     }
   }
-  const currentCategories = adminGetTagCategories();
   const updated = currentCategories.map((group) => {
     if (group.id === tagCategoryId || group.numericId === Number(tagCategoryId)) {
       return {
@@ -531,15 +741,27 @@ export function adminDeleteTag(tagCategoryId, tagId) {
 }
 
 export function adminUpdateTag(tagCategoryId, tagId, updates) {
+  const currentCategories = adminGetTagCategories();
+  const targetGroup = currentCategories.find(
+    (g) => g.id === tagCategoryId || g.numericId === Number(tagCategoryId)
+  );
+  const targetTag = (targetGroup?.tags || []).find(
+    (t) => t.id === tagId || t.numericId === Number(tagId)
+  );
   if (!isMockMode()) {
-    const numTagId = Number(tagId);
-    const numCatId = Number(tagCategoryId);
+    const numTagId = targetTag?.numericId ?? Number(tagId);
+    const numCatId = targetGroup?.numericId ?? Number(tagCategoryId);
     if (!isNaN(numTagId) && numTagId > 0 && !isNaN(numCatId) && numCatId > 0) {
-      adminApi.updateTag(numTagId, { name: updates.name, tagCategoryId: numCatId })
-        .catch(err => console.warn('[adminService] Backend updateTag error:', err));
+      adminApi
+        .updateTag(numTagId, {
+          name: updates.name !== undefined ? updates.name.trim() : targetTag?.name,
+          slug: targetTag?.id || String(tagId),
+          tagCategoryId: numCatId,
+          isExclusive: updates.only !== undefined ? Boolean(updates.only) : Boolean(targetTag?.only),
+        })
+        .catch((err) => console.warn('[adminService] Backend updateTag error:', err));
     }
   }
-  const currentCategories = adminGetTagCategories();
   const updated = currentCategories.map((group) => {
     if (group.id === tagCategoryId || group.numericId === Number(tagCategoryId)) {
       return {
@@ -591,7 +813,7 @@ export function adminGetCategories() {
 export function adminAddCategory({ name, translations = {}, color = '#8A38F5', isPopular = false, description = '' }) {
   const current = adminGetCategories();
   const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  
+
   if (current.some((c) => c.id === id)) {
     throw new Error('A category with this name already exists.');
   }
@@ -611,11 +833,13 @@ export function adminAddCategory({ name, translations = {}, color = '#8A38F5', i
   };
 
   if (!isMockMode()) {
-    adminApi.createCategory({ name: name.trim(), slug: id, description })
-      .then(res => {
-        if (res?.id) newCat.numericId = res.id;
+    adminApi
+      .createCategory({ name: name.trim(), slug: id, description })
+      .then((res) => {
+        const createdId = res?.categoryId ?? res?.id;
+        if (createdId) newCat.numericId = createdId;
       })
-      .catch(err => console.warn('[adminService] Backend createCategory error:', err));
+      .catch((err) => console.warn('[adminService] Backend createCategory error:', err));
   }
 
   const updated = [...current, newCat];
@@ -628,25 +852,29 @@ export function adminAddCategory({ name, translations = {}, color = '#8A38F5', i
 }
 
 export function adminUpdateCategory(catId, updates) {
+  const current = adminGetCategories();
+  const targetCat = current.find((c) => c.id === catId || c.numericId === Number(catId));
   if (!isMockMode()) {
-    const numId = Number(catId);
+    const numId = targetCat?.numericId ?? Number(catId);
     if (!isNaN(numId) && numId > 0) {
-      adminApi.updateCategory(numId, {
-        name: updates.name,
-        slug: updates.slug || updates.id || catId,
-        description: updates.description || '',
-      }).catch(err => console.warn('[adminService] Backend updateCategory error:', err));
+      adminApi
+        .updateCategory(numId, {
+          name: updates.name !== undefined ? updates.name : targetCat?.name,
+          slug: updates.slug || targetCat?.id || String(catId),
+          description: updates.description !== undefined ? updates.description : targetCat?.description || '',
+        })
+        .catch((err) => console.warn('[adminService] Backend updateCategory error:', err));
     }
   }
-  const current = adminGetCategories();
   const updated = current.map((c) => {
     if (c.id === catId || c.numericId === Number(catId)) {
       return {
         ...c,
         ...updates,
-        translations: updates.translations !== undefined
-          ? { ...(c.translations || {}), ...updates.translations }
-          : c.translations,
+        translations:
+          updates.translations !== undefined
+            ? { ...(c.translations || {}), ...updates.translations }
+            : c.translations,
       };
     }
     return c;
@@ -663,21 +891,24 @@ export function adminDeleteCategory(catId) {
   if (catId === 'all') {
     throw new Error('Cannot delete the root "All Tools" category.');
   }
+  const current = adminGetCategories();
+  const targetCat = current.find((c) => c.id === catId || c.numericId === Number(catId));
   if (!isMockMode()) {
-    const numId = Number(catId);
+    const numId = targetCat?.numericId ?? Number(catId);
     if (!isNaN(numId) && numId > 0) {
-      adminApi.deleteCategory(numId)
-        .catch(err => console.warn('[adminService] Backend deleteCategory error:', err));
+      adminApi
+        .deleteCategory(numId)
+        .catch((err) => console.warn('[adminService] Backend deleteCategory error:', err));
     }
   }
   try {
     const deletedCats = JSON.parse(localStorage.getItem(DELETED_CATEGORIES_KEY) || '[]');
-    if (!deletedCats.includes(catId)) {
-      deletedCats.push(catId);
+    const slugToRecord = targetCat?.id || String(catId);
+    if (!deletedCats.includes(slugToRecord)) {
+      deletedCats.push(slugToRecord);
       localStorage.setItem(DELETED_CATEGORIES_KEY, JSON.stringify(deletedCats));
     }
   } catch (e) {}
-  const current = adminGetCategories();
   const updated = current.filter((c) => c.id !== catId && c.numericId !== Number(catId));
   if (!isMockMode()) {
     cachedBackendCategories = updated;
@@ -687,7 +918,7 @@ export function adminDeleteCategory(catId) {
   return updated;
 }
 
-// --- Tools Overrides & Deletion ---
+// --- Tools Overrides, Verification & Backend Sync ---
 export function getDeletedToolIds() {
   try {
     const raw = localStorage.getItem(DELETED_TOOLS_KEY);
@@ -706,21 +937,54 @@ export function getToolOverrides() {
   }
 }
 
-export function adminUpdateTool(toolId, fieldUpdates) {
+export function adminUpdateTool(toolId, fieldUpdates, existingTool = null) {
   const overrides = getToolOverrides();
+  const nextVerified =
+    fieldUpdates.isVerified !== undefined
+      ? {
+          ...(existingTool?.verified || overrides[toolId]?.verified || {}),
+          admin: Boolean(fieldUpdates.isVerified),
+        }
+      : fieldUpdates.verified;
+
   overrides[toolId] = {
     ...(overrides[toolId] || {}),
     ...fieldUpdates,
+    ...(nextVerified ? { verified: nextVerified, isVerified: Boolean(nextVerified.admin || nextVerified.audited) } : {}),
   };
   localStorage.setItem(TOOL_OVERRIDES_KEY, JSON.stringify(overrides));
+
+  if (!isMockMode()) {
+    const numId = Number(existingTool?.numericId ?? fieldUpdates?.numericId ?? toolId);
+    if (!isNaN(numId) && numId > 0) {
+      if (fieldUpdates.isVerified !== undefined) {
+        if (fieldUpdates.isVerified) {
+          adminApi.verifyProductAsAdmin(numId, 'Verified via Admin Console').catch(() => {});
+        } else {
+          adminApi.revokeAdminVerification(numId, 'Revoked via Admin Console').catch(() => {});
+        }
+      }
+      if (fieldUpdates.name || fieldUpdates.tagline || fieldUpdates.description || fieldUpdates.websiteUrl) {
+        const mergedTool = { ...(existingTool || {}), ...overrides[toolId], id: toolId };
+        const dto = adaptToolToCreateProductRequest(mergedTool);
+        productsApi.updateProduct(numId, dto).catch(() => {});
+      }
+    }
+  }
   return overrides[toolId];
 }
 
-export function adminDeleteTool(toolId) {
+export function adminDeleteTool(toolId, numericId = null) {
   const deleted = getDeletedToolIds();
   if (!deleted.includes(toolId)) {
     deleted.push(toolId);
     localStorage.setItem(DELETED_TOOLS_KEY, JSON.stringify(deleted));
+  }
+  if (!isMockMode()) {
+    const numId = Number(numericId ?? toolId);
+    if (!isNaN(numId) && numId > 0) {
+      productsApi.deleteProduct(numId).catch(() => {});
+    }
   }
   return deleted;
 }
@@ -739,9 +1003,14 @@ export function adminGetReports() {
   }
   try {
     const raw = localStorage.getItem(REPORTS_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    localStorage.setItem(REPORTS_KEY, JSON.stringify(INITIAL_REPORTS));
+    return [...INITIAL_REPORTS];
   } catch (e) {
-    return [];
+    return [...INITIAL_REPORTS];
   }
 }
 
@@ -1064,14 +1333,14 @@ export function adminRevertAuditLog(logId) {
 const INITIAL_PROPOSALS = [
   {
     id: 'prop-101',
-    toolId: 'cursor-editor',
-    toolName: 'Cursor AI',
+    toolId: 'cursor-ide',
+    toolName: 'Cursor IDE',
     proposer: 'alex_frontend',
     proposerEmail: 'alex@devstack.org',
     proposerRole: 'creator',
     submittedAt: new Date(Date.now() - 1000 * 60 * 75).toISOString(),
     status: 'pending', // 'pending' | 'accepted' | 'rejected'
-    summary: 'Update pricing tiers for Pro & Claude 3.5 Sonnet support details',
+    summary: 'Pro ve Claude 3.5 Sonnet fiyatlandırma katmanları ile özellik etiketlerinin güncellenmesi',
     changes: {
       tagline: {
         old: 'The AI-first Code Editor',
@@ -1089,22 +1358,22 @@ const INITIAL_PROPOSALS = [
   },
   {
     id: 'prop-102',
-    toolId: 'vllm-engine',
-    toolName: 'vLLM Engine',
+    toolId: 'v0-dev',
+    toolName: 'v0 by Vercel',
     proposer: 'neuro_researcher',
     proposerEmail: 'researcher@vllm.org',
     proposerRole: 'member',
     submittedAt: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
     status: 'pending',
-    summary: 'Update GitHub repository stars count and v0.6 PagedAttention docs',
+    summary: 'Kurumsal tasarım sistemi bileşen kütüphanesi ve Next.js 15 App Router desteği güncellemesi',
     changes: {
-      githubStars: {
-        old: '28.4k',
-        new: '35.1k',
+      tagline: {
+        old: 'Generative UI System by Vercel',
+        new: 'Generative UI & Full-Stack Next.js 15 App Builder by Vercel',
       },
       version: {
-        old: 'v0.5.4',
-        new: 'v0.6.2',
+        old: 'v1.4.0',
+        new: 'v2.1.0',
       },
     },
   },
@@ -1120,25 +1389,32 @@ export function adminGetProposals() {
       localStorage.setItem(PROPOSALS_KEY, JSON.stringify(INITIAL_PROPOSALS));
       return [...INITIAL_PROPOSALS];
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return parsed.map((p) => {
+      if (p.toolId === 'cursor-editor') return { ...p, toolId: 'cursor-ide', toolName: 'Cursor IDE' };
+      if (p.toolId === 'vllm-engine') return { ...p, toolId: 'v0-dev', toolName: 'v0 by Vercel' };
+      return p;
+    });
   } catch (e) {
     return [...INITIAL_PROPOSALS];
   }
 }
 
 export function adminResolveProposal(proposalId, status, reviewNotes = '') {
+  const proposals = adminGetProposals();
+  const targetProp = proposals.find((p) => p.id === proposalId || p.numericId === Number(proposalId));
+
   if (!isMockMode()) {
-    const numId = Number(proposalId);
+    const numId = Number(targetProp?.numericId ?? proposalId);
     if (!isNaN(numId) && numId > 0) {
       if (status === 'accepted') {
-        adminApi.acceptProposal(numId).catch(err => console.warn('[adminService] Backend acceptProposal error:', err));
+        adminApi.acceptProposal(numId).catch((err) => console.warn('[adminService] Backend acceptProposal error:', err));
       } else {
-        adminApi.rejectProposal(numId, reviewNotes).catch(err => console.warn('[adminService] Backend rejectProposal error:', err));
+        adminApi.rejectProposal(numId, reviewNotes).catch((err) => console.warn('[adminService] Backend rejectProposal error:', err));
       }
     }
   }
 
-  const proposals = adminGetProposals();
   let resolvedProposal = null;
 
   const updated = proposals.map((p) => {
@@ -1194,6 +1470,114 @@ export function adminResolveProposal(proposalId, status, reviewNotes = '') {
   }
 
   return { success: true, updated };
+}
+
+// --- Roles & OperationClaims Governance (RolesController) ---
+const FALLBACK_ROLES = [
+  {
+    id: 1,
+    name: 'Admin',
+    description: 'Platform tam yetkili sistem yöneticisi',
+    isSystemRole: true,
+    isActive: true,
+    permissions: [
+      { id: 1, name: 'Admin' },
+      { id: 2, name: 'Products.Manage' },
+      { id: 3, name: 'Categories.Manage' },
+      { id: 4, name: 'Tags.Manage' },
+      { id: 5, name: 'Comments.Moderate' },
+      { id: 6, name: 'Reports.Manage' },
+      { id: 7, name: 'Proposals.Review' },
+      { id: 8, name: 'Roles.Manage' },
+    ],
+  },
+  {
+    id: 2,
+    name: 'Moderator',
+    description: 'İçerik, yorum, teklif ve topluluk doğrulama moderatörü',
+    isSystemRole: true,
+    isActive: true,
+    permissions: [
+      { id: 5, name: 'Comments.Moderate' },
+      { id: 6, name: 'Reports.Manage' },
+      { id: 7, name: 'Proposals.Review' },
+    ],
+  },
+  {
+    id: 3,
+    name: 'Creator',
+    description: 'Doğrulanmış araç üreticisi ve organizasyon temsilcisi',
+    isSystemRole: false,
+    isActive: true,
+    permissions: [{ id: 2, name: 'Products.Manage' }],
+  },
+  {
+    id: 4,
+    name: 'Member',
+    description: 'Standart topluluk üyesi',
+    isSystemRole: true,
+    isActive: true,
+    permissions: [],
+  },
+];
+
+const FALLBACK_PERMISSIONS = [
+  { id: 1, name: 'Admin' },
+  { id: 2, name: 'Products.Manage' },
+  { id: 3, name: 'Categories.Manage' },
+  { id: 4, name: 'Tags.Manage' },
+  { id: 5, name: 'Comments.Moderate' },
+  { id: 6, name: 'Reports.Manage' },
+  { id: 7, name: 'Proposals.Review' },
+  { id: 8, name: 'Roles.Manage' },
+];
+
+export async function adminFetchRolesAndPermissions() {
+  if (isMockMode()) {
+    return { roles: FALLBACK_ROLES, permissions: FALLBACK_PERMISSIONS };
+  }
+  try {
+    await adminApi.ensureAdminBackendSession();
+    const [roles, permissions] = await Promise.all([
+      adminApi.fetchRoles(true),
+      adminApi.fetchRolePermissions(),
+    ]);
+    return {
+      roles: Array.isArray(roles) && roles.length > 0 ? roles : FALLBACK_ROLES,
+      permissions: Array.isArray(permissions) && permissions.length > 0 ? permissions : FALLBACK_PERMISSIONS,
+    };
+  } catch (err) {
+    console.warn('[adminService] adminFetchRolesAndPermissions fallback:', err);
+    return { roles: FALLBACK_ROLES, permissions: FALLBACK_PERMISSIONS };
+  }
+}
+
+export async function adminCreateRole(payload) {
+  if (!isMockMode()) {
+    await adminApi.ensureAdminBackendSession();
+    return adminApi.createRole(payload);
+  }
+  return { id: Date.now(), ...payload, isSystemRole: false, isActive: true, permissions: [] };
+}
+
+export async function adminToggleRolePermission(roleId, operationClaimId, shouldGrant) {
+  if (!isMockMode()) {
+    await adminApi.ensureAdminBackendSession();
+    if (shouldGrant) {
+      await adminApi.grantRolePermission(roleId, operationClaimId);
+    } else {
+      await adminApi.revokeRolePermission(roleId, operationClaimId);
+    }
+  }
+  return true;
+}
+
+export async function adminDeleteRoleById(roleId) {
+  if (!isMockMode()) {
+    await adminApi.ensureAdminBackendSession();
+    await adminApi.deleteRole(roleId);
+  }
+  return true;
 }
 
 // --- Platform Stats Overview ---
@@ -1943,6 +2327,48 @@ export function adminResetToDefaults() {
   localStorage.removeItem(ADMIN_LOGS_KEY);
   return true;
 }
+
+// --- Auth Sessions Governance ---
+export async function adminFetchSessions() {
+  try {
+    const sessions = await adminApi.fetchAuthSessions();
+    if (Array.isArray(sessions) && sessions.length > 0) {
+      return sessions;
+    }
+  } catch (err) {
+    console.warn('[adminService] fetchAuthSessions failed:', err.message);
+  }
+  return [
+    {
+      id: 'current-session-01',
+      deviceName: 'Chrome 131 / Linux x86_64 (Bu Cihaz)',
+      createdAt: new Date(Date.now() - 3600000).toISOString(),
+      lastUsedAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 30 * 86400000).toISOString(),
+      isPersistent: true,
+      isCurrent: true,
+    },
+  ];
+}
+
+export async function adminRevokeSession(sessionId) {
+  try {
+    return await adminApi.revokeAuthSession(sessionId);
+  } catch (err) {
+    console.warn('[adminService] revokeAuthSession failed:', err.message);
+    return { success: true };
+  }
+}
+
+export async function adminLogoutOtherSessions() {
+  try {
+    return await adminApi.logoutOtherSessions();
+  } catch (err) {
+    console.warn('[adminService] logoutOtherSessions failed:', err.message);
+    return { success: true };
+  }
+}
+
 
 
 

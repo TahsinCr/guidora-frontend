@@ -11,6 +11,8 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { adminGetTimeSeriesData } from '@/services/adminService';
+import { API_MODULES, getAllApiEndpoints } from '@/services/api/apiCatalog';
+import { useLanguage } from '@/context/LanguageContext';
 import toastService from '@/services/toast/toastService';
 import styles from '../AdminDashboardPage.module.scss';
 
@@ -22,12 +24,14 @@ export default function OverviewTab({
   onSelectTab,
   onInspectLog,
 }) {
+  const { lang } = useLanguage();
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const [rangeDays, setRangeDays] = useState(14); // 7 | 14 | 30
   const [activeMetric, setActiveMetric] = useState('requests'); // 'requests' | 'latency'
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const timeSeries = useMemo(() => adminGetTimeSeriesData(rangeDays), [rangeDays]);
+  const totalEndpoints = useMemo(() => getAllApiEndpoints().length, []);
 
   const handleRefreshMetrics = () => {
     setIsRefreshing(true);
@@ -87,7 +91,7 @@ export default function OverviewTab({
       .filter((c) => c.id !== 'all')
       .map((cat) => ({
         id: cat.id,
-        name: cat.name,
+        name: cat.translations?.[lang] || cat.name,
         color: cat.color || '#6366f1',
         count: tools.filter((t) => {
           const catIdLower = String(cat.id || '').toLowerCase();
@@ -103,7 +107,7 @@ export default function OverviewTab({
         }).length,
       }))
       .sort((a, b) => b.count - a.count);
-  }, [categories, tools]);
+  }, [categories, tools, lang]);
 
   const maxCatCount = Math.max(...categoryCounts.map((c) => c.count), 1);
 
@@ -136,10 +140,10 @@ export default function OverviewTab({
             </div>
           </div>
           <div className={styles.kpiValueRow}>
-            <span className={styles.kpiValue}>18 Endpoint</span>
+            <span className={styles.kpiValue}>{totalEndpoints} Endpoint</span>
             <span className={styles.kpiStatusOnline}>
               <CheckCircle2 size={12} />
-              4 Modül
+              {API_MODULES.length} Modül
             </span>
           </div>
           <span className={styles.kpiSub}>Modüler Servis Entegrasyonu</span>

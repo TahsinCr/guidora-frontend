@@ -6075,4 +6075,623 @@
   }
 }
 
+// -------------------------------------------------------------
+// Sub-Tab Navigation Badges & Active States
+// -------------------------------------------------------------
+.subTabBtnActive {
+  background: rgba(99, 102, 241, 0.16) !important;
+  border-color: rgba(99, 102, 241, 0.35) !important;
+  color: #818cf8 !important;
+  font-weight: 600;
+}
+
+.subTabBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 9999px;
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+  margin-left: 6px;
+}
+
+// -------------------------------------------------------------
+// Star & Outline Action Buttons
+// -------------------------------------------------------------
+.starBtn {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  border-radius: 6px;
+  color: var(--text-tertiary, #94a3b8);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    transform: scale(1.1);
+  }
+}
+
+.starBtnActive {
+  color: #f59e0b !important;
+  fill: #f59e0b;
+}
+
+.actionBtnOutline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.12));
+  color: var(--text-secondary, #cbd5e1);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--primary-color, #6366f1);
+    color: var(--text-primary, #ffffff);
+  }
+}
+
+.toolMonogramText {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  user-select: none;
+}
+
+// -------------------------------------------------------------
+// Product Sub-Resource Governance Modal Styles
+// -------------------------------------------------------------
+.subResourceNav {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-card, rgba(255, 255, 255, 0.08));
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.subResourceNavBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary, #ffffff);
+  }
+
+  &.active,
+  &Active {
+    background: rgba(99, 102, 241, 0.14);
+    border-color: rgba(99, 102, 241, 0.35);
+    color: #818cf8;
+    font-weight: 600;
+  }
+}
+
+.subResourceContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.subResourceForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-card-subtle, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.06));
+  border-radius: 12px;
+}
+
+.subResourceGrid2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.subResourceGrid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.subResourceList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.subResourceItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  background: var(--bg-card, rgba(17, 24, 39, 0.6));
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.06));
+  border-radius: 10px;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: rgba(99, 102, 241, 0.25);
+    background: rgba(255, 255, 255, 0.03);
+  }
+}
+
+.subResourceItemInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+
+  strong {
+    font-size: 13px;
+    color: var(--text-primary, #ffffff);
+  }
+
+  p {
+    font-size: 12px;
+    color: var(--text-secondary, #94a3b8);
+    margin: 0;
+    word-break: break-all;
+  }
+}
+
+.emptySubResource {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-tertiary, #64748b);
+  border: 1px dashed var(--border-card, rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+// -------------------------------------------------------------
+// Proposals Diff Chips
+// -------------------------------------------------------------
+.diffChipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.diffChipItem {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+}
+
+// -------------------------------------------------------------
+// System Metrics & Active Sessions Governance
+// -------------------------------------------------------------
+.systemMetricsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.systemMetricBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--bg-card-subtle, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.06));
+}
+
+.metricHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.metricVal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary, #ffffff);
+}
+
+.metricSub {
+  font-size: 11px;
+  color: var(--text-tertiary, #64748b);
+}
+
+.liveDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.sessionList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sessionItem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--bg-card-subtle, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.06));
+  transition: all 0.18s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(99, 102, 241, 0.25);
+  }
+
+  &Current {
+    border-color: rgba(139, 92, 246, 0.4);
+    background: rgba(139, 92, 246, 0.05);
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.sessionDeviceIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  flex-shrink: 0;
+}
+
+.sessionInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sessionTopRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sessionDeviceName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+}
+
+.sessionBadges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badgeCurrentSession {
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.25));
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  color: #c4b5fd;
+}
+
+.badgePersistent {
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+}
+
+.badgeTemporary {
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fcd34d;
+}
+
+.sessionMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--text-secondary, #94a3b8);
+  flex-wrap: wrap;
+}
+
+.sessionIdText {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text-tertiary, #64748b);
+}
+
+.sessionActions {
+  display: flex;
+  align-items: center;
+}
+
+.sessionCurrentHint {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8b5cf6;
+  padding: 6px 12px;
+}
+
+.sessionRevokeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+    color: #fca5a5;
+  }
+}
+
+// -------------------------------------------------------------
+// Complete Light Theme Adaptations
+// -------------------------------------------------------------
+:global([data-theme='light']) {
+  .subTabBtnActive {
+    background: rgba(138, 56, 245, 0.12) !important;
+    border-color: rgba(138, 56, 245, 0.3) !important;
+    color: #7025d9 !important;
+  }
+
+  .subTabBadge {
+    background: rgba(138, 56, 245, 0.15) !important;
+    color: #7025d9 !important;
+  }
+
+  .actionBtnOutline {
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.04) !important;
+      border-color: #8A38F5 !important;
+      color: #0f172a !important;
+    }
+  }
+
+  .subResourceNavBtnActive,
+  .subResourceNavBtn.active {
+    background: rgba(138, 56, 245, 0.12) !important;
+    border-color: rgba(138, 56, 245, 0.35) !important;
+    color: #7025d9 !important;
+  }
+
+  .subResourceForm {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  .subResourceItem {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+
+    &:hover {
+      border-color: rgba(138, 56, 245, 0.4) !important;
+      background: #fdfcff !important;
+    }
+  }
+
+  .subResourceItemInfo strong {
+    color: #0f172a !important;
+  }
+
+  .subResourceItemInfo p {
+    color: #64748b !important;
+  }
+
+  .emptySubResource {
+    border-color: #cbd5e1 !important;
+    color: #64748b !important;
+  }
+
+  .diffChipItem {
+    background: rgba(138, 56, 245, 0.1) !important;
+    border-color: rgba(138, 56, 245, 0.25) !important;
+    color: #7025d9 !important;
+  }
+
+  .systemMetricBox {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  .metricVal {
+    color: #0f172a !important;
+  }
+
+  .sessionItem {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+
+    &:hover {
+      background: #ffffff !important;
+      border-color: rgba(138, 56, 245, 0.4) !important;
+    }
+
+    &Current {
+      background: rgba(138, 56, 245, 0.04) !important;
+      border-color: rgba(138, 56, 245, 0.35) !important;
+    }
+  }
+
+  .sessionDeviceName {
+    color: #0f172a !important;
+  }
+
+  .sessionMetaRow {
+    color: #64748b !important;
+  }
+
+  .badgeCurrentSession {
+    background: rgba(138, 56, 245, 0.12) !important;
+    border-color: rgba(138, 56, 245, 0.35) !important;
+    color: #7025d9 !important;
+  }
+
+  .toolThumbnailSmall {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  .toolNameText {
+    color: #0f172a !important;
+  }
+
+  .toolDescText {
+    color: #64748b !important;
+  }
+}
+
+// -------------------------------------------------------------
+// Tool Table Title & Thumbnail Sizing
+// -------------------------------------------------------------
+.toolTableTitleBlock {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  max-width: 480px;
+}
+
+.toolThumbnailSmall {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  min-height: 36px;
+  max-height: 36px;
+  border-radius: 9px;
+  background: var(--bg-card-subtle, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-card, rgba(255, 255, 255, 0.08));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 8px;
+  }
+}
+
+.toolNameText {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+}
+
+.toolDescText {
+  font-size: 12px;
+  color: var(--text-secondary, #94a3b8);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 420px;
+}
+
+
+
 

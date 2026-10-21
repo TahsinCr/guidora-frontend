@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import {
   Wrench,
   Search,
-  Filter,
   CheckCircle2,
   XCircle,
   Edit2,
@@ -17,6 +16,12 @@ import {
   Star,
   ChevronLeft,
   ChevronRight,
+  Layers,
+  FileText,
+  Image as ImageIcon,
+  Users,
+  GitCommit,
+  X,
 } from 'lucide-react';
 import {
   adminUpdateTool,
@@ -25,7 +30,10 @@ import {
   getDeletedToolIds,
   adminAddLog,
 } from '@/services/adminService';
+import * as adminApi from '@/services/api/adminApi';
 import { addTool } from '@/services/toolsService';
+import { isMockMode } from '@/services/config/modeService';
+import { getCategoryColor } from '@/constants/categoryIcons';
 import toastService from '@/services/toast/toastService';
 import ToolStudioForm from '@/components/common/ToolStudioForm';
 import { useLanguage } from '@/context/LanguageContext';
@@ -49,13 +57,28 @@ export default function ToolsTab({
   onRefreshTools,
   onOpenTool,
 }) {
-  const { t, language } = useLanguage();
+  const { t, language, lang } = useLanguage();
+  const activeLang = lang || language || 'tr';
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [activeChip, setActiveChip] = useState('ALL');
   const [selectedToolIds, setSelectedToolIds] = useState([]);
   const [editingTool, setEditingTool] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [failedImages, setFailedImages] = useState({});
+
+  // Sub-Resource Manager Modal State (Changelogs, Documents, Media, Contributors)
+  const [resourceModalTool, setResourceModalTool] = useState(null);
+  const [resourceTab, setResourceTab] = useState('changelogs');
+  const [resourceLoading, setResourceLoading] = useState(false);
+  const [changelogs, setChangelogs] = useState([]);
+  const [documents, setDocuments] = useState([]);
+  const [mediaItems, setMediaItems] = useState([]);
+  const [contributors, setContributors] = useState([]);
+  const [newChangelog, setNewChangelog] = useState({ version: '', releaseNotes: '' });
+  const [newDoc, setNewDoc] = useState({ title: '', content: '', sortOrder: 1 });
+  const [newMedia, setNewMedia] = useState({ mediaUrl: '', mediaType: 'image', sortOrder: 1 });
+  const [newContributorId, setNewContributorId] = useState('');
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -71,7 +94,197 @@ export default function ToolsTab({
     onConfirm: () => {},
   });
 
-  const deletedIds = useMemo(() => getDeletedToolIds(), []);
+  const deletedIds = useMemo(() => getDeletedToolIds(), [tools]);
+
+  const categoryMap = useMemo(() => {
+    const map = new Map();
+    categories.forEach((c) => {
+      if (c?.id) map.set(String(c.id).toLowerCase(), c);
+      if (c?.name) map.set(String(c.name).toLowerCase(), c);
+    });
+    return map;
+  }, [categories]);
+
+  const resolveCategoryDisplay = (catKey) => {
+    if (!catKey) return { label: 'Genel', color: '#8A38F5' };
+    const found = categoryMap.get(String(catKey).toLowerCase());
+    if (found) {
+      return {
+        label: found.translations?.[activeLang] || found.name || catKey,
+        color: found.color || getCategoryColor(found.id) || '#8A38F5',
+      };
+    }
+    return {
+      label: catKey,
+      color: getCategoryColor(catKey) || '#8A38F5',
+    };
+  };
+
+  // Open Sub-Resource Modal and fetch live sub-resources
+  const handleOpenResourceManager = async (tool) => {
+    setResourceModalTool(tool);
+    setResourceTab('changelogs');
+    const numId = Number(tool.numericId ?? tool.id);
+    if (isMockMode() || isNaN(numId) || numId <= 0) {
+      setChangelogs(tool.changelog || []);
+      setDocuments(tool.documentation ? [{ id: 1, title: 'Overview Docs', content: tool.documentation, sortOrder: 1 }] : []);
+      setMediaItems(tool.media || []);
+      setContributors([]);
+      return;
+    }
+    setResourceLoading(true);
+    try {
+      await adminApi.ensureAdminBackendSession();
+      const [cl, docs, med, contr] = await Promise.allSettled([
+        adminApi.fetchProductChangelogs(numId),
+        adminApi.fetchProductDocuments(numId),
+        adminApi.fetchProductMedia(numId),
+        adminApi.fetchProductContributors(numId),
+      ]);
+      setChangelogs(cl.status === 'fulfilled' && Array.isArray(cl.value) ? cl.value : []);
+      setDocuments(docs.status === 'fulfilled' && Array.isArray(docs.value) ? docs.value : []);
+      setMediaItems(med.status === 'fulfilled' && Array.isArray(med.value) ? med.value : []);
+      setContributors(contr.status === 'fulfilled' && Array.isArray(contr.value) ? contr.value : []);
+    } catch {
+      // Fallback gracefully
+    } finally {
+      setResourceLoading(false);
+    }
+  };
+
+  const handleAddChangelog = async (e) => {
+    e.preventDefault();
+    if (!newChangelog.version.trim() || !newChangelog.releaseNotes.trim() || !resourceModalTool) return;
+    const numId = Number(resourceModalTool.numericId ?? resourceModalTool.id);
+    try {
+      if (!isMockMode() && !isNaN(numId) && numId > 0) {
+        await adminApi.createProductChangelog(numId, {
+          version: newChangelog.version.trim(),
+          releaseNotes: newChangelog.releaseNotes.trim(),
+          releasedAt: new Date().toISOString(),
+        });
+        const refreshed = await adminApi.fetchProductChangelogs(numId);
+        setChangelogs(Array.isArray(refreshed) ? refreshed : []);
+      } else {
+        setChangelogs((prev) => [
+          { id: Date.now(), version: newChangelog.version.trim(), releaseNotes: newChangelog.releaseNotes.trim(), releasedAt: new Date().toISOString() },
+          ...prev,
+        ]);
+      }
+      setNewChangelog({ version: '', releaseNotes: '' });
+      toastService.success('Sürüm notu (Changelog) eklendi.');
+    } catch (err) {
+      toastService.error('Sürüm notu eklenemedi: ' + (err.message || 'Hata'));
+    }
+  };
+
+  const handleAddDocument = async (e) => {
+    e.preventDefault();
+    if (!newDoc.title.trim() || !newDoc.content.trim() || !resourceModalTool) return;
+    const numId = Number(resourceModalTool.numericId ?? resourceModalTool.id);
+    try {
+      if (!isMockMode() && !isNaN(numId) && numId > 0) {
+        await adminApi.createProductDocument(numId, {
+          title: newDoc.title.trim(),
+          content: newDoc.content.trim(),
+          sortOrder: Number(newDoc.sortOrder) || 1,
+        });
+        const refreshed = await adminApi.fetchProductDocuments(numId);
+        setDocuments(Array.isArray(refreshed) ? refreshed : []);
+      } else {
+        setDocuments((prev) => [...prev, { id: Date.now(), ...newDoc }]);
+      }
+      setNewDoc({ title: '', content: '', sortOrder: documents.length + 2 });
+      toastService.success('Doküman eklendi.');
+    } catch (err) {
+      toastService.error('Doküman eklenemedi: ' + (err.message || 'Hata'));
+    }
+  };
+
+  const handleDeleteDocument = async (docId) => {
+    if (!resourceModalTool) return;
+    const numId = Number(resourceModalTool.numericId ?? resourceModalTool.id);
+    try {
+      if (!isMockMode() && !isNaN(numId) && numId > 0) {
+        await adminApi.deleteProductDocument(numId, docId);
+      }
+      setDocuments((prev) => prev.filter((d) => d.id !== docId));
+      toastService.success('Doküman kaldırıldı.');
+    } catch (err) {
+      toastService.error('Doküman silinemedi: ' + (err.message || 'Hata'));
+    }
+  };
+
+  const handleAddMedia = async (e) => {
+    e.preventDefault();
+    if (!newMedia.mediaUrl.trim() || !resourceModalTool) return;
+    const numId = Number(resourceModalTool.numericId ?? resourceModalTool.id);
+    try {
+      if (!isMockMode() && !isNaN(numId) && numId > 0) {
+        await adminApi.createProductMedia(numId, {
+          mediaUrl: newMedia.mediaUrl.trim(),
+          mediaType: newMedia.mediaType || 'image',
+          sortOrder: Number(newMedia.sortOrder) || 1,
+        });
+        const refreshed = await adminApi.fetchProductMedia(numId);
+        setMediaItems(Array.isArray(refreshed) ? refreshed : []);
+      } else {
+        setMediaItems((prev) => [...prev, { id: Date.now(), ...newMedia }]);
+      }
+      setNewMedia({ mediaUrl: '', mediaType: 'image', sortOrder: mediaItems.length + 2 });
+      toastService.success('Medya öğesi eklendi.');
+    } catch (err) {
+      toastService.error('Medya eklenemedi: ' + (err.message || 'Hata'));
+    }
+  };
+
+  const handleDeleteMedia = async (mediaId) => {
+    if (!resourceModalTool) return;
+    const numId = Number(resourceModalTool.numericId ?? resourceModalTool.id);
+    try {
+      if (!isMockMode() && !isNaN(numId) && numId > 0) {
+        await adminApi.deleteProductMedia(numId, mediaId);
+      }
+      setMediaItems((prev) => prev.filter((m) => m.id !== mediaId));
+      toastService.success('Medya öğesi silindi.');
+    } catch (err) {
+      toastService.error('Medya silinemedi: ' + (err.message || 'Hata'));
+    }
+  };
+
+  const handleAddContributor = async (e) => {
+    e.preventDefault();
+    const uid = Number(newContributorId);
+    if (!uid || isNaN(uid) || !resourceModalTool) return;
+    const numId = Number(resourceModalTool.numericId ?? resourceModalTool.id);
+    try {
+      if (!isMockMode() && !isNaN(numId) && numId > 0) {
+        await adminApi.addProductContributor(numId, uid);
+        const refreshed = await adminApi.fetchProductContributors(numId);
+        setContributors(Array.isArray(refreshed) ? refreshed : []);
+      } else {
+        setContributors((prev) => [...prev, { userId: uid, addedAt: new Date().toISOString() }]);
+      }
+      setNewContributorId('');
+      toastService.success(`Katkıcı (#${uid}) eklendi.`);
+    } catch (err) {
+      toastService.error('Katkıcı eklenemedi: ' + (err.message || 'Hata'));
+    }
+  };
+
+  const handleRemoveContributor = async (userId) => {
+    if (!resourceModalTool) return;
+    const numId = Number(resourceModalTool.numericId ?? resourceModalTool.id);
+    try {
+      if (!isMockMode() && !isNaN(numId) && numId > 0) {
+        await adminApi.removeProductContributor(numId, userId);
+      }
+      setContributors((prev) => prev.filter((c) => (c.userId ?? c.id) !== userId));
+      toastService.success('Katkıcı kaldırıldı.');
+    } catch (err) {
+      toastService.error('Katkıcı kaldırılamadı: ' + (err.message || 'Hata'));
+    }
+  };
 
   // Filter tools
   const filteredTools = useMemo(() => {
@@ -143,7 +356,7 @@ export default function ToolsTab({
   // Toggle Verification
   const handleToggleVerify = (tool) => {
     const nextVer = !tool.isVerified;
-    adminUpdateTool(tool.id, { isVerified: nextVer });
+    adminUpdateTool(tool.id, { isVerified: nextVer }, tool);
     adminAddLog(
       nextVer ? 'PRODUCT_STATUS_VERIFIED' : 'PRODUCT_STATUS_UNVERIFIED',
       tool.name,
@@ -157,7 +370,7 @@ export default function ToolsTab({
   // Toggle Featured Star
   const handleToggleFeatured = (tool) => {
     const nextFeat = !(tool.isFeatured || tool.featured);
-    adminUpdateTool(tool.id, { isFeatured: nextFeat, featured: nextFeat });
+    adminUpdateTool(tool.id, { isFeatured: nextFeat, featured: nextFeat }, tool);
     adminAddLog(
       nextFeat ? 'PRODUCT_FEATURED' : 'PRODUCT_UNFEATURED',
       tool.name,
@@ -177,7 +390,7 @@ export default function ToolsTab({
       variant: 'danger',
       confirmText: 'Katalogdan Kaldır',
       onConfirm: () => {
-        adminDeleteTool(tool.id);
+        adminDeleteTool(tool.id, tool.numericId);
         adminAddLog('PRODUCT_DELETED', tool.name, 'warning', {
           entityName: 'Product',
           entityId: tool.id,
@@ -205,7 +418,8 @@ export default function ToolsTab({
   // Batch Verify
   const handleBatchVerify = (verifyStatus) => {
     selectedToolIds.forEach((id) => {
-      adminUpdateTool(id, { isVerified: verifyStatus });
+      const target = tools.find((t) => t.id === id);
+      adminUpdateTool(id, { isVerified: verifyStatus }, target);
     });
     adminAddLog('BATCH_TOOLS_VERIFIED', `${selectedToolIds.length} araç güncellendi`, 'info', {
       category: 'CATALOG',
@@ -225,7 +439,8 @@ export default function ToolsTab({
       confirmText: `${selectedToolIds.length} Aracı Kaldır`,
       onConfirm: () => {
         selectedToolIds.forEach((id) => {
-          adminDeleteTool(id);
+          const target = tools.find((t) => t.id === id);
+          adminDeleteTool(id, target?.numericId);
         });
         adminAddLog('BATCH_TOOLS_DELETED', `${selectedToolIds.length} araç kaldırıldı`, 'warning', {
           category: 'CATALOG',
@@ -242,7 +457,7 @@ export default function ToolsTab({
   const handleSaveTool = async (toolPayload) => {
     try {
       if (editingTool) {
-        adminUpdateTool(editingTool.id, toolPayload);
+        adminUpdateTool(editingTool.id, toolPayload, editingTool);
         adminAddLog('PRODUCT_UPDATED', toolPayload.name, 'info', {
           entityName: 'Product',
           entityId: editingTool.id,
@@ -338,11 +553,13 @@ export default function ToolsTab({
               aria-label={t('admin.filterByCategory', 'Kategoriye Göre Filtrele')}
             >
               <option value="ALL">{t('admin.allCategories', 'Tüm Kategoriler')}</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
+              {categories
+                .filter((c) => c.id !== 'all')
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.translations?.[activeLang] || c.name}
+                  </option>
+                ))}
             </select>
           </div>
         </div>
@@ -444,7 +661,8 @@ export default function ToolsTab({
               className={styles.batchBtn}
               onClick={() => {
                 selectedToolIds.forEach((id) => {
-                  adminUpdateTool(id, { isFeatured: true, featured: true });
+                  const target = tools.find((t) => t.id === id);
+                  adminUpdateTool(id, { isFeatured: true, featured: true }, target);
                 });
                 toastService.success(`${selectedToolIds.length} ${language === 'tr' ? 'araç öne çıkarıldı.' : language === 'ru' ? 'инструментов выделено.' : 'tools featured.'}`);
                 setSelectedToolIds([]);
@@ -498,7 +716,7 @@ export default function ToolsTab({
                 <th>{t('admin.colTool', 'Araç Adı & Tanım')}</th>
                 <th>{t('admin.colCategory', 'Kategori')}</th>
                 <th>{t('admin.colPricing', 'Fiyatlandırma')}</th>
-                <th>{t('admin.colRatingVotes', 'Rating & Votes')}</th>
+                <th>{t('admin.colRatingVotes', 'Puan & Oylar')}</th>
                 <th>{t('filter.verification', 'Doğrulama')}</th>
                 <th style={{ textAlign: 'right' }}>{t('admin.colActions', 'İşlemler')}</th>
               </tr>
@@ -515,6 +733,15 @@ export default function ToolsTab({
                   const isArchived = deletedIds.includes(tool.id) || tool.isArchived;
                   const isSelected = selectedToolIds.includes(tool.id);
                   const isFeatured = tool.isFeatured || tool.featured;
+                  const rawImg = tool.image || tool.logo || (typeof tool.icon === 'string' && tool.icon.startsWith('http') ? tool.icon : null);
+                  const showImg = rawImg && !failedImages[tool.id];
+                  const catMeta = resolveCategoryDisplay(tool.category);
+                  const monogram = (tool.name || 'AI')
+                    .split(/[\s-]+/)
+                    .slice(0, 2)
+                    .map((w) => w[0])
+                    .join('')
+                    .toUpperCase();
 
                   return (
                     <tr
@@ -538,18 +765,36 @@ export default function ToolsTab({
 
                       <td>
                         <div className={styles.toolTableTitleBlock}>
-                          <div className={styles.toolThumbnailSmall}>
-                            {tool.image ? (
-                              <img src={tool.image} alt={tool.name} loading="lazy" />
+                          <div
+                            className={styles.toolThumbnailSmall}
+                            style={
+                              !showImg
+                                ? {
+                                    background: `linear-gradient(135deg, ${catMeta.color}30, ${catMeta.color}12)`,
+                                    borderColor: `${catMeta.color}45`,
+                                    color: catMeta.color,
+                                  }
+                                : undefined
+                            }
+                          >
+                            {showImg ? (
+                              <img
+                                src={rawImg}
+                                alt={tool.name}
+                                loading="lazy"
+                                onError={() =>
+                                  setFailedImages((prev) => ({ ...prev, [tool.id]: true }))
+                                }
+                              />
                             ) : (
-                              <Wrench size={16} />
+                              <span className={styles.toolMonogramText}>{monogram}</span>
                             )}
                           </div>
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <strong className={styles.toolNameText}>{tool.name}</strong>
                               {isFeatured && (
-                                <span title="Öne Çıkarılmış Araç">
+                                <span title="Öne Çıkarılmış Araç" style={{ display: 'inline-flex' }}>
                                   <Star size={12} fill="#fbbf24" color="#fbbf24" />
                                 </span>
                               )}
@@ -563,7 +808,16 @@ export default function ToolsTab({
                       </td>
 
                       <td>
-                        <span className={styles.categoryBadge}>{tool.category}</span>
+                        <span
+                          className={styles.categoryBadge}
+                          style={{
+                            borderColor: `${catMeta.color}45`,
+                            backgroundColor: `${catMeta.color}18`,
+                            color: catMeta.color,
+                          }}
+                        >
+                          {catMeta.label}
+                        </span>
                       </td>
 
                       <td>
@@ -572,8 +826,11 @@ export default function ToolsTab({
 
                       <td>
                         <div className={styles.ratingCell}>
-                          <span className={styles.ratingVal}>★ {tool.rating?.toFixed(1) || '5.0'}</span>
-                          <span className={styles.votesCount}>{tool.votes || 0} oy</span>
+                          <span className={styles.ratingVal}>
+                            <Star size={12} fill="#fbbf24" color="#fbbf24" />
+                            <span>{Number(tool.rating || 5.0).toFixed(1)}</span>
+                          </span>
+                          <span className={styles.votesCount}>{tool.votes ?? tool.reviewCount ?? 0} oy</span>
                         </div>
                       </td>
 
@@ -608,6 +865,16 @@ export default function ToolsTab({
                             title={isFeatured ? 'Öne çıkarmayı kaldır' : 'Öne çıkar'}
                           >
                             <Star size={15} fill={isFeatured ? '#fbbf24' : 'none'} />
+                          </button>
+
+                          {/* Sub-Resource Manager (Changelogs, Docs, Media, Contributors) */}
+                          <button
+                            type="button"
+                            className={styles.actionIconBtn}
+                            onClick={() => handleOpenResourceManager(tool)}
+                            title="Alt Kaynaklar (Sürüm Notları, Dokümanlar, Medya, Katkıcılar)"
+                          >
+                            <Layers size={15} />
                           </button>
 
                           {/* View in catalog */}
@@ -739,6 +1006,282 @@ export default function ToolsTab({
           </div>
         )}
       </div>
+
+      {/* Product Sub-Resources Manager Modal (Changelogs, Documents, Media, Contributors) */}
+      {resourceModalTool && (
+        <div
+          className={styles.modalBackdrop}
+          onClick={() => setResourceModalTool(null)}
+        >
+          <div
+            className={styles.modalCard}
+            style={{ maxWidth: '720px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <div>
+                <h3 className={styles.modalTitle}>
+                  {resourceModalTool.name} — Alt Kaynak Yönetimi
+                </h3>
+                <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--admin-text-muted)' }}>
+                  REST API uç noktaları (`/api/products/{resourceModalTool.numericId || resourceModalTool.id}/...`) üzerinden sürüm geçmişi, doküman, medya ve katkıcıları yönetin.
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => setResourceModalTool(null)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className={styles.subTabNav} style={{ margin: '0 24px 16px' }}>
+              <button
+                type="button"
+                className={`${styles.subTabBtn} ${resourceTab === 'changelogs' ? styles.subTabBtnActive : ''}`}
+                onClick={() => setResourceTab('changelogs')}
+              >
+                <GitCommit size={14} />
+                <span>Sürüm Notları ({changelogs.length})</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.subTabBtn} ${resourceTab === 'documents' ? styles.subTabBtnActive : ''}`}
+                onClick={() => setResourceTab('documents')}
+              >
+                <FileText size={14} />
+                <span>Dokümanlar ({documents.length})</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.subTabBtn} ${resourceTab === 'media' ? styles.subTabBtnActive : ''}`}
+                onClick={() => setResourceTab('media')}
+              >
+                <ImageIcon size={14} />
+                <span>Medya ({mediaItems.length})</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.subTabBtn} ${resourceTab === 'contributors' ? styles.subTabBtnActive : ''}`}
+                onClick={() => setResourceTab('contributors')}
+              >
+                <Users size={14} />
+                <span>Katkıcılar ({contributors.length})</span>
+              </button>
+            </div>
+
+            <div className={styles.modalBody} style={{ maxHeight: '62vh', overflowY: 'auto' }}>
+              {resourceLoading ? (
+                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--admin-text-muted)' }}>
+                  Alt kaynak verileri yükleniyor...
+                </div>
+              ) : resourceTab === 'changelogs' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <form onSubmit={handleAddChangelog} className={styles.subResourceForm}>
+                    <div className={styles.formRowGrid}>
+                      <input
+                        type="text"
+                        className={styles.formInput}
+                        placeholder="Sürüm (örn. v2.4.0)"
+                        value={newChangelog.version}
+                        onChange={(e) => setNewChangelog({ ...newChangelog, version: e.target.value })}
+                        required
+                      />
+                      <input
+                        type="text"
+                        className={styles.formInput}
+                        placeholder="Sürüm notları / değişiklik özeti..."
+                        value={newChangelog.releaseNotes}
+                        onChange={(e) => setNewChangelog({ ...newChangelog, releaseNotes: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <button type="submit" className={styles.actionBtnPrimary} style={{ alignSelf: 'flex-start' }}>
+                      <Plus size={14} />
+                      <span>Sürüm Notu Ekle</span>
+                    </button>
+                  </form>
+
+                  <div className={styles.subResourceList}>
+                    {changelogs.length === 0 ? (
+                      <div className={styles.emptySubResource}>Henüz kayıtlı sürüm notu bulunmuyor.</div>
+                    ) : (
+                      changelogs.map((cl, idx) => (
+                        <div key={cl.id || idx} className={styles.subResourceItem}>
+                          <div>
+                            <strong style={{ color: '#a855f7', fontFamily: 'monospace' }}>{cl.version}</strong>
+                            <p style={{ margin: '4px 0 0', fontSize: '0.82rem' }}>{cl.releaseNotes || cl.notes || cl.description}</p>
+                          </div>
+                          <span style={{ fontSize: '0.74rem', color: 'var(--admin-text-muted)' }}>
+                            {cl.releasedAt ? new Date(cl.releasedAt).toLocaleDateString('tr-TR') : 'Aktif'}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              ) : resourceTab === 'documents' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <form onSubmit={handleAddDocument} className={styles.subResourceForm}>
+                    <div className={styles.formRowGrid}>
+                      <input
+                        type="text"
+                        className={styles.formInput}
+                        placeholder="Doküman Başlığı (örn. Kurulum Rehberi)"
+                        value={newDoc.title}
+                        onChange={(e) => setNewDoc({ ...newDoc, title: e.target.value })}
+                        required
+                      />
+                      <input
+                        type="number"
+                        className={styles.formInput}
+                        placeholder="Sıra (1)"
+                        value={newDoc.sortOrder}
+                        onChange={(e) => setNewDoc({ ...newDoc, sortOrder: e.target.value })}
+                      />
+                    </div>
+                    <textarea
+                      className={styles.formTextarea}
+                      rows={3}
+                      placeholder="Markdown / Doküman içeriği..."
+                      value={newDoc.content}
+                      onChange={(e) => setNewDoc({ ...newDoc, content: e.target.value })}
+                      required
+                    />
+                    <button type="submit" className={styles.actionBtnPrimary} style={{ alignSelf: 'flex-start' }}>
+                      <Plus size={14} />
+                      <span>Doküman Ekle</span>
+                    </button>
+                  </form>
+
+                  <div className={styles.subResourceList}>
+                    {documents.length === 0 ? (
+                      <div className={styles.emptySubResource}>Henüz kayıtlı doküman bulunmuyor.</div>
+                    ) : (
+                      documents.map((doc) => (
+                        <div key={doc.id} className={styles.subResourceItem}>
+                          <div>
+                            <strong>{doc.title}</strong>
+                            <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--admin-text-secondary)' }}>
+                              {(doc.content || '').slice(0, 140)}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.actionIconBtnDanger}
+                            onClick={() => handleDeleteDocument(doc.id)}
+                            title="Dokümanı Sil"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              ) : resourceTab === 'media' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <form onSubmit={handleAddMedia} className={styles.subResourceForm}>
+                    <div className={styles.formRowGrid}>
+                      <input
+                        type="url"
+                        className={styles.formInput}
+                        placeholder="Görsel veya Video URL (https://...)"
+                        value={newMedia.mediaUrl}
+                        onChange={(e) => setNewMedia({ ...newMedia, mediaUrl: e.target.value })}
+                        required
+                      />
+                      <select
+                        className={styles.adminSelect}
+                        value={newMedia.mediaType}
+                        onChange={(e) => setNewMedia({ ...newMedia, mediaType: e.target.value })}
+                      >
+                        <option value="image">Görsel (Image)</option>
+                        <option value="video">Video</option>
+                      </select>
+                    </div>
+                    <button type="submit" className={styles.actionBtnPrimary} style={{ alignSelf: 'flex-start' }}>
+                      <Plus size={14} />
+                      <span>Medya Ekle</span>
+                    </button>
+                  </form>
+
+                  <div className={styles.subResourceList}>
+                    {mediaItems.length === 0 ? (
+                      <div className={styles.emptySubResource}>Henüz kayıtlı medya öğesi bulunmuyor.</div>
+                    ) : (
+                      mediaItems.map((m, idx) => (
+                        <div key={m.id || idx} className={styles.subResourceItem}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span className={styles.categoryBadge}>{m.mediaType || 'image'}</span>
+                            <span style={{ fontSize: '0.8rem', wordBreak: 'break-all' }}>{m.mediaUrl || m.url}</span>
+                          </div>
+                          {m.id && (
+                            <button
+                              type="button"
+                              className={styles.actionIconBtnDanger}
+                              onClick={() => handleDeleteMedia(m.id)}
+                              title="Medyayı Sil"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <form onSubmit={handleAddContributor} className={styles.subResourceForm}>
+                    <div className={styles.formRowGrid}>
+                      <input
+                        type="number"
+                        className={styles.formInput}
+                        placeholder="Kullanıcı Numeric ID (örn. 242)"
+                        value={newContributorId}
+                        onChange={(e) => setNewContributorId(e.target.value)}
+                        required
+                      />
+                      <button type="submit" className={styles.actionBtnPrimary}>
+                        <Plus size={14} />
+                        <span>Katkıcı Ekle</span>
+                      </button>
+                    </div>
+                  </form>
+
+                  <div className={styles.subResourceList}>
+                    {contributors.length === 0 ? (
+                      <div className={styles.emptySubResource}>Henüz atanmış katkıcı bulunmuyor.</div>
+                    ) : (
+                      contributors.map((c, idx) => {
+                        const uid = c.userId ?? c.id;
+                        return (
+                          <div key={uid || idx} className={styles.subResourceItem}>
+                            <div>
+                              <strong>Kullanıcı #{uid}</strong>
+                              {c.username && <span style={{ marginLeft: '8px', color: 'var(--admin-text-muted)' }}>@{c.username}</span>}
+                            </div>
+                            <button
+                              type="button"
+                              className={styles.actionIconBtnDanger}
+                              onClick={() => handleRemoveContributor(uid)}
+                              title="Katkıcıyı Kaldır"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit / Create Tool Studio Modal */}
       {isFormOpen && (

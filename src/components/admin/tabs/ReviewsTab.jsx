@@ -10,9 +10,15 @@ import {
   Download,
   ChevronLeft,
   ChevronRight,
+  Eye,
+  EyeOff,
+  ShieldAlert,
+  Ban,
 } from 'lucide-react';
-import { deleteReview } from '@/services/toolsService';
+import { deleteReview, updateReviewModeration } from '@/services/toolsService';
 import { adminAddLog } from '@/services/adminService';
+import * as adminApi from '@/services/api/adminApi';
+import { isMockMode } from '@/services/config/modeService';
 import toastService from '@/services/toast/toastService';
 import AdminConfirmModal from '../modals/AdminConfirmModal';
 import styles from '../AdminDashboardPage.module.scss';
@@ -20,6 +26,7 @@ import styles from '../AdminDashboardPage.module.scss';
 const RATING_CHIPS = [
   { id: 'all', label: 'Tüm Mesajlar' },
   { id: 'replies', label: 'Alt Yanıtlar (@Reply)' },
+  { id: 'flagged', label: 'Gizli / Engelli' },
   { id: '5', label: '★★★★★ (5 Yıldız)' },
   { id: '4', label: '★★★★☆ (4 Yıldız)' },
   { id: '3', label: '★★★☆☆ (3 Yıldız)' },
@@ -61,6 +68,8 @@ export default function ReviewsTab({
     return safeReviews.filter((r) => {
       if (activeChip === 'replies') {
         if (!r.parentId) return false;
+      } else if (activeChip === 'flagged') {
+        if (r.isVisible !== false && !r.isBlocked) return false;
       } else if (activeChip !== 'all') {
         if (r.parentId || Number(r.rating) !== parseInt(activeChip, 10)) {
           return false;
@@ -92,6 +101,52 @@ export default function ReviewsTab({
     }
   };
 
+  const handleToggleVisibility = async (rev) => {
+    const nextVis = rev.isVisible === false;
+    const numId = Number(rev.numericId ?? rev.id);
+    try {
+      if (!isMockMode() && !isNaN(numId) && numId > 0) {
+        await adminApi.setCommentVisibility(numId, nextVis);
+      }
+      updateReviewModeration(rev.toolId, rev.id, { isVisible: nextVis });
+      adminAddLog('COMMENT_VISIBILITY_CHANGED', `${getAuthor(rev)} (${rev.toolName || rev.toolId})`, 'info', {
+        category: 'GOVERNANCE',
+        newValues: { isVisible: nextVis },
+      });
+      toastService.success(nextVis ? 'Yorum görünür yapıldı.' : 'Yorum gizlendi.');
+      if (onRefreshReviews) onRefreshReviews();
+    } catch (err) {
+      toastService.error('Görünürlük değiştirilemedi: ' + (err.message || 'Hata'));
+    }
+  };
+
+  const handleBlockCommentPrompt = (rev) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Yorumu Engelle (Moderasyon)',
+      message: `"${getAuthor(rev)}" tarafından yazılan mesajı topluluk kuralları ihlali nedeniyle engellemek istiyor musunuz?`,
+      variant: 'danger',
+      confirmText: 'Yorumu Engelle',
+      onConfirm: async () => {
+        const numId = Number(rev.numericId ?? rev.id);
+        try {
+          if (!isMockMode() && !isNaN(numId) && numId > 0) {
+            await adminApi.blockComment(numId, 'Topluluk standartları ihlali');
+          }
+          updateReviewModeration(rev.toolId, rev.id, { isBlocked: true, isVisible: false, blockReason: 'Topluluk kuralları ihlali' });
+          adminAddLog('COMMENT_BLOCKED', `${getAuthor(rev)} (${rev.toolName || rev.toolId})`, 'warning', {
+            category: 'GOVERNANCE',
+          });
+          toastService.warning('Yorum moderasyon tarafından engellendi.');
+          if (onRefreshReviews) onRefreshReviews();
+          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        } catch (err) {
+          toastService.error('Engelleme hatası: ' + (err.message || 'Hata'));
+        }
+      },
+    });
+  };
+
   const handleDeleteReview = (rev) => {
     const authorDisplay = getAuthor(rev);
     setConfirmModal({
@@ -102,12 +157,17 @@ export default function ReviewsTab({
       confirmText: 'Sil',
       onConfirm: async () => {
         try {
+          const numId = Number(rev.numericId ?? rev.id);
+          if (!isMockMode() && !isNaN(numId) && numId > 0) {
+            await adminApi.deleteComment(numId);
+          }
           await deleteReview(rev.toolId, rev.id);
           adminAddLog('REVIEW_DELETED', `${rev.toolName || rev.toolId} (${authorDisplay})`, 'warning', {
             category: 'GOVERNANCE',
           });
           toastService.success('Mesaj başarıyla silindi.');
           if (onRefreshReviews) onRefreshReviews();
+          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
         } catch (err) {
           toastService.error('Mesaj silme hatası: ' + err.message);
         }
@@ -120,7 +180,7 @@ export default function ReviewsTab({
       toastService.warning('Dışa aktarılacak değerlendirme bulunmuyor.');
       return;
     }
-    const headers = ['ID', 'Tür', 'Kullanıcı', 'Araç ID', 'Araç Adı', 'Puan', 'Yorum', 'Tarih'];
+    const headers = ['ID', 'Tür', 'Kullanıcı', 'Araç ID', 'Araç Adı', 'Puan', 'Yorum', 'Tarih', 'Görünür', 'Engelli'];
     const rows = filteredReviews.map((r) => [
       `"${r.id || ''}"`,
       `"${r.parentId ? 'Alt Yanıt' : 'Ana Yorum'}"`,
@@ -130,6 +190,8 @@ export default function ReviewsTab({
       r.parentId ? 'Yanıt' : (r.rating || 5),
       `"${getContent(r).replace(/"/g, '""')}"`,
       `"${getDate(r)}"`,
+      r.isVisible !== false ? 'Evet' : 'Hayır',
+      r.isBlocked ? 'Evet' : 'Hayır',
     ]);
     const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -245,32 +307,64 @@ export default function ReviewsTab({
                   </div>
                 </div>
 
-                {rev.parentId ? (
-                  <span
-                    style={{
-                      padding: '3px 9px',
-                      borderRadius: '6px',
-                      background: 'rgba(139, 92, 246, 0.14)',
-                      border: '1px solid rgba(139, 92, 246, 0.3)',
-                      color: 'var(--accent-purple)',
-                      fontSize: '11px',
-                      fontWeight: 600,
-                    }}
-                  >
-                    Alt Yanıt {rev.replyTo ? `→ @${rev.replyTo}` : ''}
-                  </span>
-                ) : (
-                  <div className={styles.reviewRatingStars}>
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star
-                        key={s}
-                        size={13}
-                        fill={s <= (rev.rating || 5) ? '#fbbf24' : 'none'}
-                        color={s <= (rev.rating || 5) ? '#fbbf24' : 'var(--text-muted)'}
-                      />
-                    ))}
-                  </div>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {rev.isVisible === false && (
+                    <span
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        background: 'rgba(239, 68, 68, 0.15)',
+                        border: '1px solid rgba(239, 68, 68, 0.35)',
+                        color: '#f87171',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Gizli
+                    </span>
+                  )}
+                  {rev.isBlocked && (
+                    <span
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        background: 'rgba(245, 158, 11, 0.15)',
+                        border: '1px solid rgba(245, 158, 11, 0.35)',
+                        color: '#fbbf24',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Engelli
+                    </span>
+                  )}
+                  {rev.parentId ? (
+                    <span
+                      style={{
+                        padding: '3px 9px',
+                        borderRadius: '6px',
+                        background: 'rgba(139, 92, 246, 0.14)',
+                        border: '1px solid rgba(139, 92, 246, 0.3)',
+                        color: 'var(--accent-purple)',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Alt Yanıt {rev.replyTo ? `→ @${rev.replyTo}` : ''}
+                    </span>
+                  ) : (
+                    <div className={styles.reviewRatingStars}>
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          size={13}
+                          fill={s <= (rev.rating || 5) ? '#fbbf24' : 'none'}
+                          color={s <= (rev.rating || 5) ? '#fbbf24' : 'var(--text-muted)'}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <p className={styles.reviewCardText}>
@@ -283,15 +377,35 @@ export default function ReviewsTab({
                   {getDate(rev)}
                 </span>
 
-                <button
-                  type="button"
-                  className={styles.reviewDeleteBtn}
-                  onClick={() => handleDeleteReview(rev)}
-                  title="Yorumu Sil"
-                >
-                  <Trash2 size={13} />
-                  <span>Sil</span>
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button
+                    type="button"
+                    className={styles.actionIconBtn}
+                    onClick={() => handleToggleVisibility(rev)}
+                    title={rev.isVisible === false ? 'Yorumu Görünür Yap' : 'Yorumu Gizle'}
+                  >
+                    {rev.isVisible === false ? <Eye size={13} color="#10b981" /> : <EyeOff size={13} />}
+                  </button>
+
+                  <button
+                    type="button"
+                    className={styles.actionIconBtn}
+                    onClick={() => handleBlockCommentPrompt(rev)}
+                    title="Yorumu Engelle"
+                  >
+                    <Ban size={13} color="#f59e0b" />
+                  </button>
+
+                  <button
+                    type="button"
+                    className={styles.reviewDeleteBtn}
+                    onClick={() => handleDeleteReview(rev)}
+                    title="Yorumu Sil"
+                  >
+                    <Trash2 size={13} />
+                    <span>Sil</span>
+                  </button>
+                </div>
               </div>
             </div>
           ))

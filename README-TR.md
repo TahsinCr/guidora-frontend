@@ -28,6 +28,7 @@ Bu proje şunları sağlar:
 - Merkezde havada süzülen ve iğnesi dönen büyütülmüş Guidora pusulası ile altında hızlı ritimli 5'li Newton sarkacı noktalarına sahip şık ve dinamik yükleme ekranı (`PageLoader`) ve açılışta footer sıçramasını engelleyen anti-flash mimarisi;
 - kapsamlı popuplar (`AuthModal`, `ToolStudioForm`) için tüm ekranı devralmayan, pencereye hapsolmuş yerel diyalog yükleyicileri;
 - yer imlerine eklenebilir ve tarayıcı geçmişiyle uyumlu URL sorgu senkronizasyonu (`?tool=<id>`);
+- roller & yetki matrisi (OperationClaims), ürün alt kaynakları (sürüm notları, belgeler, medya, katkıcılar), topluluk doğrulama onay sırası, yorum moderasyonu, aktif oturum yönetimi ve canlı telemetri sunan kurumsal yönetim konsolu (`?view=admin`);
 - Figma Auto-Layout özelliklerini (`fill`, `hug`, `fixed`) CSS kurallarına dönüştüren SCSS yerleşim motoru.
 
 Bu proje bilinçli olarak şunları içermez:

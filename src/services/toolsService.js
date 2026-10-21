@@ -5,6 +5,7 @@ import { getCategoryColor } from '@/constants/categoryIcons';
 import { isMockMode } from './config/modeService';
 const useMock = () => isMockMode();
 let backendTools = [];
+let catalogLoadPromise = null;
 
 export { loadBackendCatalog };
 
@@ -12,55 +13,63 @@ async function loadBackendCatalog(forceRefresh = false) {
   if (!forceRefresh && backendTools.length > 0) {
     return getAllTools();
   }
-  try {
-    const categories = await taxonomiesApi.fetchCategories().catch(() => []);
-    const categoryMap = {};
-
-    if (Array.isArray(categories) && categories.length > 0) {
-      await Promise.all(
-        categories.map(async (cat) => {
-          try {
-            const res = await productsApi.fetchProducts({ page: 1, pageSize: 100, categoryId: cat.categoryId });
-            const list = res?.items || (Array.isArray(res) ? res : []);
-            list.forEach((p) => {
-              if (!categoryMap[p.productId]) {
-                categoryMap[p.productId] = {
-                  categorySlug: cat.slug,
-                  categoryName: cat.categoryName,
-                  categorySlugs: [cat.slug],
-                  categoryIds: [cat.categoryId],
-                };
-              } else {
-                if (!categoryMap[p.productId].categorySlugs.includes(cat.slug)) {
-                  categoryMap[p.productId].categorySlugs.push(cat.slug);
-                  categoryMap[p.productId].categoryIds.push(cat.categoryId);
-                }
-              }
-            });
-          } catch {
-            // ignore individual category fetch errors
-          }
-        })
-      );
-    }
-
-    const items = [];
-    let page = 1;
-    let result;
-    do {
-      result = await productsApi.fetchProducts({ page, pageSize: 100 });
-      const fetchedList = result?.items || (Array.isArray(result) ? result : []);
-      items.push(...fetchedList.map((dto) => adaptProductDtoToTool(dto, categoryMap)));
-      page += 1;
-    } while (items.length < (result?.totalCount ?? 0) && (result?.items?.length ?? 0) > 0);
-    backendTools = items;
-    return getAllTools();
-  } catch (err) {
-    if (import.meta.env?.VITE_ALLOW_MOCK_FALLBACK !== 'false') {
-      return getAllTools();
-    }
-    throw err;
+  if (!forceRefresh && catalogLoadPromise) {
+    return catalogLoadPromise;
   }
+  catalogLoadPromise = (async () => {
+    try {
+      const categories = await taxonomiesApi.fetchCategories().catch(() => []);
+      const categoryMap = {};
+
+      if (Array.isArray(categories) && categories.length > 0) {
+        await Promise.all(
+          categories.map(async (cat) => {
+            try {
+              const res = await productsApi.fetchProducts({ page: 1, pageSize: 100, categoryId: cat.categoryId });
+              const list = res?.items || (Array.isArray(res) ? res : []);
+              list.forEach((p) => {
+                if (!categoryMap[p.productId]) {
+                  categoryMap[p.productId] = {
+                    categorySlug: cat.slug,
+                    categoryName: cat.categoryName,
+                    categorySlugs: [cat.slug],
+                    categoryIds: [cat.categoryId],
+                  };
+                } else {
+                  if (!categoryMap[p.productId].categorySlugs.includes(cat.slug)) {
+                    categoryMap[p.productId].categorySlugs.push(cat.slug);
+                    categoryMap[p.productId].categoryIds.push(cat.categoryId);
+                  }
+                }
+              });
+            } catch {
+              // ignore individual category fetch errors
+            }
+          })
+        );
+      }
+
+      const items = [];
+      let page = 1;
+      let result;
+      do {
+        result = await productsApi.fetchProducts({ page, pageSize: 100 });
+        const fetchedList = result?.items || (Array.isArray(result) ? result : []);
+        items.push(...fetchedList.map((dto) => adaptProductDtoToTool(dto, categoryMap)));
+        page += 1;
+      } while (items.length < (result?.totalCount ?? 0) && (result?.items?.length ?? 0) > 0);
+      backendTools = items;
+      return getAllTools();
+    } catch (err) {
+      if (import.meta.env?.VITE_ALLOW_MOCK_FALLBACK !== 'false') {
+        return getAllTools();
+      }
+      throw err;
+    } finally {
+      catalogLoadPromise = null;
+    }
+  })();
+  return catalogLoadPromise;
 }
 
 import { TOOLS_DATA, CATEGORIES, TAG_CATEGORIES, ALL_TAGS } from './mockData';
@@ -858,6 +867,25 @@ export async function deleteReview(toolId, reviewId) {
 }
 
 /**
+ * Update review moderation status (visibility / blocked) and sync with backend
+ */
+export async function updateReviewModeration(toolId, reviewId, updates = {}) {
+  const key = `${REVIEWS_KEY_PREFIX}${toolId}`;
+  const existing = await getReviews(toolId);
+  const targetId = String(reviewId);
+  const updated = existing.map((r) => {
+    if (String(r.id) === targetId) {
+      return { ...r, ...updates };
+    }
+    return r;
+  });
+  try {
+    localStorage.setItem(key, JSON.stringify(updated));
+  } catch (e) {}
+  return updated;
+}
+
+/**
  * Get all reviews across all tools (for Admin Moderation Panel & User Profile)
  */
 export async function getAllReviews() {
@@ -866,6 +894,7 @@ export async function getAllReviews() {
   }
   const allTools = await getAllTools();
   let aggregated = [];
+  const seenDefaultKeys = new Set();
 
   for (const tool of allTools) {
     const key = `${REVIEWS_KEY_PREFIX}${tool.id}`;
@@ -874,8 +903,14 @@ export async function getAllReviews() {
       if (raw) {
         const list = JSON.parse(raw);
         list.forEach((rev) => {
+          const isDefaultSeed = /^rev-(1|1-sub-1|2|2-sub-1|3)$/.test(String(rev.id));
+          if (isDefaultSeed) {
+            if (seenDefaultKeys.has(String(rev.id))) return;
+            seenDefaultKeys.add(String(rev.id));
+          }
           aggregated.push({
             ...rev,
+            uid: `${tool.id}::${rev.id}`,
             toolId: tool.id,
             toolName: tool.name,
             toolCategory: tool.categoryName || tool.category,
@@ -885,24 +920,24 @@ export async function getAllReviews() {
     } catch (e) {}
   }
 
-  // Seed initial reviews for top catalog tools if none have been visited yet
+  // Seed initial reviews for the primary catalog tool if none have been visited yet
   if (aggregated.length === 0 && allTools.length > 0) {
-    const seedTargets = allTools.slice(0, Math.min(2, allTools.length));
-    for (const targetTool of seedTargets) {
-      const seeded = await getReviews(targetTool.id);
-      seeded.forEach((rev) => {
-        aggregated.push({
-          ...rev,
-          toolId: targetTool.id,
-          toolName: targetTool.name,
-          toolCategory: targetTool.categoryName || targetTool.category,
-        });
+    const targetTool = allTools[0];
+    const seeded = await getReviews(targetTool.id);
+    seeded.forEach((rev) => {
+      aggregated.push({
+        ...rev,
+        uid: `${targetTool.id}::${rev.id}`,
+        toolId: targetTool.id,
+        toolName: targetTool.name,
+        toolCategory: targetTool.categoryName || targetTool.category,
       });
-    }
+    });
   }
 
   return aggregated.sort((a, b) => (String(b.id) > String(a.id) ? 1 : -1));
 }
+
 
 /**
  * Get all reviews authored by a specific user across all tools

@@ -14,6 +14,8 @@ import {
   adminDeleteCategory,
   adminAddLog,
 } from '@/services/adminService';
+import { getCategoryIcon } from '@/constants/categoryIcons';
+import { useLanguage } from '@/context/LanguageContext';
 import toastService from '@/services/toast/toastService';
 import UnifiedTranslationModal from '@/components/common/UnifiedTranslationModal';
 import AdminConfirmModal from '../modals/AdminConfirmModal';
@@ -25,6 +27,7 @@ export default function CategoriesTab({
   globalSearch = '',
   onRefreshCategories,
 }) {
+  const { lang } = useLanguage();
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCat, setEditingCat] = useState(null);
@@ -46,16 +49,20 @@ export default function CategoriesTab({
     onConfirm: () => {},
   });
 
-  const filteredCategories = categories.filter((c) => {
-    const q = (search || globalSearch || '').trim().toLowerCase();
-    if (q) {
-      return (
-        c.name.toLowerCase().includes(q) ||
-        (c.id || '').toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
+  const filteredCategories = categories
+    .filter((c) => c.id !== 'all')
+    .filter((c) => {
+      const q = (search || globalSearch || '').trim().toLowerCase();
+      if (q) {
+        const localName = (c.translations?.[lang] || '').toLowerCase();
+        return (
+          (c.name || '').toLowerCase().includes(q) ||
+          localName.includes(q) ||
+          (c.id || '').toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
 
   const handleOpenAdd = () => {
     setEditingCat(null);
@@ -176,7 +183,7 @@ export default function CategoriesTab({
           <input
             type="text"
             className={styles.searchInput}
-            placeholder="Kategori ara..."
+            placeholder="Kategori adı veya slug ara..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -195,6 +202,8 @@ export default function CategoriesTab({
       {/* Categories Grid */}
       <div className={styles.categoriesGrid}>
         {filteredCategories.map((cat) => {
+          const CatIcon = getCategoryIcon(cat.id);
+          const localizedTitle = cat.translations?.[lang] || cat.name;
           const toolCount = tools.filter((t) => {
             const catIdLower = String(cat.id || '').toLowerCase();
             const catNameLower = String(cat.name || '').toLowerCase();
@@ -213,11 +222,19 @@ export default function CategoriesTab({
               <div className={styles.catCardTop}>
                 <div
                   className={styles.catColorCircle}
-                  style={{ backgroundColor: cat.color || '#6366f1' }}
-                />
+                  style={{
+                    background: `linear-gradient(135deg, ${cat.color || '#6366f1'}, ${cat.color || '#6366f1'}cc)`,
+                    boxShadow: `0 6px 16px -4px ${cat.color || '#6366f1'}66`,
+                  }}
+                >
+                  <CatIcon size={18} color="#ffffff" />
+                </div>
                 <div className={styles.catCardInfo}>
-                  <h4 className={styles.catCardName}>{cat.name}</h4>
-                  <code className={styles.catIdCode}>{cat.id}</code>
+                  <h4 className={styles.catCardName}>{localizedTitle}</h4>
+                  <code className={styles.catIdCode}>
+                    {cat.id}
+                    {localizedTitle !== cat.name ? ` • ${cat.name}` : ''}
+                  </code>
                 </div>
                 {(cat.popular || cat.isPopular) && (
                   <span className={styles.popularBadge}>
@@ -228,7 +245,9 @@ export default function CategoriesTab({
 
               <div className={styles.catCardStats}>
                 <span>İlişkili Araç: <strong>{toolCount}</strong></span>
-                <span className={styles.catHex}>{cat.color || '#6366f1'}</span>
+                <span className={styles.catHex} style={{ color: cat.color || '#6366f1' }}>
+                  {cat.color || '#6366f1'}
+                </span>
               </div>
 
               <div className={styles.catCardActions}>
@@ -252,16 +271,14 @@ export default function CategoriesTab({
                   <span>Düzenle</span>
                 </button>
 
-                {cat.id !== 'all' && (
-                  <button
-                    type="button"
-                    className={styles.catActionBtnDanger}
-                    onClick={() => handleDeleteCategory(cat)}
-                    title="Kategoriyi Sil"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className={styles.catActionBtnDanger}
+                  onClick={() => handleDeleteCategory(cat)}
+                  title="Kategoriyi Sil"
+                >
+                  <Trash2 size={14} />
+                </button>
               </div>
             </div>
           );

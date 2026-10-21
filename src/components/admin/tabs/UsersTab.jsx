@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Users,
   Search,
@@ -22,6 +22,8 @@ import {
   Mail,
   ExternalLink,
   RotateCcw,
+  KeyRound,
+  Lock,
 } from 'lucide-react';
 import {
   adminCreateUser,
@@ -29,7 +31,13 @@ import {
   adminUpdateUserDetails,
   adminDeleteUser,
 } from '@/services/userService';
-import { adminAddLog } from '@/services/adminService';
+import {
+  adminAddLog,
+  adminFetchRolesAndPermissions,
+  adminCreateRole,
+  adminToggleRolePermission,
+  adminDeleteRoleById,
+} from '@/services/adminService';
 import toastService from '@/services/toast/toastService';
 import { useLanguage } from '@/context/LanguageContext';
 import AdminConfirmModal from '../modals/AdminConfirmModal';
@@ -51,6 +59,7 @@ export default function UsersTab({
 }) {
   const { t, language } = useLanguage();
   const safeUsers = Array.isArray(users) ? users : [];
+  const [activeSubTab, setActiveSubTab] = useState('users'); // 'users' | 'roles'
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUserIds, setSelectedUserIds] = useState([]);
@@ -59,6 +68,90 @@ export default function UsersTab({
   const [viewUserModalOpen, setViewUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [viewingUser, setViewingUser] = useState(null);
+
+  // Roles & OperationClaims State (RolesController)
+  const [backendRoles, setBackendRoles] = useState([]);
+  const [backendPermissions, setBackendPermissions] = useState([]);
+  const [rolesLoading, setRolesLoading] = useState(false);
+  const [newRoleName, setNewRoleName] = useState('');
+  const [newRoleDesc, setNewRoleDesc] = useState('');
+
+  const loadRolesMatrix = useCallback(async () => {
+    setRolesLoading(true);
+    try {
+      const { roles, permissions } = await adminFetchRolesAndPermissions();
+      setBackendRoles(roles);
+      setBackendPermissions(permissions);
+    } catch {
+      // handled in service
+    } finally {
+      setRolesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRolesMatrix();
+  }, [loadRolesMatrix]);
+
+  const handleCreateBackendRole = async (e) => {
+    e.preventDefault();
+    if (!newRoleName.trim()) return;
+    try {
+      await adminCreateRole({
+        name: newRoleName.trim(),
+        description: newRoleDesc.trim() || 'Özel platform rolü',
+      });
+      adminAddLog('ROLE_CREATED', newRoleName.trim(), 'success', {
+        entityName: 'Role',
+        category: 'AUTH',
+      });
+      toastService.success(`"${newRoleName.trim()}" rolü oluşturuldu.`);
+      setNewRoleName('');
+      setNewRoleDesc('');
+      await loadRolesMatrix();
+    } catch (err) {
+      toastService.error('Rol oluşturulamadı: ' + (err.message || 'Hata'));
+    }
+  };
+
+  const handleTogglePermission = async (roleObj, permObj, hasPerm) => {
+    if (roleObj.name === 'Admin' && permObj.name === 'Admin') {
+      toastService.warning('Kök Admin rolünün temel Admin yetkisi kaldırılamaz.');
+      return;
+    }
+    try {
+      await adminToggleRolePermission(roleObj.id, permObj.id, !hasPerm);
+      setBackendRoles((prev) =>
+        prev.map((r) => {
+          if (r.id !== roleObj.id) return r;
+          const currentPerms = Array.isArray(r.permissions) ? r.permissions : [];
+          const nextPerms = hasPerm
+            ? currentPerms.filter((p) => (p.id ?? p.operationClaimId) !== permObj.id)
+            : [...currentPerms, { id: permObj.id, name: permObj.name }];
+          return { ...r, permissions: nextPerms };
+        })
+      );
+      toastService.success(
+        `${roleObj.name} rolü için "${permObj.name}" izni ${!hasPerm ? 'verildi' : 'kaldırıldı'}.`
+      );
+    } catch (err) {
+      toastService.error('İzin güncellenemedi: ' + (err.message || 'Hata'));
+    }
+  };
+
+  const handleDeleteBackendRole = async (roleObj) => {
+    if (roleObj.isSystemRole) {
+      toastService.warning('Sistem rolleri silinemez.');
+      return;
+    }
+    try {
+      await adminDeleteRoleById(roleObj.id);
+      setBackendRoles((prev) => prev.filter((r) => r.id !== roleObj.id));
+      toastService.success(`"${roleObj.name}" rolü silindi.`);
+    } catch (err) {
+      toastService.error('Rol silinemedi: ' + (err.message || 'Hata'));
+    }
+  };
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -369,357 +462,495 @@ export default function UsersTab({
 
   return (
     <div className={styles.tabContent}>
-      {/* Quick Role Filter Chips */}
-      <div className={styles.quickFilterChips}>
-        {ROLE_CHIPS.map((chip) => {
-          const count = chip.id === 'all'
-            ? safeUsers.length
-            : chip.id === 'banned'
-            ? safeUsers.filter((u) => u.isBanned).length
-            : safeUsers.filter((u) => u.role === chip.id).length;
-          return (
-            <button
-              key={chip.id}
-              type="button"
-              className={`${styles.filterChip} ${roleFilter === chip.id ? styles.filterChipActive : ''}`}
-              onClick={() => {
-                setRoleFilter(chip.id);
-                setCurrentPage(1);
-              }}
-            >
-              {chip.label} ({count})
-            </button>
-          );
-        })}
+      {/* Sub-Tab Switcher: Users vs Roles & OperationClaims Matrix */}
+      <div className={styles.subTabNav}>
+        <button
+          type="button"
+          className={`${styles.subTabBtn} ${activeSubTab === 'users' ? styles.subTabBtnActive : ''}`}
+          onClick={() => setActiveSubTab('users')}
+        >
+          <Users size={15} />
+          <span>Kullanıcı Hesapları</span>
+          <span className={styles.subTabBadge}>{safeUsers.length}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`${styles.subTabBtn} ${activeSubTab === 'roles' ? styles.subTabBtnActive : ''}`}
+          onClick={() => setActiveSubTab('roles')}
+        >
+          <KeyRound size={15} />
+          <span>Roller & İzin Matrisi (OperationClaims)</span>
+          <span className={styles.subTabBadge}>{backendRoles.length}</span>
+        </button>
       </div>
 
-      {/* Toolbar */}
-      <div className={styles.toolbar}>
-        <div className={styles.toolbarFilters}>
-          <div className={styles.searchWrapper}>
-            <Search size={16} className={styles.searchIcon} />
-            <input
-              type="text"
-              className={styles.searchInput}
-              placeholder="İsim, @kullanıcı, unvan veya e-posta ara..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setCurrentPage(1);
-              }}
-            />
-          </div>
-        </div>
-
-        <div className={styles.toolbarActions}>
-          <button
-            type="button"
-            className={styles.actionBtnSecondary}
-            onClick={handleExportCSV}
-            title="CSV Dışa Aktar"
-          >
-            <Download size={14} />
-            <span>CSV Dışa Aktar</span>
-          </button>
-
-          <button
-            type="button"
-            className={styles.actionBtnPrimary}
-            onClick={() => setAddUserModalOpen(true)}
-          >
-            <Plus size={16} />
-            <span>Yeni Kullanıcı Ekle</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Multi-Select Floating Batch Actions Bar */}
-      {selectedUserIds.length > 0 && (
-        <div className={styles.batchBar}>
-          <div className={styles.batchBarSelected}>
-            <CheckSquare size={16} color="#6366f1" />
-            <span>
-              <strong>{selectedUserIds.length}</strong> kullanıcı seçildi
-            </span>
-          </div>
-
-          <div className={styles.batchBarActions}>
-            <button
-              type="button"
-              className={styles.batchBtn}
-              onClick={() => handleBatchBan(false)}
-              title="Seçilenlerin Yasağını Kaldır"
-            >
-              <ShieldCheck size={13} color="#10b981" />
-              <span>Yasağı Kaldır</span>
-            </button>
-
-            <button
-              type="button"
-              className={styles.batchBtn}
-              onClick={() => handleBatchBan(true)}
-              title="Seçilenleri Yasakla"
-            >
-              <Ban size={13} color="#f59e0b" />
-              <span>Yasakla</span>
-            </button>
-
-            <button
-              type="button"
-              className={styles.batchBtn}
-              onClick={() => handleBatchRole('moderator')}
-            >
-              <span>Moderator Yap</span>
-            </button>
-
-            <button
-              type="button"
-              className={styles.batchBtn}
-              onClick={() => handleBatchRole('creator')}
-            >
-              <span>Creator Yap</span>
-            </button>
-
-            <button
-              type="button"
-              className={`${styles.batchBtn} ${styles.batchBtnDanger}`}
-              onClick={handleBatchDelete}
-            >
-              <Trash2 size={13} />
-              <span>Toplu Sil</span>
-            </button>
-
-            <button
-              type="button"
-              className={styles.batchBtn}
-              onClick={() => setSelectedUserIds([])}
-            >
-              Seçimi Temizle
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Users Data Grid */}
-      <div className={styles.tableCard}>
-        <div className={styles.tableResponsive}>
-          <table className={styles.adminTable}>
-            <thead>
-              <tr>
-                <th style={{ width: '40px', textAlign: 'center' }}>
-                  <button
-                    type="button"
-                    onClick={handleToggleSelectAll}
-                    className={`${styles.rowSelectBtn} ${selectedUserIds.length === paginatedUsers.length && paginatedUsers.length > 0 ? styles.selected : ''}`}
-                    aria-label="Tümünü Seç"
-                  >
-                    {selectedUserIds.length === paginatedUsers.length && paginatedUsers.length > 0 ? (
-                      <CheckSquare size={14} color="#6366f1" />
-                    ) : (
-                      <Square size={14} />
-                    )}
-                  </button>
-                </th>
-                <th>Kullanıcı (Profil & Kimlik)</th>
-                <th>Platform Rolü</th>
-                <th>İtibar Puanı</th>
-                <th>Kayıt Tarihi</th>
-                <th>Hesap Durumu</th>
-                <th style={{ textAlign: 'right' }}>İşlemler</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className={styles.emptyTableTd}>
-                    Filtre kriterlerine uygun kullanıcı bulunamadı.
-                  </td>
-                </tr>
-              ) : (
-                paginatedUsers.map((user) => {
-                  const isSelected = selectedUserIds.includes(user.id);
-                  return (
-                    <tr
-                      key={user.id}
-                      className={`${user.isBanned ? styles.rowDeleted : ''} ${isSelected ? styles.rowSelected : ''}`}
-                    >
-                      <td style={{ textAlign: 'center' }}>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleSelectUser(user.id)}
-                          className={`${styles.rowSelectBtn} ${isSelected ? styles.selected : ''}`}
-                          aria-label="Kullanıcı Seç"
-                        >
-                          {isSelected ? (
-                            <CheckSquare size={14} color="#6366f1" />
-                          ) : (
-                            <Square size={14} />
-                          )}
-                        </button>
-                      </td>
-                      <td>
-                        <div className={styles.userIdentityCell}>
-                          <div className={styles.userAvatarSquare}>
-                            {user.avatar || (user.name ? user.name.substring(0, 2).toUpperCase() : 'U')}
-                          </div>
-                          <div>
-                            <div className={styles.userNameTitle}>
-                              <strong>{user.name || 'İsimsiz'}</strong>
-                              {user.username && <span className={styles.userHandle}>@{user.username}</span>}
-                            </div>
-                            <span className={styles.userEmailText}>{user.email}</span>
-                            {user.title && <span className={styles.userMetaSub}>{user.title}</span>}
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <select
-                          className={`${styles.roleSelectInline} ${styles[user.role]}`}
-                          value={user.role}
-                          onChange={(e) => handleRoleChange(user.id, e.target.value, user.name)}
-                          aria-label="Kullanıcı Rolü Değiştir"
-                        >
-                          <option value="member">Member</option>
-                          <option value="creator">Creator</option>
-                          <option value="moderator">Moderator</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                      </td>
-                      <td>
-                        <span className={styles.reputationBadge}>
-                          <Award size={13} />
-                          <span>{user.reputation ?? 100} pts</span>
-                        </span>
-                      </td>
-                      <td>
-                        <span className={styles.joinedDateText}>
-                          {user.joinedDate || 'Eylül 2024'}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={user.isBanned ? styles.bannedBadge : styles.activeBadge}>
-                          {user.isBanned ? 'Yasaklı' : 'Aktif'}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div className={styles.rowActionsRight}>
-                          <button
-                            type="button"
-                            className={styles.actionIconBtn}
-                            onClick={() => handleOpenView(user)}
-                            title="Kullanıcı Detaylarını Gör"
-                          >
-                            <Eye size={15} />
-                          </button>
-
-                          <button
-                            type="button"
-                            className={styles.actionIconBtn}
-                            onClick={() => handleOpenEdit(user)}
-                            title="Kullanıcıyı Düzenle"
-                          >
-                            <Edit2 size={15} />
-                          </button>
-
-                          <button
-                            type="button"
-                            className={user.isBanned ? styles.actionIconBtnSuccess : styles.actionIconBtn}
-                            onClick={() => handleToggleBan(user)}
-                            title={user.isBanned ? 'Yasağı Kaldır' : 'Kullanıcıyı Yasakla'}
-                          >
-                            <Ban size={15} />
-                          </button>
-
-                          <button
-                            type="button"
-                            className={styles.actionIconBtnDanger}
-                            onClick={() => handleDeleteUser(user)}
-                            title="Kullanıcıyı Tamamen Sil"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination Bar */}
-        {filteredUsers.length > 0 && (
-          <div className={styles.paginationBar}>
-            <div className={styles.paginationInfo}>
-              <span>
-                Toplam <strong>{filteredUsers.length}</strong> kullanıcıdan <strong>{pageSize === 'all' ? filteredUsers.length : Math.min((currentPage - 1) * pageSize + 1, filteredUsers.length)}</strong> - <strong>{pageSize === 'all' ? filteredUsers.length : Math.min(currentPage * pageSize, filteredUsers.length)}</strong> arası gösteriliyor
-              </span>
-
-              <div className={styles.pageSizeSelector}>
-                <label>Sayfa Başına:</label>
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    const val = e.target.value === 'all' ? 'all' : parseInt(e.target.value, 10);
-                    setPageSize(val);
+      {activeSubTab === 'users' ? (
+        <>
+          {/* Quick Role Filter Chips */}
+          <div className={styles.quickFilterChips}>
+            {ROLE_CHIPS.map((chip) => {
+              const count = chip.id === 'all'
+                ? safeUsers.length
+                : chip.id === 'banned'
+                ? safeUsers.filter((u) => u.isBanned).length
+                : safeUsers.filter((u) => u.role === chip.id).length;
+              return (
+                <button
+                  key={chip.id}
+                  type="button"
+                  className={`${styles.filterChip} ${roleFilter === chip.id ? styles.filterChipActive : ''}`}
+                  onClick={() => {
+                    setRoleFilter(chip.id);
                     setCurrentPage(1);
                   }}
-                  className={styles.pageSizeSelect}
                 >
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value="all">Tümü</option>
-                </select>
+                  <span>{chip.label}</span>
+                  <span className={styles.filterChipCount}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Toolbar */}
+          <div className={styles.toolbar}>
+            <div className={styles.toolbarFilters}>
+              <div className={styles.searchWrapper}>
+                <Search size={16} className={styles.searchIcon} />
+                <input
+                  type="text"
+                  className={styles.searchInput}
+                  placeholder="İsim, @kullanıcı, unvan veya e-posta ara..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
               </div>
             </div>
 
-            {pageSize !== 'all' && totalPages > 1 && (
-              <div className={styles.paginationNav}>
+            <div className={styles.toolbarActions}>
+              <button
+                type="button"
+                className={styles.actionBtnSecondary}
+                onClick={handleExportCSV}
+                title="CSV Dışa Aktar"
+              >
+                <Download size={14} />
+                <span>CSV Dışa Aktar</span>
+              </button>
+
+              <button
+                type="button"
+                className={styles.actionBtnPrimary}
+                onClick={() => setAddUserModalOpen(true)}
+              >
+                <Plus size={16} />
+                <span>Yeni Kullanıcı Ekle</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Multi-Select Floating Batch Actions Bar */}
+          {selectedUserIds.length > 0 && (
+            <div className={styles.batchBar}>
+              <div className={styles.batchBarSelected}>
+                <CheckSquare size={16} color="#6366f1" />
+                <span>
+                  <strong>{selectedUserIds.length}</strong> kullanıcı seçildi
+                </span>
+              </div>
+
+              <div className={styles.batchBarActions}>
                 <button
                   type="button"
-                  className={styles.pageBtn}
-                  disabled={currentPage <= 1}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  aria-label="Önceki Sayfa"
+                  className={styles.batchBtn}
+                  onClick={() => handleBatchBan(false)}
+                  title="Seçilenlerin Yasağını Kaldır"
                 >
-                  <ChevronLeft size={16} />
+                  <ShieldCheck size={13} color="#10b981" />
+                  <span>Yasağı Kaldır</span>
                 </button>
 
-                {Array.from({ length: Math.min(totalPages, 7) }, (_, idx) => {
-                  let pageNum = idx + 1;
-                  if (totalPages > 7) {
-                    if (currentPage <= 4) pageNum = idx + 1;
-                    else if (currentPage >= totalPages - 3) pageNum = totalPages - 6 + idx;
-                    else pageNum = currentPage - 3 + idx;
-                  }
-                  return (
-                    <button
-                      key={pageNum}
-                      type="button"
-                      className={`${styles.pageBtn} ${currentPage === pageNum ? styles.pageBtnActive : ''}`}
-                      onClick={() => handlePageChange(pageNum)}
+                <button
+                  type="button"
+                  className={styles.batchBtn}
+                  onClick={() => handleBatchBan(true)}
+                  title="Seçilenleri Yasakla"
+                >
+                  <Ban size={13} color="#f59e0b" />
+                  <span>Yasakla</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.batchBtn}
+                  onClick={() => handleBatchRole('moderator')}
+                >
+                  <span>Moderator Yap</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.batchBtn}
+                  onClick={() => handleBatchRole('creator')}
+                >
+                  <span>Creator Yap</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`${styles.batchBtn} ${styles.batchBtnDanger}`}
+                  onClick={handleBatchDelete}
+                >
+                  <Trash2 size={13} />
+                  <span>Toplu Sil</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.batchBtn}
+                  onClick={() => setSelectedUserIds([])}
+                >
+                  Seçimi Temizle
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Users Data Grid */}
+          <div className={styles.tableCard}>
+            <div className={styles.tableResponsive}>
+              <table className={styles.adminTable}>
+                <thead>
+                  <tr>
+                    <th style={{ width: '40px', textAlign: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={handleToggleSelectAll}
+                        className={`${styles.rowSelectBtn} ${selectedUserIds.length === paginatedUsers.length && paginatedUsers.length > 0 ? styles.selected : ''}`}
+                        aria-label="Tümünü Seç"
+                      >
+                        {selectedUserIds.length === paginatedUsers.length && paginatedUsers.length > 0 ? (
+                          <CheckSquare size={14} color="#6366f1" />
+                        ) : (
+                          <Square size={14} />
+                        )}
+                      </button>
+                    </th>
+                    <th>Kullanıcı (Profil & Kimlik)</th>
+                    <th>Platform Rolü</th>
+                    <th>İtibar Puanı</th>
+                    <th>Kayıt Tarihi</th>
+                    <th>Hesap Durumu</th>
+                    <th style={{ textAlign: 'right' }}>İşlemler</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className={styles.emptyTableTd}>
+                        Filtre kriterlerine uygun kullanıcı bulunamadı.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedUsers.map((user) => {
+                      const isSelected = selectedUserIds.includes(user.id);
+                      return (
+                        <tr
+                          key={user.id}
+                          className={`${user.isBanned ? styles.rowDeleted : ''} ${isSelected ? styles.rowSelected : ''}`}
+                        >
+                          <td style={{ textAlign: 'center' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleSelectUser(user.id)}
+                              className={`${styles.rowSelectBtn} ${isSelected ? styles.selected : ''}`}
+                              aria-label="Kullanıcı Seç"
+                            >
+                              {isSelected ? (
+                                <CheckSquare size={14} color="#6366f1" />
+                              ) : (
+                                <Square size={14} />
+                              )}
+                            </button>
+                          </td>
+                          <td>
+                            <div className={styles.userIdentityCell}>
+                              <div className={styles.userAvatarSquare}>
+                                {user.avatar || (user.name ? user.name.substring(0, 2).toUpperCase() : 'U')}
+                              </div>
+                              <div>
+                                <div className={styles.userNameTitle}>
+                                  <strong>{user.name || 'İsimsiz'}</strong>
+                                  {user.username && <span className={styles.userHandle}>@{user.username}</span>}
+                                </div>
+                                <span className={styles.userEmailText}>{user.email}</span>
+                                {user.title && <span className={styles.userMetaSub}>{user.title}</span>}
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <select
+                              className={`${styles.roleSelectInline} ${styles[user.role]}`}
+                              value={user.role}
+                              onChange={(e) => handleRoleChange(user.id, e.target.value, user.name)}
+                              aria-label="Kullanıcı Rolü Değiştir"
+                            >
+                              <option value="member">Member</option>
+                              <option value="creator">Creator</option>
+                              <option value="moderator">Moderator</option>
+                              <option value="admin">Admin</option>
+                            </select>
+                          </td>
+                          <td>
+                            <span className={styles.reputationBadge}>
+                              <Award size={13} />
+                              <span>{user.reputation ?? 100} pts</span>
+                            </span>
+                          </td>
+                          <td>
+                            <span className={styles.joinedDateText}>
+                              {user.joinedDate || 'Eylül 2024'}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={user.isBanned ? styles.bannedBadge : styles.activeBadge}>
+                              {user.isBanned ? 'Yasaklı' : 'Aktif'}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <div className={styles.rowActionsRight}>
+                              <button
+                                type="button"
+                                className={styles.actionIconBtn}
+                                onClick={() => handleOpenView(user)}
+                                title="Kullanıcı Detaylarını Gör"
+                              >
+                                <Eye size={15} />
+                              </button>
+
+                              <button
+                                type="button"
+                                className={styles.actionIconBtn}
+                                onClick={() => handleOpenEdit(user)}
+                                title="Kullanıcıyı Düzenle"
+                              >
+                                <Edit2 size={15} />
+                              </button>
+
+                              <button
+                                type="button"
+                                className={user.isBanned ? styles.actionIconBtnSuccess : styles.actionIconBtn}
+                                onClick={() => handleToggleBan(user)}
+                                title={user.isBanned ? 'Yasağı Kaldır' : 'Kullanıcıyı Yasakla'}
+                              >
+                                <Ban size={15} />
+                              </button>
+
+                              <button
+                                type="button"
+                                className={styles.actionIconBtnDanger}
+                                onClick={() => handleDeleteUser(user)}
+                                title="Kullanıcıyı Tamamen Sil"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Bar */}
+            {filteredUsers.length > 0 && (
+              <div className={styles.paginationBar}>
+                <div className={styles.paginationInfo}>
+                  <span>
+                    Toplam <strong>{filteredUsers.length}</strong> kullanıcıdan <strong>{pageSize === 'all' ? filteredUsers.length : Math.min((currentPage - 1) * pageSize + 1, filteredUsers.length)}</strong> - <strong>{pageSize === 'all' ? filteredUsers.length : Math.min(currentPage * pageSize, filteredUsers.length)}</strong> arası gösteriliyor
+                  </span>
+
+                  <div className={styles.pageSizeSelector}>
+                    <label>Sayfa Başına:</label>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => {
+                        const val = e.target.value === 'all' ? 'all' : parseInt(e.target.value, 10);
+                        setPageSize(val);
+                        setCurrentPage(1);
+                      }}
+                      className={styles.pageSizeSelect}
                     >
-                      {pageNum}
-                    </button>
-                  );
-                })}
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value="all">Tümü</option>
+                    </select>
+                  </div>
+                </div>
 
-                <button
-                  type="button"
-                  className={styles.pageBtn}
-                  disabled={currentPage >= totalPages}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  aria-label="Sonraki Sayfa"
-                >
-                  <ChevronRight size={16} />
-                </button>
+                {pageSize !== 'all' && totalPages > 1 && (
+                  <div className={styles.paginationNav}>
+                    <button
+                      type="button"
+                      className={styles.pageBtn}
+                      disabled={currentPage <= 1}
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      aria-label="Önceki Sayfa"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+
+                    {Array.from({ length: Math.min(totalPages, 7) }, (_, idx) => {
+                      let pageNum = idx + 1;
+                      if (totalPages > 7) {
+                        if (currentPage <= 4) pageNum = idx + 1;
+                        else if (currentPage >= totalPages - 3) pageNum = totalPages - 6 + idx;
+                        else pageNum = currentPage - 3 + idx;
+                      }
+                      return (
+                        <button
+                          key={pageNum}
+                          type="button"
+                          className={`${styles.pageBtn} ${currentPage === pageNum ? styles.pageBtnActive : ''}`}
+                          onClick={() => handlePageChange(pageNum)}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+
+                    <button
+                      type="button"
+                      className={styles.pageBtn}
+                      disabled={currentPage >= totalPages}
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      aria-label="Sonraki Sayfa"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
-      </div>
+        </>
+      ) : (
+        /* Roles & OperationClaims Permission Matrix (RolesController) */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          {/* Create New Custom Role Bar */}
+          <div className={styles.tableCard} style={{ padding: '18px 22px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 700 }}>
+                  Rol & OperationClaim Yetki Matrisi (`/api/roles`)
+                </h3>
+                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--admin-text-muted)' }}>
+                  Sistem ve özel rollerin `.NET 10` OperationClaim yetkilerini canlı olarak atayın veya kaldırın.
+                </p>
+              </div>
+              <form onSubmit={handleCreateBackendRole} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  style={{ width: '180px' }}
+                  placeholder="Yeni Rol Adı (örn. Auditor)"
+                  value={newRoleName}
+                  onChange={(e) => setNewRoleName(e.target.value)}
+                  required
+                />
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  style={{ width: '240px' }}
+                  placeholder="Rol açıklaması..."
+                  value={newRoleDesc}
+                  onChange={(e) => setNewRoleDesc(e.target.value)}
+                />
+                <button type="submit" className={styles.actionBtnPrimary}>
+                  <Plus size={15} />
+                  <span>Rol Oluştur</span>
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {/* Roles Matrix Cards */}
+          {rolesLoading ? (
+            <div className={styles.emptyStateCard}>Roller ve OperationClaim izinleri yükleniyor...</div>
+          ) : (
+            <div className={styles.categoriesGrid}>
+              {backendRoles.map((roleObj) => {
+                const rolePerms = Array.isArray(roleObj.permissions) ? roleObj.permissions : [];
+                return (
+                  <div key={roleObj.id} className={styles.categoryCard} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div className={styles.catCardTop}>
+                      <div
+                        className={styles.catColorCircle}
+                        style={{
+                          background: roleObj.isSystemRole
+                            ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+                            : 'linear-gradient(135deg, #10b981, #059669)',
+                        }}
+                      >
+                        {roleObj.isSystemRole ? <Lock size={16} color="#fff" /> : <KeyRound size={16} color="#fff" />}
+                      </div>
+                      <div className={styles.catCardInfo}>
+                        <h4 className={styles.catCardName}>{roleObj.name}</h4>
+                        <code className={styles.catIdCode}>
+                          Role ID: #{roleObj.id} • {roleObj.isSystemRole ? 'Sistem Rolü' : 'Özel Rol'}
+                        </code>
+                      </div>
+                      {!roleObj.isSystemRole && (
+                        <button
+                          type="button"
+                          className={styles.actionIconBtnDanger}
+                          onClick={() => handleDeleteBackendRole(roleObj)}
+                          title="Özel Rolü Sil"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+
+                    {roleObj.description && (
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--admin-text-secondary)' }}>
+                        {roleObj.description}
+                      </p>
+                    )}
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {backendPermissions.map((perm) => {
+                        const hasPerm = rolePerms.some(
+                          (rp) => (rp.id ?? rp.operationClaimId) === perm.id || rp.name === perm.name
+                        );
+                        return (
+                          <button
+                            key={perm.id}
+                            type="button"
+                            onClick={() => handleTogglePermission(roleObj, perm, hasPerm)}
+                            className={`${styles.filterChip} ${hasPerm ? styles.filterChipActive : ''}`}
+                            style={{ fontSize: '0.73rem', padding: '4px 10px' }}
+                            title={hasPerm ? 'Yetkiyi Kaldır' : 'Yetkiyi Ver'}
+                          >
+                            {hasPerm ? <CheckSquare size={12} /> : <Square size={12} />}
+                            <span>{perm.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Add User Modal */}
       {addUserModalOpen && (

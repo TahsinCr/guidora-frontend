@@ -6,18 +6,21 @@ import {
   adminGetLogs,
   adminGetProposals,
   adminGetTagCategories,
+  adminGetCommunityReviews,
   adminGetStats,
   adminFetchAll,
   adminFetchCategories,
   adminFetchTagCategories,
   adminFetchProposals,
   adminFetchReports,
+  adminFetchCommunityReviews,
 } from '@/services/adminService';
+import { checkSystemHealth } from '@/services/api/adminApi';
+import { getAllApiEndpoints } from '@/services/api/apiCatalog';
 import { getAllTools, getAllReviews, loadBackendCatalog } from '@/services/toolsService';
 import { getOrganizations, getAllUsers, getCurrentUser } from '@/services/userService';
 import { isMockMode } from '@/services/config/modeService';
 import { useLanguage } from '@/context/LanguageContext';
-import { toast } from '@/services/toast/toastService';
 
 // Admin Sub-Components
 import AdminSidebar from './AdminSidebar';
@@ -41,7 +44,7 @@ import styles from './AdminDashboardPage.module.scss';
 
 const SIDEBAR_COLLAPSED_KEY = 'guidora_admin_sidebar_collapsed';
 
-export default function AdminDashboardPage({ onBack, onOpenTool }) {
+export default function AdminDashboardPage({ onBack, onOpenTool, initialTab }) {
   const { t } = useLanguage();
   const rawUser = getCurrentUser();
   // Ensure the admin panel always loads: if no user is logged in or role is not admin/moderator, fallback to default admin
@@ -88,7 +91,30 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
   }
 
   // Active Tab & Navigation State
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTabState] = useState(() => {
+    if (initialTab) return initialTab;
+    if (typeof window !== 'undefined') {
+      const paramTab = new URLSearchParams(window.location.search).get('tab');
+      if (paramTab) return paramTab;
+    }
+    return 'overview';
+  });
+
+  const setActiveTab = useCallback((newTab) => {
+    setActiveTabState(newTab);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('view', 'admin');
+      url.searchParams.set('tab', newTab);
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, []);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTabState(initialTab);
+    }
+  }, [initialTab]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     try {
       return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
@@ -106,9 +132,11 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
   const [users, setUsers] = useState([]);
   const [reports, setReports] = useState([]);
   const [proposals, setProposals] = useState([]);
+  const [communityReviews, setCommunityReviews] = useState([]);
   const [logs, setLogs] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
   const [tagCategories, setTagCategories] = useState([]);
+  const [dbStatus, setDbStatus] = useState({ isOnline: true, latencyMs: 6, status: 'ONLINE' });
 
   // Fetch all administrative data (instant local cache + background live sync)
   const refreshAllData = useCallback(async () => {
@@ -120,6 +148,7 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
       const allU = getAllUsers();
       const allR = adminGetReports();
       const allP = adminGetProposals();
+      const allCR = adminGetCommunityReviews();
       const allL = adminGetLogs();
       const allRev = getAllReviews();
       const allTC = adminGetTagCategories();
@@ -130,6 +159,7 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
       setUsers(allU);
       setReports(allR);
       setProposals(allP);
+      setCommunityReviews(allCR);
       setLogs(allL);
       if (allRev && typeof allRev.then === 'function') {
         allRev.then((revs) => Array.isArray(revs) && setAllReviews(revs));
@@ -140,16 +170,33 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
 
       // 2. If live backend mode is active, fetch live data asynchronously
       if (!isMockMode()) {
-        const [fetchedAdmin, catalogItems] = await Promise.allSettled([
+        const pingStart = performance.now();
+        const [fetchedAdmin, catalogItems, healthResult] = await Promise.allSettled([
           adminFetchAll(),
           loadBackendCatalog(),
+          checkSystemHealth(),
         ]);
+        const measuredMs = Math.max(2, Math.round(performance.now() - pingStart));
+        if (healthResult.status === 'fulfilled' && healthResult.value) {
+          setDbStatus({
+            isOnline: Boolean(healthResult.value.isLive),
+            latencyMs: measuredMs,
+            status: healthResult.value.isLive ? 'ONLINE' : 'DEGRADED',
+          });
+        }
         if (fetchedAdmin.status === 'fulfilled' && fetchedAdmin.value) {
-          const { categories: liveCats, tagCategories: liveTags, proposals: liveProps, reports: liveReps } = fetchedAdmin.value;
+          const {
+            categories: liveCats,
+            tagCategories: liveTags,
+            proposals: liveProps,
+            reports: liveReps,
+            communityReviews: liveComm,
+          } = fetchedAdmin.value;
           if (liveCats?.length) setCategories(liveCats);
           if (liveTags?.length) setTagCategories(liveTags);
           if (liveProps) setProposals(liveProps);
           if (liveReps) setReports(liveReps);
+          if (liveComm) setCommunityReviews(liveComm);
         }
         if (catalogItems.status === 'fulfilled' && Array.isArray(catalogItems.value)) {
           setTools(catalogItems.value);
@@ -210,10 +257,13 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
   // Badges for sidebar
   const badges = useMemo(() => {
     const pendingR = reports.filter((r) => !r.status || r.status === 'pending').length;
-    const pendingP = proposals.filter((p) => p.status === 'pending').length;
+    const pendingP =
+      proposals.filter((p) => p.status === 'pending').length +
+      communityReviews.filter((c) => !c.status || c.status === 'pending').length;
     const criticalL = logs.filter((l) => l.level === 'CRITICAL').length;
 
     return {
+      apiCount: getAllApiEndpoints().length,
       schema: 8,
       tables: 8,
       toolsCount: tools.length,
@@ -223,7 +273,7 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
       pendingProposals: pendingP,
       criticalLogs: criticalL,
     };
-  }, [reports, proposals, logs, tools, categories, users]);
+  }, [reports, proposals, communityReviews, logs, tools, categories, users]);
 
   // Computed platform statistics
   const stats = useMemo(() => {
@@ -261,6 +311,7 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
           onToggleMobile={() => setIsMobileMenuOpen(true)}
           globalSearch={globalSearch}
           onGlobalSearchChange={setGlobalSearch}
+          dbStatus={dbStatus}
           currentUser={currentUser}
         />
 
@@ -312,13 +363,19 @@ export default function AdminDashboardPage({ onBack, onOpenTool }) {
           {activeTab === 'proposals' && (
             <ProposalsTab
               proposals={proposals}
+              communityReviews={communityReviews}
               globalSearch={globalSearch}
               onRefreshProposals={async () => {
                 if (!isMockMode()) {
-                  const p = await adminFetchProposals();
+                  const [p, cr] = await Promise.all([
+                    adminFetchProposals(),
+                    adminFetchCommunityReviews(),
+                  ]);
                   setProposals(p);
+                  setCommunityReviews(cr);
                 } else {
                   setProposals(adminGetProposals());
+                  setCommunityReviews(adminGetCommunityReviews());
                 }
                 setTools(getAllTools());
               }}
